@@ -1,4 +1,35 @@
 # Add files here to ignore them from prettier formatting
+dist/**/*
+out/**/*
+generated/**/*
+**/*.gen.*
+node_modules/**/*
+coverage/**/*
+*.snap
 
-/dist
-/coverage
+*.sh
+*.png
+*.gif
+*.ico
+*.icns
+*.svg
+*.txt
+*.mp3
+
+**/.git*
+**/.DS_Store
+**/.prettier*
+**/.env*
+**/.nvm
+**/*.conf
+**/browserslist
+
+# custom
+.generated/*
+capacitor/*
+tools/*
+**/assets/*
+.editorconfig
+apple-app-site-association
+yarn.lock
+*.mongo

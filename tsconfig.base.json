@@ -14,7 +14,33 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
-    "paths": {}
+    "paths": {
+      "@nx-cqrs/pusher/socketio/client": [
+        "libs/pusher/socketio/client/src/index.ts"
+      ],
+      "@nx-cqrs/pusher/socketio/core": [
+        "libs/pusher/socketio/core/src/index.ts"
+      ],
+      "@nx-cqrs/user/core": ["libs/user/core/src/index.ts"],
+      "@nx-cqrs/user/ui": ["libs/user/ui/src/index.ts"],
+      "@nx-cqrs/shared": ["libs/shared/src/index.ts"],
+      "@nx-cqrs/pusher/shared/client": [
+        "libs/pusher/shared/client/src/index.ts"
+      ],
+      "@nx-cqrs/pusher/api": ["libs/pusher/api/src/index.ts"],
+      "@nx-cqrs/pusher/aws/core": [
+        "libs/pusher/aws/core/src/index.ts"
+      ],
+      "@nx-cqrs/pusher/aws/client": [
+        "libs/pusher/aws/client/src/index.ts"
+      ],
+      "@nx-cqrs/user/api": ["libs/user/api/src/index.ts"],
+      "@nx-cqrs/user/shared": ["libs/user/shared/src/index.ts"],
+      "@nx-cqrs/joker/api": ["libs/joker/api/src/index.ts"],
+      "@nx-cqrs/joker/ui": ["libs/joker/ui/src/index.ts"],
+      "@nx-cqrs/joker/core": ["libs/joker/core/src/index.ts"],
+      "@nx-cqrs/joker/shared": ["libs/joker/shared/src/index.ts"]
+    }
   },
   "exclude": ["node_modules", "tmp"]
 }

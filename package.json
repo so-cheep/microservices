@@ -26,17 +26,35 @@
     "help": "nx help"
   },
   "private": true,
-  "dependencies": {},
+  "dependencies": {
+    "jsonwebtoken": "^8.5.1",
+    "redis": "^3.0.2",
+    "rxjs": "^6.6.3",
+    "socket.io": "^3.0.4",
+    "socket.io-client": "^3.0.4",
+    "socket.io-redis": "^6.0.1"
+  },
   "devDependencies": {
-    "@nrwl/tao": "11.0.15",
     "@nrwl/cli": "11.0.15",
+    "@nrwl/eslint-plugin-nx": "11.0.15",
+    "@nrwl/jest": "11.0.15",
+    "@nrwl/node": "11.0.15",
+    "@nrwl/tao": "11.0.15",
     "@nrwl/workspace": "11.0.15",
+    "@types/jest": "26.0.8",
+    "@types/jsonwebtoken": "^8.5.0",
     "@types/node": "12.12.38",
+    "@types/redis": "^2.8.28",
+    "@typescript-eslint/eslint-plugin": "4.3.0",
+    "@typescript-eslint/parser": "4.3.0",
     "dotenv": "6.2.0",
+    "eslint": "7.10.0",
+    "eslint-config-prettier": "6.0.0",
+    "jest": "26.2.2",
+    "prettier": "2.1.2",
+    "ts-jest": "26.4.0",
     "ts-node": "~9.1.1",
     "tslint": "~6.1.0",
-    "eslint": "7.10.0",
-    "typescript": "~4.0.3",
-    "prettier": "2.1.2"
+    "typescript": "~4.0.3"
   }
 }
