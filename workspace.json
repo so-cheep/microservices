@@ -552,6 +552,86 @@
           }
         }
       }
+    },
+    "cqrs-rpc": {
+      "root": "libs/cqrs/rpc",
+      "sourceRoot": "libs/cqrs/rpc/src",
+      "projectType": "library",
+      "targets": {
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "libs/cqrs/rpc/**/*.ts"
+            ]
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": [
+            "coverage/libs/cqrs/rpc"
+          ],
+          "options": {
+            "jestConfig": "libs/cqrs/rpc/jest.config.js",
+            "passWithNoTests": true
+          }
+        },
+        "build": {
+          "executor": "@nrwl/node:package",
+          "outputs": [
+            "{options.outputPath}"
+          ],
+          "options": {
+            "outputPath": "dist/libs/cqrs/rpc",
+            "tsConfig": "libs/cqrs/rpc/tsconfig.lib.json",
+            "packageJson": "libs/cqrs/rpc/package.json",
+            "main": "libs/cqrs/rpc/src/index.ts",
+            "assets": [
+              "libs/cqrs/rpc/*.md"
+            ]
+          }
+        }
+      }
+    },
+    "cqrs-types": {
+      "root": "libs/cqrs/types",
+      "sourceRoot": "libs/cqrs/types/src",
+      "projectType": "library",
+      "targets": {
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "libs/cqrs/types/**/*.ts"
+            ]
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": [
+            "coverage/libs/cqrs/types"
+          ],
+          "options": {
+            "jestConfig": "libs/cqrs/types/jest.config.js",
+            "passWithNoTests": true
+          }
+        },
+        "build": {
+          "executor": "@nrwl/node:package",
+          "outputs": [
+            "{options.outputPath}"
+          ],
+          "options": {
+            "outputPath": "dist/libs/cqrs/types",
+            "tsConfig": "libs/cqrs/types/tsconfig.lib.json",
+            "packageJson": "libs/cqrs/types/package.json",
+            "main": "libs/cqrs/types/src/index.ts",
+            "assets": [
+              "libs/cqrs/types/*.md"
+            ]
+          }
+        }
+      }
     }
   },
   "cli": {

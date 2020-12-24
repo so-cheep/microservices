@@ -76,6 +76,12 @@
     },
     "joker-shared": {
       "tags": []
+    },
+    "cqrs-rpc": {
+      "tags": ["cqrs"]
+    },
+    "cqrs-types": {
+      "tags": []
     }
   }
 }

@@ -39,7 +39,9 @@
       "@nx-cqrs/joker/api": ["libs/joker/api/src/index.ts"],
       "@nx-cqrs/joker/ui": ["libs/joker/ui/src/index.ts"],
       "@nx-cqrs/joker/core": ["libs/joker/core/src/index.ts"],
-      "@nx-cqrs/joker/shared": ["libs/joker/shared/src/index.ts"]
+      "@nx-cqrs/joker/shared": ["libs/joker/shared/src/index.ts"],
+      "@nx-cqrs/cqrs/rpc": ["libs/cqrs/rpc/src/index.ts"],
+      "@nx-cqrs/cqrs/types": ["libs/cqrs/types/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

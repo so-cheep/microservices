@@ -1,6 +1,9 @@
 import { Observable } from 'rxjs'
 
-export interface Transport<TMetadata extends MessageMetadata> {
+export interface ITransport<
+  TMetadata extends IMessageMetadata = never,
+  TMessageType = unknown
+> {
   /**
    * rabbitmq         - name for the queue & response queue (rpc)
    * socket.io-server - not used
@@ -11,19 +14,21 @@ export interface Transport<TMetadata extends MessageMetadata> {
   /**
    * received message stream
    */
-  message$: Observable<TransportItem<any, TMetadata>>
+  message$: Observable<ITransportItem<TMetadata, TMessageType>>
 
   /**
-   * rabbitmq         - publish new message to the queue
-   * socket.io-server - send message to the client, based on the socketId in metadata
-   * socket.io-client - send message to the server
+   * - rabbitmq         - publish new message to the queue
+   * - socket.io-server - send message to the client, based on the socketId in metadata
+   * - socket.io-client - send message to the server
    */
-  publish<TResult>(props: PublishProps<any>): Promise<TResult>
+  publish<TResult, TMeta extends TMetadata = TMetadata>(
+    props: IPublishProps<TMeta, TMessageType>,
+  ): Promise<{ result: TResult; metadata: TMeta }>
 
   /**
-   * rabbitmq         - create binding (exchange -> queue)
-   * socket.io-server - do nothing
-   * socket.io-client - adds event to listen (?)
+   * - rabbitmq         - create binding (exchange -> queue)
+   * - socket.io-server - do nothing
+   * - socket.io-client - adds event to listen (?)
    */
   listenPatterns(patterns: string[]): void
 
@@ -49,12 +54,13 @@ export interface Transport<TMetadata extends MessageMetadata> {
   dispose(): void
 }
 
-export interface TransportItem<
-  T extends Message<T>,
-  TMetadata extends MessageMetadata
+export interface ITransportItem<
+  TMetadata extends IMessageMetadata,
+  TMessageType = unknown,
+  TResult = unknown
 > {
   route: string
-  message: T
+  message: TMessageType
 
   metadata: TMetadata
 
@@ -69,22 +75,21 @@ export interface TransportItem<
    *  false - move item to the dead letter queue
    */
   complete(isSuccess?: boolean): void
-  sendReply(result: any, metadata: MessageMetadata): Promise<void>
+  sendReply(result: TResult, metadata: TMetadata): Promise<void>
 }
 
-export interface MessageMetadata {
+export interface IMessageMetadata {
   [key: string]: unknown
 }
 
-export type Message<T extends Message<T>> = {
-  type: T['type']
-}
-
-export interface PublishProps<T> {
+export interface IPublishProps<
+  TMetadata extends IMessageMetadata,
+  TMessage
+> {
   route: string
-  message: T
+  message: TMessage
 
-  metadata: MessageMetadata
+  metadata: TMetadata
 
   rpc?: {
     enabled: boolean
