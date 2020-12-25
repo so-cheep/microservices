@@ -9,5 +9,7 @@
     {
       "path": "./tsconfig.spec.json"
     }
-  ]
+  ],
+  "compilerOptions": {"lib": ["ES2019"]}
+
 }

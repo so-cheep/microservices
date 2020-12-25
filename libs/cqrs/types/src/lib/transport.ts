@@ -14,7 +14,9 @@ export interface ITransport<
   /**
    * received message stream
    */
-  message$: Observable<ITransportItem<TMetadata, TMessageType>>
+  message$: Observable<
+    ITransportItem<TMetadata & { originModule: string }, TMessageType>
+  >
 
   /**
    * - rabbitmq         - publish new message to the queue
