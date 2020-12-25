@@ -11,6 +11,7 @@ import {
   THandlerArg,
   IHandlerMap,
 } from './types'
+import { encodeRpc } from './utils/encodeRpc'
 
 /**
  *
@@ -100,64 +101,70 @@ function buildSingleHandler<T extends THandler>(
     functionName: keyPrefix,
   })
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handle = (
+  const makeHandlerArgs = (
     transportItem: ITransportItem<IRpcMetadata>,
-  ): ReturnType<T> =>
-    handler.apply(
-      handler,
-      decodeRpc(transportItem.message as string)
-        // NOTE: add the metadata object on the end for utility
-        .concat([transportItem.metadata]),
-    )
+  ): unknown[] =>
+    decodeRpc(transportItem.message as string)
+      // NOTE: add the metadata object on the end for utility
+      .concat([transportItem.metadata])
+
   transport.message$
     .pipe(filter(t => t.route.includes(routeKey)))
     .subscribe(transportItem => {
-      try {
-        switch (type) {
-          case CqrsType.Query:
-            {
-              // ack the message immediately
-              transportItem.complete(true)
-              handle(transportItem)
+      switch (type) {
+        case CqrsType.Query:
+          {
+            // ack the message immediately
+            transportItem.complete(true)
+            try {
+              handler
+                .apply(handler, makeHandlerArgs(transportItem))
                 .then(result => {
                   // for now, just sending the original metadata back
                   // TODO(kb): determine whether to send different metadata
-                  transportItem.sendReply(result, {
-                    ...transportItem.metadata,
-                    replyTime: new Date().toISOString(),
-                  })
+                  sendReply(transportItem)(result)
                 })
-                .catch(err => {
-                  transportItem.sendReply(undefined, {
-                    ...transportItem.metadata,
-                    error: err,
-                    replyTime: new Date().toISOString(),
-                  })
-                })
+                .catch(sendError(transportItem))
+            } catch (error) {
+              // this catch is just in case the handler throws a sync error
+              sendError(transportItem)(error)
             }
-            break
-          case CqrsType.Command:
-            {
-              handle(transportItem)
-                .then(result => {
-                  transportItem.complete(true)
-                  if (result) {
-                    transportItem.sendReply(result, {
-                      ...transportItem.metadata,
-                      replyTime: new Date().toISOString(),
-                    })
-                  }
-                })
-                .catch(err => {
-                  transportItem.complete(false)
-                  throw err
-                })
-            }
-            break
-        }
-      } catch (err) {
-        //
+          }
+          break
+        case CqrsType.Command:
+          {
+            handler(makeHandlerArgs(transportItem))
+              .then(result => {
+                transportItem.complete(true)
+                if (result) {
+                  sendReply(transportItem)(result)
+                }
+              })
+              .catch(err => {
+                transportItem.complete(false)
+                throw err
+              })
+          }
+          break
       }
     })
   return routeKey
 }
+
+// helpers per transport item
+const sendError = (
+  transportItem: ITransportItem<IRpcMetadata, unknown>,
+) => error =>
+  transportItem.sendReply(undefined, {
+    ...transportItem.metadata,
+    error,
+    replyTime: new Date().toISOString(),
+  })
+// helper
+const sendReply = (
+  transportItem: ITransportItem<IRpcMetadata, unknown>,
+) => result =>
+  transportItem.sendReply(encodeRpc(result), {
+    ...transportItem.metadata,
+    replyTime: new Date().toISOString(),
+  })

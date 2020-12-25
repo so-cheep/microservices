@@ -38,7 +38,7 @@ function recursiveHandler(
       })
       return transport
         .publish<string, IRpcMetadata>({
-          message: encodeRpc(args),
+          message: encodeRpc(...args),
           metadata: { callTime: new Date().toISOString() },
           route: routeKey,
           rpc: {
@@ -51,7 +51,7 @@ function recursiveHandler(
           if (result.metadata?.error) {
             throw result.metadata.error
           }
-          return decodeRpc(result?.result)
+          return decodeRpc(result?.result)[0]
         })
     },
   })

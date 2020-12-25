@@ -3,8 +3,8 @@ import { IPublishProps } from '@nx-cqrs/cqrs/types'
 import { CqrsType } from '../constants'
 import { IRpcMetadata, IRpcOptions, IHandlerMap } from '../types'
 import { getClient } from '../getClient'
-import { encodeRpc } from '../encodeRpc'
-import { constructRouteKey } from '../constructRouteKey'
+import { encodeRpc } from '../utils/encodeRpc'
+import { constructRouteKey } from '../utils/constructRouteKey'
 import { mockTransport } from '../__mocks__/transport'
 
 interface Thing {
