@@ -632,6 +632,31 @@
           }
         }
       }
+    },
+    "transport": {
+      "root": "libs/transport",
+      "sourceRoot": "libs/transport/src",
+      "projectType": "library",
+      "targets": {
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "libs/transport/**/*.ts"
+            ]
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": [
+            "coverage/libs/transport"
+          ],
+          "options": {
+            "jestConfig": "libs/transport/jest.config.js",
+            "passWithNoTests": true
+          }
+        }
+      }
     }
   },
   "cli": {

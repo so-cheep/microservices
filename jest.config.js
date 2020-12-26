@@ -23,5 +23,6 @@ module.exports = {
     '<rootDir>/libs/joker/shared',
     '<rootDir>/libs/cqrs/rpc',
     '<rootDir>/libs/cqrs/types',
+    '<rootDir>/libs/transport',
   ],
 }

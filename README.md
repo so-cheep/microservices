@@ -8,6 +8,13 @@ Event-driven architecture
 - `Query` (RPC) - Request to query data. Always returns data back
 - `Event` - Always in past. Usually it's a result of the Command. One Command can create multiple Events as well. Not awaitable.
 
-- `Action` - Client sent message to via Pusher
-
 - `Message` - All of them are called messages
+
+## Transports
+
+- `MemoryTransport` - `Ready` In-memory rxjs implementation
+- `RabbitMQTransport` -
+- `SnsSqsTransport` -
+- `SocketIoServerTransport` -
+- `SocketIoClientTransport` -
+- `WebSocketTransport` -

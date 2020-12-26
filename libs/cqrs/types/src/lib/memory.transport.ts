@@ -1,10 +1,10 @@
 import { Observable, Subject } from 'rxjs'
+import { RpcTimeoutError } from './errors'
 import {
   IPublishProps,
   ITransport,
   ITransportItem,
 } from './transport'
-import { RpcTimeoutError } from './errors'
 
 export class MemoryTransport implements ITransport {
   moduleName?: string
@@ -51,9 +51,11 @@ export class MemoryTransport implements ITransport {
   listenPatterns(): void {
     return
   }
+
   start(): void {
     return
   }
+
   stop(): void {
     return
   }
