@@ -1,15 +1,16 @@
 import { filter } from 'rxjs/operators'
 
-import { ITransport, ITransportItem } from '@nx-cqrs/cqrs/types'
+import { Transport, TransportItem } from '@nx-cqrs/cqrs/types'
 
 import { CqrsType } from './constants'
 import { constructRouteKey } from './utils/constructRouteKey'
 import { decodeRpc } from './utils/decodeRpc'
 import {
-  IRpcMetadata,
-  THandler,
-  THandlerArg,
-  IHandlerMap,
+  RpcMetadata,
+  Handler,
+  HandlerArg,
+  HandlerMap,
+  CqrsApi,
 } from './types'
 import { encodeRpc } from './utils/encodeRpc'
 
@@ -24,14 +25,44 @@ import { encodeRpc } from './utils/encodeRpc'
  * @param keyPrefix
  */
 
-export function handle(
-  type: CqrsType,
-  transport: ITransport<IRpcMetadata>,
-  handlers: THandlerArg,
-) {
+export function handle<
+  TApi extends CqrsApi<string, HandlerMap, HandlerMap>,
+  TTransport extends Transport<
+    RpcMetadata,
+    unknown,
+    TApi['namespace']
+  >
+>(type: CqrsType, transport: TTransport, handlers: HandlerArg) {
   const keys = buildRecursiveHandler(type, transport, handlers)
   if (keys.length === 0) {
     transport.listenPatterns(keys)
+  }
+}
+
+export function handleApi<
+  TApi extends CqrsApi<string, HandlerMap, HandlerMap>,
+  TTransport extends Transport<
+    RpcMetadata,
+    unknown,
+    TApi['namespace']
+  >
+>(transport: TTransport, api: TApi) {
+  const queryKeys = buildRecursiveHandler(
+    CqrsType.Query,
+    transport,
+    api[CqrsType.Query],
+  )
+  if (queryKeys.length === 0) {
+    transport.listenPatterns(queryKeys)
+  }
+
+  const commandKeys = buildRecursiveHandler(
+    CqrsType.Command,
+    transport,
+    api[CqrsType.Command],
+  )
+  if (commandKeys.length === 0) {
+    transport.listenPatterns(commandKeys)
   }
 }
 
@@ -44,8 +75,8 @@ export function handle(
  */
 function buildRecursiveHandler(
   type: CqrsType,
-  transport: ITransport<IRpcMetadata>,
-  handlers: THandlerArg,
+  transport: Transport<RpcMetadata>,
+  handlers: HandlerArg,
   keyPrefix: string[] = [],
 ): string[] {
   let routeKeys: string[]
@@ -53,7 +84,7 @@ function buildRecursiveHandler(
     // handlers is an array
     case Array.isArray(handlers):
       {
-        routeKeys = (handlers as THandler[]).map(h =>
+        routeKeys = (handlers as Handler[]).map(h =>
           buildSingleHandler(type, transport, h),
         )
       }
@@ -64,16 +95,14 @@ function buildRecursiveHandler(
         buildSingleHandler(
           type,
           transport,
-          handlers as THandler,
-          keyPrefix.length
-            ? keyPrefix
-            : [(handlers as THandler).name],
+          handlers as Handler,
+          keyPrefix.length ? keyPrefix : [(handlers as Handler).name],
         ),
       ]
       break
     // it is safe to check object here, we have caught array above
     case typeof handlers === 'object':
-      routeKeys = Object.entries(handlers as IHandlerMap).flatMap(
+      routeKeys = Object.entries(handlers as HandlerMap).flatMap(
         ([key, handler]) =>
           // call handle recursively, adding the object key to the keyPrefix array to track depth
           buildRecursiveHandler(
@@ -90,35 +119,33 @@ function buildRecursiveHandler(
   return routeKeys
 }
 
-function buildSingleHandler<T extends THandler>(
+function buildSingleHandler<T extends Handler>(
   type: CqrsType,
-  transport: ITransport<IRpcMetadata>,
+  transport: Transport<RpcMetadata>,
   handler: T,
   keyPrefix: string[] = [],
 ): string {
   const routeKey = constructRouteKey({
+    moduleName: transport.moduleName,
     busType: type,
     functionName: keyPrefix,
   })
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const makeHandlerArgs = (
-    transportItem: ITransportItem<IRpcMetadata>,
-  ): unknown[] =>
-    decodeRpc(transportItem.message as string)
-      // NOTE: add the metadata object on the end for utility
-      .concat([transportItem.metadata])
 
   transport.message$
-    .pipe(filter(t => t.route.includes(routeKey)))
+    .pipe(filter(t => t.route === routeKey))
     .subscribe(transportItem => {
+      const handlerArgs = decodeRpc(transportItem.message as string)
+        // NOTE: add the metadata object on the end for utility
+        .concat([transportItem.metadata])
+
       switch (type) {
         case CqrsType.Query:
           {
             // ack the message immediately
             transportItem.complete(true)
             try {
-              handler
-                .apply(handler, makeHandlerArgs(transportItem))
+              handler(...handlerArgs)
                 .then(result => {
                   // for now, just sending the original metadata back
                   // TODO(kb): determine whether to send different metadata
@@ -133,7 +160,7 @@ function buildSingleHandler<T extends THandler>(
           break
         case CqrsType.Command:
           {
-            handler(makeHandlerArgs(transportItem))
+            handler(...handlerArgs)
               .then(result => {
                 transportItem.complete(true)
                 if (result) {
@@ -142,7 +169,7 @@ function buildSingleHandler<T extends THandler>(
               })
               .catch(err => {
                 transportItem.complete(false)
-                throw err
+                sendError(transportItem)(err)
               })
           }
           break
@@ -153,7 +180,7 @@ function buildSingleHandler<T extends THandler>(
 
 // helpers per transport item
 const sendError = (
-  transportItem: ITransportItem<IRpcMetadata, unknown>,
+  transportItem: TransportItem<RpcMetadata, unknown>,
 ) => error =>
   transportItem.sendReply(undefined, {
     ...transportItem.metadata,
@@ -162,7 +189,7 @@ const sendError = (
   })
 // helper
 const sendReply = (
-  transportItem: ITransportItem<IRpcMetadata, unknown>,
+  transportItem: TransportItem<RpcMetadata, unknown>,
 ) => result =>
   transportItem.sendReply(encodeRpc(result), {
     ...transportItem.metadata,

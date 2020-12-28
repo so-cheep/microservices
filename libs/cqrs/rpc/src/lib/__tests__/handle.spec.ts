@@ -1,8 +1,8 @@
-import { IHandlerMap, IRpcMetadata } from '../types'
+import { HandlerMap, RpcMetadata } from '../types'
 import { handle } from '../handle'
 import { CqrsType } from '../constants'
 import { mockTransport } from '../__mocks__/transport'
-import { ITransportItem } from '../../../../types/src'
+import { TransportItem } from '../../../../types/src'
 import { encodeRpc } from '../utils/encodeRpc'
 import { constructRouteKey } from '../utils/constructRouteKey'
 import { Subject } from 'rxjs'
@@ -11,7 +11,7 @@ interface User {
   name: string
 }
 
-interface UserService extends IHandlerMap {
+interface UserService extends HandlerMap {
   getById: (id: string) => Promise<User>
 }
 
@@ -21,7 +21,7 @@ const userService: UserService = {
   getById: (...args) => mockGet(...args),
 }
 const message$ = (mockTransport.message$ as unknown) as Subject<
-  ITransportItem<IRpcMetadata, string>
+  TransportItem<RpcMetadata, string>
 >
 
 beforeEach(() => {
@@ -35,7 +35,10 @@ describe('handler tests', () => {
     const mockReturn = jest.fn()
     mockGet.mockResolvedValueOnce(mockUser)
     const id = 'some-id'
-    const metadata = { callTime: new Date().toISOString() }
+    const metadata = {
+      callTime: new Date().toISOString(),
+      originModule: '',
+    }
     handle(CqrsType.Query, mockTransport, userService)
 
     message$.next({
@@ -45,6 +48,7 @@ describe('handler tests', () => {
       metadata: metadata,
       route: constructRouteKey({
         busType: CqrsType.Query,
+        moduleName: mockTransport.moduleName,
         functionName: ([
           'getById',
         ] as (keyof UserService)[]) as string[],
@@ -61,7 +65,8 @@ describe('handler tests', () => {
     setImmediate(() => {
       expect(mockReturn).toHaveBeenCalledTimes(1)
       expect(mockReturn).toHaveBeenLastCalledWith(
-        mockUser,
+        // handler should encode return value for rpc!
+        encodeRpc(mockUser),
         expect.objectContaining(metadata),
       )
       done()
@@ -75,7 +80,10 @@ describe('handler tests', () => {
     const mockReturn = jest.fn()
     mockGet.mockResolvedValueOnce(mockUser)
     const id = 'some-id'
-    const metadata = { callTime: new Date().toISOString() }
+    const metadata = {
+      callTime: new Date().toISOString(),
+      originModule: '',
+    }
 
     handle(CqrsType.Query, mockTransport, api)
 
@@ -86,6 +94,7 @@ describe('handler tests', () => {
       metadata: metadata,
       route: constructRouteKey({
         busType: CqrsType.Query,
+        moduleName: mockTransport.moduleName,
         functionName: ([
           'users',
           'getById',
@@ -103,7 +112,7 @@ describe('handler tests', () => {
     setImmediate(() => {
       expect(mockReturn).toHaveBeenCalledTimes(1)
       expect(mockReturn).toHaveBeenLastCalledWith(
-        mockUser,
+        encodeRpc(mockUser),
         expect.objectContaining(metadata),
       )
       done()

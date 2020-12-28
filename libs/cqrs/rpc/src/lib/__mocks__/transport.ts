@@ -1,8 +1,8 @@
 import { Subject } from 'rxjs'
-import { ITransport } from '../../../../types/src'
-import { encodeRpc } from '../encodeRpc'
+import { Transport } from '../../../../types/src'
+import { encodeRpc } from '../utils/encodeRpc'
 
-export const mockTransport = <ITransport>{
+export const mockTransport = <Transport>{
   publish: jest.fn().mockResolvedValue({
     result: encodeRpc(undefined),
     metadata: {},

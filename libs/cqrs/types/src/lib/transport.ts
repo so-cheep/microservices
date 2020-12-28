@@ -1,22 +1,23 @@
 import { Observable } from 'rxjs'
 
-export interface ITransport<
-  TMetadata extends IMessageMetadata = never,
-  TMessageType = unknown
+export interface Transport<
+  TMetadata extends MessageMetadata = never,
+  TMessageType = unknown,
+  TModuleName extends string = string
 > {
   /**
    * rabbitmq         - name for the queue & response queue (rpc)
    * socket.io-server - not used
    * socket.io-client - not used
+   *
+   * _used by the rpc layer to determine namespace for handlers_
    */
-  moduleName?: string
+  moduleName: TModuleName
 
   /**
    * received message stream
    */
-  message$: Observable<
-    ITransportItem<TMetadata & { originModule: string }, TMessageType>
-  >
+  message$: Observable<TransportItem<TMetadata, TMessageType>>
 
   /**
    * - rabbitmq         - publish new message to the queue
@@ -24,7 +25,7 @@ export interface ITransport<
    * - socket.io-client - send message to the server
    */
   publish<TResult, TMeta extends TMetadata = TMetadata>(
-    props: IPublishProps<TMeta, TMessageType>,
+    props: PublishProps<TMeta, TMessageType>,
   ): Promise<{ result: TResult; metadata: TMeta }>
 
   /**
@@ -56,15 +57,15 @@ export interface ITransport<
   dispose(): void
 }
 
-export interface ITransportItem<
-  TMetadata extends IMessageMetadata,
+export interface TransportItem<
+  TMetadata extends MessageMetadata,
   TMessageType = unknown,
   TResult = unknown
 > {
   route: string
   message: TMessageType
 
-  metadata: TMetadata
+  metadata: TMetadata & { originModule: string }
 
   // used with correlationId when its RPC
   replyTo?: string
@@ -80,12 +81,12 @@ export interface ITransportItem<
   sendReply(result: TResult, metadata: TMetadata): Promise<void>
 }
 
-export interface IMessageMetadata {
+export interface MessageMetadata {
   [key: string]: unknown
 }
 
-export interface IPublishProps<
-  TMetadata extends IMessageMetadata,
+export interface PublishProps<
+  TMetadata extends MessageMetadata,
   TMessage
 > {
   route: string

@@ -1,7 +1,12 @@
 // eslint-disable-next-line @nrwl/nx/enforce-module-boundaries
-import { IPublishProps } from '@nx-cqrs/cqrs/types'
+import { PublishProps } from '@nx-cqrs/cqrs/types'
 import { CqrsType } from '../constants'
-import { IRpcMetadata, IRpcOptions, IHandlerMap } from '../types'
+import {
+  RpcMetadata,
+  RpcOptions,
+  HandlerMap,
+  CqrsApi,
+} from '../types'
 import { getClient } from '../getClient'
 import { encodeRpc } from '../utils/encodeRpc'
 import { constructRouteKey } from '../utils/constructRouteKey'
@@ -14,101 +19,95 @@ interface Thing {
 }
 type Get = (id: string) => Promise<Thing>
 
-interface Silly extends IHandlerMap {
+interface SillyQuery extends HandlerMap {
   get: Get
 }
+interface SillyCommand extends HandlerMap {
+  delete: (id: string) => Promise<void>
+}
+
+type SillyApi = CqrsApi<'Silly', SillyQuery, SillyCommand>
+
+interface SillyRecursive extends HandlerMap {
+  recurse: SillyRecursive
+  get: Get
+}
+type SillyRecursiveApi = CqrsApi<
+  'Silly',
+  SillyRecursive,
+  SillyCommand
+>
 
 beforeEach(() => {
   jest.clearAllMocks()
 })
 
-it('can proxy a 1 layer object', async () => {
-  const options: IRpcOptions = { timeout: 12345 }
-  const base = getClient<Silly>(
-    CqrsType.Query,
-    mockTransport,
-    options,
-  )
-  const args = ['thing'] as [string]
-  await base.get(...args)
+describe('client functionality', () => {
+  it('can proxy a 1 layer object', async () => {
+    const options: RpcOptions = { timeout: 12345 }
+    const base = getClient<SillyApi>(mockTransport, options)
+    const args = ['thing'] as [string]
+    await base.Query.Silly.get(...args)
 
-  expect(mockTransport.publish).toHaveBeenCalledTimes(1)
-  expect(mockTransport.publish).toHaveBeenLastCalledWith(
-    expect.objectContaining<IPublishProps<IRpcMetadata, string>>({
-      message: encodeRpc(args),
-      metadata: expect.objectContaining<IRpcMetadata>({
+    expect(mockTransport.publish).toHaveBeenCalledTimes(1)
+    expect(mockTransport.publish).toHaveBeenLastCalledWith({
+      message: encodeRpc(...args),
+      metadata: expect.objectContaining<RpcMetadata>({
         // iso regex!
         callTime: expect.any(String),
       }),
       route: constructRouteKey({
         busType: CqrsType.Query,
+        moduleName: 'Silly',
         functionName: 'get',
       }),
       rpc: expect.objectContaining(options),
-    }),
-  )
-})
+    })
+  })
 
-it('can proxy a 2 layered object', async () => {
-  interface SillyRecursive extends IHandlerMap {
-    silly: SillyRecursive
-    get: Get
-  }
-  const options: IRpcOptions = { timeout: 12345 }
-  const base = getClient<SillyRecursive>(
-    CqrsType.Query,
-    mockTransport,
-    options,
-  )
-  const args = ['thing'] as [string]
-  await base.silly.get(...args)
+  it('can proxy a 2 layered object', async () => {
+    const options: RpcOptions = { timeout: 12345 }
+    const base = getClient<SillyRecursiveApi>(mockTransport, options)
+    const args = 'thing'
+    await base.Query.Silly.recurse.get(args)
 
-  expect(mockTransport.publish).toHaveBeenCalledTimes(1)
-  expect(mockTransport.publish).toHaveBeenLastCalledWith(
-    expect.objectContaining<IPublishProps<IRpcMetadata, string>>({
+    expect(mockTransport.publish).toHaveBeenCalledTimes(1)
+    expect(mockTransport.publish).toHaveBeenLastCalledWith({
       message: encodeRpc(args),
-      metadata: expect.objectContaining<IRpcMetadata>({
+      metadata: expect.objectContaining<RpcMetadata>({
         // iso regex!
         callTime: expect.any(String),
       }),
       route: constructRouteKey({
         busType: CqrsType.Query,
-        functionName: ['silly', 'get'],
+        moduleName: 'Silly',
+        functionName: ['recurse', 'get'],
       }),
       rpc: expect.objectContaining(options),
-    }),
-  )
-})
-it('can proxy a many layered object', async () => {
-  interface SillyRecursive extends IHandlerMap {
-    silly: SillyRecursive
-    get: Get
-  }
-  const options: IRpcOptions = { timeout: 12345 }
-  const base = getClient<SillyRecursive>(
-    CqrsType.Query,
-    mockTransport,
-    options,
-  )
-  const args = ['thing'] as [string]
-  // 10 silly!
-  await base.silly.silly.silly.silly.silly.silly.silly.silly.silly.silly.get(
-    ...args,
-  )
+    })
+  })
+  it('can proxy a many layered object', async () => {
+    const options: RpcOptions = { timeout: 12345 }
+    const base = getClient<SillyRecursiveApi>(mockTransport, options)
+    const args = 'thing'
+    // 10 recurse!
+    await base.Query.Silly.recurse.recurse.recurse.recurse.recurse.recurse.recurse.recurse.recurse.recurse.get(
+      args,
+    )
 
-  expect(mockTransport.publish).toHaveBeenCalledTimes(1)
-  expect(mockTransport.publish).toHaveBeenLastCalledWith(
-    expect.objectContaining<IPublishProps<IRpcMetadata, string>>({
+    expect(mockTransport.publish).toHaveBeenCalledTimes(1)
+    expect(mockTransport.publish).toHaveBeenLastCalledWith({
       message: encodeRpc(args),
-      metadata: expect.objectContaining<IRpcMetadata>({
+      metadata: expect.objectContaining<RpcMetadata>({
         // iso regex!
         callTime: expect.any(String),
       }),
       route: constructRouteKey({
         busType: CqrsType.Query,
-        functionName: [...Array(10).fill('silly'), 'get'],
+        moduleName: 'Silly',
+        functionName: [...Array(10).fill('recurse'), 'get'],
       }),
       rpc: expect.objectContaining(options),
-    }),
-  )
+    })
+  })
 })

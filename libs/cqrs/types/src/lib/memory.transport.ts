@@ -1,25 +1,32 @@
 import { Observable, Subject } from 'rxjs'
-import { RpcTimeoutError } from './errors'
 import {
-  IPublishProps,
-  ITransport,
-  ITransportItem,
+  MessageMetadata,
+  PublishProps,
+  Transport,
+  TransportItem,
 } from './transport'
+import { RpcTimeoutError } from './errors'
 
-export class MemoryTransport implements ITransport {
-  moduleName?: string
+export class MemoryTransport<
+  TTransportMeta extends MessageMetadata = never,
+  TMessage = unknown,
+  TNamespace extends string = string
+> implements Transport<TTransportMeta, TMessage, TNamespace> {
+  moduleName: TNamespace
 
-  _message$ = new Subject<ITransportItem<never, unknown>>()
-  get message$(): Observable<ITransportItem<never, unknown>> {
+  _message$ = new Subject<TransportItem<TTransportMeta, TMessage>>()
+  get message$(): Observable<
+    TransportItem<TTransportMeta, TMessage>
+  > {
     return this._message$.asObservable()
   }
 
-  constructor(args: { moduleName: string }) {
+  constructor(args: { moduleName: TNamespace }) {
     this.moduleName = args.moduleName
   }
 
-  publish<TResult, TMeta extends never = never>(
-    props: IPublishProps<TMeta, unknown>,
+  publish<TResult, TMeta extends TTransportMeta = TTransportMeta>(
+    props: PublishProps<TMeta, TMessage>,
   ): Promise<{ result: TResult; metadata: TMeta }> {
     return new Promise<{ result: TResult; metadata: TMeta }>(
       (resolve, reject) => {
@@ -29,9 +36,12 @@ export class MemoryTransport implements ITransport {
             }, props.rpc.timeout)
           : undefined
 
-        const item: ITransportItem<TMeta, unknown, TResult> = {
+        const item: TransportItem<TMeta, TMessage, TResult> = {
           message: props.message,
-          metadata: props.metadata,
+          metadata: {
+            ...props.metadata,
+            originModule: this.moduleName,
+          },
           route: props.route,
           // currently ignoring completion, because it's in memory!
           complete: () => {
