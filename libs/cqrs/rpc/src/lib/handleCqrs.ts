@@ -31,9 +31,19 @@ export function handleCqrsSingle<
     RpcMetadata,
     unknown,
     TApi['namespace']
-  >
->(type: CqrsType, transport: TTransport, handlers: HandlerArg) {
-  const keys = buildRecursiveHandler(type, transport, handlers)
+  > = Transport<RpcMetadata, string, TApi['namespace']>
+>(
+  type: CqrsType,
+  transport: TTransport,
+  handlers: HandlerArg,
+  namespace: TApi['namespace'],
+) {
+  const keys = buildRecursiveHandler(
+    type,
+    transport,
+    namespace,
+    handlers,
+  )
   if (keys.length === 0) {
     transport.listenPatterns(keys)
   }
@@ -45,11 +55,12 @@ export function handleCqrsApi<
     RpcMetadata,
     unknown,
     TApi['namespace']
-  >
->(transport: TTransport, api: TApi) {
+  > = Transport<RpcMetadata, string, TApi['namespace']>
+>(transport: TTransport, api: TApi, namespace: TApi['namespace']) {
   const queryKeys = buildRecursiveHandler(
     CqrsType.Query,
     transport,
+    namespace,
     api[CqrsType.Query],
   )
   if (queryKeys.length === 0) {
@@ -59,6 +70,7 @@ export function handleCqrsApi<
   const commandKeys = buildRecursiveHandler(
     CqrsType.Command,
     transport,
+    namespace,
     api[CqrsType.Command],
   )
   if (commandKeys.length === 0) {
@@ -71,11 +83,13 @@ export function handleCqrsApi<
  * @param type @see handleCqrsSingle
  * @param transport @see handleCqrsSingle
  * @param handlers @see handleCqrsSingle
+ * @param moduleName string of the module name
  * @param keyPrefix an array of key prefixes, used to track recursion depth
  */
 function buildRecursiveHandler(
   type: CqrsType,
   transport: Transport<RpcMetadata>,
+  moduleName: string,
   handlers: HandlerArg,
   keyPrefix: string[] = [],
 ): string[] {
@@ -85,7 +99,7 @@ function buildRecursiveHandler(
     case Array.isArray(handlers):
       {
         routeKeys = (handlers as Handler[]).map(h =>
-          buildSingleHandler(type, transport, h),
+          buildSingleHandler(type, transport, moduleName, h),
         )
       }
       break
@@ -95,6 +109,7 @@ function buildRecursiveHandler(
         buildSingleHandler(
           type,
           transport,
+          moduleName,
           handlers as Handler,
           keyPrefix.length ? keyPrefix : [(handlers as Handler).name],
         ),
@@ -108,6 +123,7 @@ function buildRecursiveHandler(
           buildRecursiveHandler(
             type,
             transport,
+            moduleName,
             handler,
             keyPrefix.concat([key]),
           ),
@@ -122,11 +138,12 @@ function buildRecursiveHandler(
 function buildSingleHandler<T extends Handler>(
   type: CqrsType,
   transport: Transport<RpcMetadata>,
+  moduleName: string,
   handler: T,
   keyPrefix: string[] = [],
 ): string {
   const routeKey = constructRouteKey({
-    moduleName: transport.moduleName,
+    moduleName,
     busType: type,
     functionName: keyPrefix,
   })
