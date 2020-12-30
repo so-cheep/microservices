@@ -1,7 +1,7 @@
 import { Observable } from 'rxjs'
 
 export interface Transport<
-  TMetadata extends MessageMetadata = never,
+  TMetadata extends MessageMetadata = MessageMetadata,
   TMessageType = unknown,
   TModuleName extends string = string
 > {
