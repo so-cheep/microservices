@@ -6,24 +6,23 @@ export interface User {
   id: number
 }
 
-export type Api1 = EventApi<
-  'User',
-  {
-    create: (user) => void
-    nest: {
-      thingA: (number: number) => void
-      thingB: (bool: boolean) => void
-    }
+export interface userEventMap {
+  created: (user: User) => void
+  nested: {
+    thingAed: (number: number) => void
+    thingBed: (bool: boolean) => void
   }
->
+}
+
+export type UserApi = EventApi<'User', userEventMap>
 
 export type Api2 = EventApi<
   'Game',
   {
-    noggin: ({ name: string, id: number }) => void
-    bloop: {
-      thingA: (number: number) => void
-      thingB: (bool: boolean) => void
+    created: ({ name: string, id: number }) => void
+    blooped: {
+      thingAed: (number: number) => void
+      thingBed: (bool: boolean) => void
     }
   }
 >
@@ -38,17 +37,16 @@ export class BaseEvent extends EventBase {
   public readonly action: Action
 }
 
-export class DomainObjectEvent extends BaseEvent {
+export class UserEvent extends BaseEvent {
   constructor(public readonly user: User) {
     super()
   }
 }
-export class DomainUpdateEvent extends DomainObjectEvent {
+export class UserUpdateEvent extends UserEvent {
   action: Action.Update
 }
+export class UserDeleteEvent extends UserEvent {
+  action: Action.Delete
+}
 
-Reflect.defineMetadata(
-  EventNamespaceMetadataKey,
-  'User',
-  DomainObjectEvent,
-)
+Reflect.defineMetadata(EventNamespaceMetadataKey, 'User', UserEvent)

@@ -2,9 +2,10 @@ export type EventPublishFunction<TPayload extends unknown> = (
   payload: TPayload,
 ) => void
 
-export interface EventMap {
-  [key: string]: EventMap | EventPublishFunction<unknown>
-}
+export type EventMap<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  TEventMap extends EventMap<TEventMap> = any
+> = Record<string, TEventMap | EventPublishFunction<unknown>>
 
 export interface EventApi<
   TNamespace extends string,
