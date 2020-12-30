@@ -56,11 +56,17 @@ const queryHandler: Queries = {
   },
 }
 
-type Api = CqrsApi<'Users', Queries, HandlerMap>
+type Api = CqrsApi<
+  'Users',
+  Queries,
+  { create: (props: { name: string }) => Promise<void> }
+>
 
 const api: Api = {
   namespace: 'Users',
-  Command: {},
+  Command: {
+    create: jest.fn().mockResolvedValue(undefined),
+  },
   Query: queryHandler,
 }
 

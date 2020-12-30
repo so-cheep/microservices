@@ -5,21 +5,21 @@ import { mockTransport } from '../../__mocks__/transport'
 import { EventRouteKey } from '../constants'
 import { getEventPublisher } from '../getEventPublisher'
 import { getClassEventRoute } from '../utils/getClassEventRoute'
-import { Api1, DomainUpdateEvent, User } from './mockApi'
+import { User, UserApi, UserUpdateEvent } from './mockApi'
 
 describe('get publisher', () => {
   beforeEach(() => {
     jest.clearAllMocks()
   })
   it('works with a basic api', () => {
-    const publish = getEventPublisher<Api1>(mockTransport)
+    const publish = getEventPublisher<UserApi>(mockTransport)
 
     const user: User = {
       id: 1,
       name: faker.name.findName(),
     }
 
-    publish.User.create(user)
+    publish.User.created(user)
 
     expect(mockTransport.publish).toHaveBeenCalledTimes(1)
     const publishCallArg = mocked(mockTransport.publish)
@@ -32,14 +32,14 @@ describe('get publisher', () => {
   })
 
   it('works with a class based event', () => {
-    const publish = getEventPublisher<Api1>(mockTransport)
+    const publish = getEventPublisher<UserApi>(mockTransport)
 
     const user: User = {
       id: 1,
       name: faker.name.findName(),
     }
 
-    publish(new DomainUpdateEvent(user))
+    publish(new UserUpdateEvent(user))
 
     expect(mockTransport.publish).toHaveBeenCalledTimes(1)
 
@@ -47,7 +47,7 @@ describe('get publisher', () => {
       .mock.calls.slice(-1)
       .pop()[0]
     expect(publishCallArg.route).toMatch(
-      getClassEventRoute(DomainUpdateEvent),
+      getClassEventRoute(UserUpdateEvent),
     )
     expect(publishCallArg.message).toMatch(encodeRpc({ user }))
   })

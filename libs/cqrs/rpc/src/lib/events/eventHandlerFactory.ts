@@ -8,7 +8,8 @@ import { getClassEventRoute } from './utils/getClassEventRoute'
 export function handleEventsWithAck<
   TEventApi extends EventApi<string, EventMap>
 >(
-  transport: Transport<never, string>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  transport: Transport<any, any>,
 ): {
   handleFunction: FunctionalEventHandlerFactory<TEventApi>
   handleClass: InheritanceEventHandlerFactory
@@ -131,8 +132,10 @@ type FunctionalEventHandlerFactory<
 ) => void
 
 type InheritanceEventHandlerFactory = <
-  TEvent extends { new (): unknown },
-  TPayload = TEvent extends { new (): infer R } ? R : never
+  TEvent extends { new (...args: unknown[]): unknown },
+  TPayload = TEvent extends { new (...args: unknown[]): infer R }
+    ? R
+    : never
 >(
   event: TEvent | TEvent[],
   handler: (payload: TPayload) => void | Promise<void>,

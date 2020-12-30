@@ -1,4 +1,4 @@
-import { InvalidRpcPathError, Transport } from '../../../../types/src'
+import { InvalidRpcPathError, Transport } from '@nx-cqrs/cqrs/types'
 import { encodeRpc } from '../utils/encodeRpc'
 import { EventRouteKey } from './constants'
 import { EventApi, EventMap, EventPublisher } from './types'
@@ -22,7 +22,11 @@ function buildRecursiveProxy(transport: Transport, path: string[]) {
         if (args.every(getInstanceEventRoute)) {
           // yep, it's class events
           args.forEach(arg =>
-            publish(transport, [arg], getInstanceEventRoute(arg)),
+            publish(
+              transport,
+              [arg],
+              `${path.join('.')}.${getInstanceEventRoute(arg)}`,
+            ),
           )
         } else {
           // nope, not class events, so its a bad path!

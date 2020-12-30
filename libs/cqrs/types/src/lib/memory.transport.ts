@@ -8,7 +8,7 @@ import {
 import { RpcTimeoutError } from './errors'
 
 export class MemoryTransport<
-  TTransportMeta extends MessageMetadata = never,
+  TTransportMeta extends MessageMetadata = MessageMetadata,
   TMessage = unknown,
   TNamespace extends string = string
 > implements Transport<TTransportMeta, TMessage, TNamespace> {
@@ -30,7 +30,7 @@ export class MemoryTransport<
   ): Promise<{ result: TResult; metadata: TMeta }> {
     return new Promise<{ result: TResult; metadata: TMeta }>(
       (resolve, reject) => {
-        const timeout = props.rpc.enabled
+        const timeout = props.rpc?.enabled
           ? setTimeout(() => {
               reject(new RpcTimeoutError(props))
             }, props.rpc.timeout)
