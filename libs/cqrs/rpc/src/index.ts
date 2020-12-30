@@ -1,4 +1,5 @@
-export * from './lib/command'
-export * from './lib/query'
+export * from './lib/getClient'
+export * from './lib/handle'
+export { HandlerMap as IHandlerMap, ClientApi } from './lib/types'
 
-export { HandlerMap as IHandlerMap } from './lib/types'
+export * from './lib/events'
