@@ -24,5 +24,6 @@ module.exports = {
     '<rootDir>/libs/cqrs/rpc',
     '<rootDir>/libs/cqrs/types',
     '<rootDir>/libs/transport',
+    '<rootDir>/libs/microservice',
   ],
 }

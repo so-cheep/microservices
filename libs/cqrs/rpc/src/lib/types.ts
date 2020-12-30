@@ -1,5 +1,6 @@
 import { MessageMetadata } from '@nx-cqrs/cqrs/types'
 import { CqrsType } from './constants'
+import { EventMap } from './events/types'
 
 /** A function which can be called over RPC */
 export type Handler = (...args: unknown[]) => Promise<unknown>
@@ -57,3 +58,15 @@ export type ClientApi<
   Api[CqrsType.Query],
   Api[CqrsType.Command]
 >
+
+export interface MicroserviceApi<
+  TNamespace extends string,
+  TQueryHandler extends HandlerMap,
+  TCommandHandler extends HandlerMap,
+  TEvents extends EventMap
+> {
+  namespace: TNamespace
+  [CqrsType.Command]: TCommandHandler
+  [CqrsType.Query]: TQueryHandler
+  events: TEvents
+}

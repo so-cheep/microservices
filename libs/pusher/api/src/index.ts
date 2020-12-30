@@ -1,3 +1,11 @@
-export * from './lib/pusher.command'
-export * from './lib/pusherClient.action'
-export * from './lib/pusherClient.message'
+import { MicroserviceApi } from '@nx-cqrs/cqrs/rpc'
+import { PusherCommand } from './lib/pusher.command'
+import { PusherEvent } from './lib/pusher.event'
+import { PusherQuery } from './lib/pusher.query'
+
+export type PusherApi = MicroserviceApi<
+  'Pusher',
+  PusherCommand,
+  PusherQuery,
+  PusherEvent
+>

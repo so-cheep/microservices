@@ -1,3 +1,11 @@
-export * from './lib/user.command'
-export * from './lib/user.event'
-export * from './lib/user.query'
+import { MicroserviceApi } from '@nx-cqrs/cqrs/rpc'
+import { UserCommand } from './lib/user.command'
+import { UserEvent } from './lib/user.event'
+import { UserQuery } from './lib/user.query'
+
+export type UserApi = MicroserviceApi<
+  'User',
+  UserCommand,
+  UserQuery,
+  UserEvent
+>
