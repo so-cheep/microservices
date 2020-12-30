@@ -1,10 +1,10 @@
 import {
-  IMessageMetadata,
-  IPublishProps,
-  ITransport,
-  ITransportItem,
+  MessageMetadata,
+  PublishProps,
   PublishResult,
   RpcTimeoutError,
+  Transport,
+  TransportItem,
 } from '@nx-cqrs/transport/shared'
 import * as amqp from 'amqp-connection-manager'
 import { ConfirmChannel } from 'amqplib'
@@ -22,16 +22,16 @@ interface Options {
 }
 
 export class RabbitMQTransport<
-  TMetadata extends IMessageMetadata,
+  TMetadata extends MessageMetadata,
   TMessage
-> implements ITransport<TMetadata, TMessage> {
+> implements Transport<TMetadata, TMessage> {
   moduleName: string
 
   private channel: amqp.ChannelWrapper
   private rpcResponseQueueName: string
 
   private internal$ = new Subject<
-    ITransportItem<
+    TransportItem<
       TMetadata & { originModule: string },
       TMessage,
       unknown
@@ -39,7 +39,7 @@ export class RabbitMQTransport<
   >()
 
   private internalResponse$ = new Subject<
-    ITransportItem<
+    TransportItem<
       TMetadata & { originModule: string },
       TMessage,
       unknown
@@ -47,7 +47,7 @@ export class RabbitMQTransport<
   >()
 
   message$: Observable<
-    ITransportItem<
+    TransportItem<
       TMetadata & { originModule: string },
       TMessage,
       unknown
@@ -197,7 +197,7 @@ export class RabbitMQTransport<
   }
 
   async publish<TResult, TMeta extends TMetadata = TMetadata>(
-    props: IPublishProps<TMeta, TMessage>,
+    props: PublishProps<TMeta, TMessage>,
   ): Promise<PublishResult<TResult, TMeta> | null> {
     if (!this.channel) {
       return

@@ -1,10 +1,10 @@
 import {
-  IMessageMetadata,
-  IPublishProps,
-  ITransport,
-  ITransportItem,
+  MessageMetadata,
+  PublishProps,
   PublishResult,
   RpcTimeoutError,
+  Transport,
+  TransportItem,
 } from '@nx-cqrs/transport/shared'
 import * as AWS from 'aws-sdk'
 import { Observable, Subject } from 'rxjs'
@@ -26,13 +26,13 @@ interface Options {
  *
  */
 export class SnsSqsTransport<
-  TMetadata extends IMessageMetadata,
+  TMetadata extends MessageMetadata,
   TMessage
-> implements ITransport<TMetadata, TMessage> {
+> implements Transport<TMetadata, TMessage> {
   moduleName: string
 
   message$: Observable<
-    ITransportItem<
+    TransportItem<
       TMetadata & { originModule: string },
       TMessage,
       unknown
@@ -40,7 +40,7 @@ export class SnsSqsTransport<
   >
 
   private internal$ = new Subject<
-    ITransportItem<
+    TransportItem<
       TMetadata & { originModule: string },
       TMessage,
       unknown
@@ -48,7 +48,7 @@ export class SnsSqsTransport<
   >()
 
   private internalResponse$ = new Subject<
-    ITransportItem<
+    TransportItem<
       TMetadata & { originModule: string },
       TMessage,
       unknown
@@ -126,7 +126,7 @@ export class SnsSqsTransport<
   }
 
   async publish<TResult, TMeta extends TMetadata = TMetadata>(
-    props: IPublishProps<TMeta, TMessage>,
+    props: PublishProps<TMeta, TMessage>,
   ): Promise<PublishResult<TResult, TMeta> | null> {
     if (!this.sns) {
       return

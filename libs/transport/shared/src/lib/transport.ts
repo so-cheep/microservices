@@ -1,7 +1,7 @@
 import { Observable } from 'rxjs'
 
-export interface ITransport<
-  TMetadata extends IMessageMetadata = never,
+export interface Transport<
+  TMetadata extends MessageMetadata = never,
   TMessageType = unknown
 > {
   /**
@@ -15,7 +15,7 @@ export interface ITransport<
    * received message stream
    */
   message$: Observable<
-    ITransportItem<TMetadata & { originModule: string }, TMessageType>
+    TransportItem<TMetadata & { originModule: string }, TMessageType>
   >
 
   /**
@@ -24,7 +24,7 @@ export interface ITransport<
    * - socket.io-client - send message to the server
    */
   publish<TResult, TMeta extends TMetadata = TMetadata>(
-    props: IPublishProps<TMeta, TMessageType>,
+    props: PublishProps<TMeta, TMessageType>,
   ): Promise<{ result: TResult; metadata: TMeta }>
 
   /**
@@ -56,8 +56,8 @@ export interface ITransport<
   dispose(): void
 }
 
-export interface ITransportItem<
-  TMetadata extends IMessageMetadata,
+export interface TransportItem<
+  TMetadata extends MessageMetadata,
   TMessageType = unknown,
   TResult = unknown
 > {
@@ -80,12 +80,12 @@ export interface ITransportItem<
   sendErrorReply(err: Error): Promise<void>
 }
 
-export interface IMessageMetadata {
+export interface MessageMetadata {
   [key: string]: unknown
 }
 
-export interface IPublishProps<
-  TMetadata extends IMessageMetadata,
+export interface PublishProps<
+  TMetadata extends MessageMetadata,
   TMessage
 > {
   route: string

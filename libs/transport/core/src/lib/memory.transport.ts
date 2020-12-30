@@ -1,21 +1,21 @@
 import {
-  IMessageMetadata,
-  IPublishProps,
-  ITransport,
-  ITransportItem,
+  MessageMetadata,
+  PublishProps,
   PublishResult,
   RpcTimeoutError,
+  Transport,
+  TransportItem,
 } from '@nx-cqrs/transport/shared'
 import { Observable, Subject } from 'rxjs'
 
 export class MemoryTransport<
-  TMetadata extends IMessageMetadata,
+  TMetadata extends MessageMetadata,
   TMessage
-> implements ITransport<TMetadata, TMessage> {
+> implements Transport<TMetadata, TMessage> {
   moduleName?: string
 
   message$: Observable<
-    ITransportItem<
+    TransportItem<
       TMetadata & { originModule: string },
       TMessage,
       unknown
@@ -23,7 +23,7 @@ export class MemoryTransport<
   >
 
   private internal$ = new Subject<
-    ITransportItem<
+    TransportItem<
       TMetadata & { originModule: string },
       TMessage,
       unknown
@@ -37,7 +37,7 @@ export class MemoryTransport<
   }
 
   publish<TResult, TMeta extends TMetadata = never>(
-    props: IPublishProps<TMeta, unknown>,
+    props: PublishProps<TMeta, unknown>,
   ): Promise<PublishResult<TResult, TMeta>> {
     const { message, metadata, route, rpc } = props
 
@@ -49,7 +49,7 @@ export class MemoryTransport<
             }, rpc.timeout)
           : undefined
 
-        const item: ITransportItem<TMeta, unknown, TResult> = {
+        const item: TransportItem<TMeta, unknown, TResult> = {
           route,
           message,
           metadata,
