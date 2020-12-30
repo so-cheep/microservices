@@ -8,7 +8,7 @@ import {
 
 import { ClientApi, CqrsApi, HandlerMap, RpcMetadata } from '../types'
 import { getClient } from '../getClient'
-import { handleApi } from '../handle'
+import { handleCqrsApi } from '../handle'
 
 interface User {
   name: string
@@ -68,7 +68,7 @@ let transport: Transport<RpcMetadata, unknown, 'Users'>,
   apiClient: ClientApi<Api>
 beforeEach(() => {
   transport = new MemoryTransport({ moduleName: api.namespace })
-  handleApi(transport, api)
+  handleCqrsApi(transport, api)
 
   apiClient = getClient<Api>(transport, {
     timeout: 5000,

@@ -25,7 +25,7 @@ import { encodeRpc } from './utils/encodeRpc'
  * @param keyPrefix
  */
 
-export function handle<
+export function handleCqrsSingle<
   TApi extends CqrsApi<string, HandlerMap, HandlerMap>,
   TTransport extends Transport<
     RpcMetadata,
@@ -39,7 +39,7 @@ export function handle<
   }
 }
 
-export function handleApi<
+export function handleCqrsApi<
   TApi extends CqrsApi<string, HandlerMap, HandlerMap>,
   TTransport extends Transport<
     RpcMetadata,
@@ -68,9 +68,9 @@ export function handleApi<
 
 /**
  * internal recursive function to build the handler tree
- * @param type @see handle
- * @param transport @see handle
- * @param handlers @see handle
+ * @param type @see handleCqrsSingle
+ * @param transport @see handleCqrsSingle
+ * @param handlers @see handleCqrsSingle
  * @param keyPrefix an array of key prefixes, used to track recursion depth
  */
 function buildRecursiveHandler(

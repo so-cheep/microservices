@@ -1,5 +1,5 @@
 import { HandlerMap, RpcMetadata } from '../types'
-import { handle } from '../handle'
+import { handleCqrsSingle } from '../handle'
 import { CqrsType } from '../constants'
 import { mockTransport } from '../__mocks__/transport'
 import { TransportItem } from '../../../../types/src'
@@ -39,7 +39,7 @@ describe('handler tests', () => {
       callTime: new Date().toISOString(),
       originModule: '',
     }
-    handle(CqrsType.Query, mockTransport, userService)
+    handleCqrsSingle(CqrsType.Query, mockTransport, userService)
 
     message$.next({
       complete: mockComplete,
@@ -85,7 +85,7 @@ describe('handler tests', () => {
       originModule: '',
     }
 
-    handle(CqrsType.Query, mockTransport, api)
+    handleCqrsSingle(CqrsType.Query, mockTransport, api)
 
     message$.next({
       complete: mockComplete,

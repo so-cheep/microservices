@@ -10,5 +10,5 @@
       "path": "./tsconfig.spec.json"
     }
   ],
-  "compilerOptions": {"lib": ["ES2019"]}
+  "compilerOptions": {"lib": ["ESNext"], "target": "ES2016"}
 }
