@@ -10,7 +10,7 @@ import {
   ClientApi,
 } from './types'
 
-export function getClient<
+export function getCqrsClient<
   Api extends CqrsApi<string, HandlerMap, HandlerMap>
 >(
   transport: Transport<RpcMetadata>,
