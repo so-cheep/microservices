@@ -10,7 +10,7 @@
     "importHelpers": true,
     "target": "es2015",
     "module": "esnext",
-    "lib": ["es2017", "dom"],
+    "lib": ["es2020", "dom"],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
@@ -42,7 +42,8 @@
       "@nx-cqrs/joker/shared": ["libs/joker/shared/src/index.ts"],
       "@nx-cqrs/cqrs/rpc": ["libs/cqrs/rpc/src/index.ts"],
       "@nx-cqrs/cqrs/types": ["libs/cqrs/types/src/index.ts"],
-      "@nx-cqrs/transport": ["libs/transport/src/index.ts"]
+      "@nx-cqrs/transport": ["libs/transport/src/index.ts"],
+      "@cheep/microservice": ["libs/microservice/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

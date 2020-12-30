@@ -1,11 +1,11 @@
-import { mockTransport } from '../../__mocks__/transport'
-import { getEventPublisher } from '../getEventPublisher'
-import { Api1, DomainUpdateEvent, User } from './mockApi'
 import * as faker from 'faker'
-import { encodeRpc } from '../../utils/encodeRpc'
-import { EventRouteKey } from '../constants'
-import { getClassEventRoute } from '../utils/getClassEventRoute'
 import { mocked } from 'ts-jest/utils'
+import { encodeRpc } from '../../utils/encodeRpc'
+import { mockTransport } from '../../__mocks__/transport'
+import { EventRouteKey } from '../constants'
+import { getEventPublisher } from '../getEventPublisher'
+import { getClassEventRoute } from '../utils/getClassEventRoute'
+import { Api1, DomainUpdateEvent, User } from './mockApi'
 
 describe('get publisher', () => {
   beforeEach(() => {

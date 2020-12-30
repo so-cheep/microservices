@@ -1,35 +1,25 @@
-import { NotImplementedError } from '@nx-cqrs/shared'
+import { IHandlerMap } from '@nx-cqrs/cqrs/rpc'
 
-export abstract class PusherCommand<TMessage = any> {
+export interface PusherCommand<TMessage = any> extends IHandlerMap {
   sendToSocket(props: {
     socketId: string
     message: TMessage
-  }): Promise<void> {
-    throw new NotImplementedError()
-  }
+  }): Promise<void>
 
   sentToChannel(props: {
     channel: string
     message: TMessage
-  }): Promise<void> {
-    throw new NotImplementedError()
-  }
+  }): Promise<void>
 
-  sendToEveryone(props: { message: TMessage }): Promise<void> {
-    throw new NotImplementedError()
-  }
+  sendToEveryone(props: { message: TMessage }): Promise<void>
 
   joinChannels(props: {
     socketId: string
     channels: string[]
-  }): Promise<void> {
-    throw new NotImplementedError()
-  }
+  }): Promise<void>
 
   leaveChannels(props: {
     socketId: string
     channels: string[]
-  }): Promise<void> {
-    throw new NotImplementedError()
-  }
+  }): Promise<void>
 }

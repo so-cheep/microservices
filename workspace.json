@@ -657,6 +657,46 @@
           }
         }
       }
+    },
+    "microservice": {
+      "root": "libs/microservice",
+      "sourceRoot": "libs/microservice/src",
+      "projectType": "library",
+      "targets": {
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "libs/microservice/**/*.ts"
+            ]
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": [
+            "coverage/libs/microservice"
+          ],
+          "options": {
+            "jestConfig": "libs/microservice/jest.config.js",
+            "passWithNoTests": true
+          }
+        },
+        "build": {
+          "executor": "@nrwl/node:package",
+          "outputs": [
+            "{options.outputPath}"
+          ],
+          "options": {
+            "outputPath": "dist/libs/microservice",
+            "tsConfig": "libs/microservice/tsconfig.lib.json",
+            "packageJson": "libs/microservice/package.json",
+            "main": "libs/microservice/src/index.ts",
+            "assets": [
+              "libs/microservice/*.md"
+            ]
+          }
+        }
+      }
     }
   },
   "cli": {

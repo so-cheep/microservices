@@ -1,1 +1,11 @@
-export abstract class UserQuery {}
+import { IHandlerMap } from '@nx-cqrs/cqrs/rpc'
+
+export interface UserQuery extends IHandlerMap {
+  user(id: string): Promise<User>
+  users(): Promise<User[]>
+}
+
+interface User {
+  id: string
+  name: string
+}

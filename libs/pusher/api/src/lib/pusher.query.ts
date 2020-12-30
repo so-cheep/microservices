@@ -1,9 +1,5 @@
-import { Publisher } from '@nx-cqrs/shared'
+import { IHandlerMap } from '@nx-cqrs/cqrs/rpc'
 
-export class PusherQuery {
-  constructor(private publisher: Publisher) {}
-
-  async getUserSockets(props: { socketId: string }): Promise<void> {
-    return this.publisher.publish(props)
-  }
+export interface PusherQuery extends IHandlerMap {
+  getUserSockets(props: { socketId: string }): Promise<void>
 }
