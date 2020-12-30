@@ -21,37 +21,23 @@ interface Options {
   forceTempQueues?: boolean
 }
 
-export class RabbitMQTransport<
-  TMetadata extends MessageMetadata,
-  TMessage
-> implements Transport<TMetadata, TMessage> {
+export class RabbitMQTransport<TMetadata extends MessageMetadata>
+  implements Transport<TMetadata> {
   moduleName: string
 
   private channel: amqp.ChannelWrapper
   private rpcResponseQueueName: string
 
   private internal$ = new Subject<
-    TransportItem<
-      TMetadata & { originModule: string },
-      TMessage,
-      unknown
-    >
+    TransportItem<TMetadata & { originModule: string }>
   >()
 
   private internalResponse$ = new Subject<
-    TransportItem<
-      TMetadata & { originModule: string },
-      TMessage,
-      unknown
-    >
+    TransportItem<TMetadata & { originModule: string }>
   >()
 
   message$: Observable<
-    TransportItem<
-      TMetadata & { originModule: string },
-      TMessage,
-      unknown
-    >
+    TransportItem<TMetadata & { originModule: string }>
   >
 
   constructor(private options: Options) {
@@ -108,8 +94,8 @@ export class RabbitMQTransport<
           return
         }
 
-        const message: TMessage = msg.content
-          ? JSON.parse(msg.content.toString())
+        const message: string = msg.content
+          ? msg.content.toString()
           : null
 
         const replyTo = msg.properties.replyTo
@@ -171,8 +157,8 @@ export class RabbitMQTransport<
           return
         }
 
-        const message: TMessage = msg.content
-          ? JSON.parse(msg.content.toString())
+        const message: string = msg.content
+          ? msg.content.toString()
           : null
 
         const correlationId = msg.properties.correlationId
@@ -196,9 +182,9 @@ export class RabbitMQTransport<
     this.channel.addSetup(setup)
   }
 
-  async publish<TResult, TMeta extends TMetadata = TMetadata>(
-    props: PublishProps<TMeta, TMessage>,
-  ): Promise<PublishResult<TResult, TMeta> | null> {
+  async publish<TMeta extends TMetadata = TMetadata>(
+    props: PublishProps<TMeta>,
+  ): Promise<PublishResult<TMeta> | null> {
     if (!this.channel) {
       return
     }
@@ -210,35 +196,33 @@ export class RabbitMQTransport<
     const correlationId = rpc ? newId() : undefined
 
     const result = rpc?.enabled
-      ? new Promise<PublishResult<TResult, TMeta>>(
-          (resolve, reject) => {
-            const sub = this.internalResponse$
-              .pipe(filter(x => x.correlationId === correlationId))
-              .subscribe(x => {
-                sub.unsubscribe()
-                clearTimeout(timer)
-
-                if (x.isError) {
-                  const err: any = x.message
-                  reject(new Error(err.message))
-                } else {
-                  resolve({
-                    result: <any>x.message,
-                    metadata: <any>x.metadata,
-                  })
-                }
-
-                x.complete()
-              })
-
-            const timer = setTimeout(() => {
+      ? new Promise<PublishResult<TMeta>>((resolve, reject) => {
+          const sub = this.internalResponse$
+            .pipe(filter(x => x.correlationId === correlationId))
+            .subscribe(x => {
               sub.unsubscribe()
               clearTimeout(timer)
 
-              reject(new RpcTimeoutError(<any>props))
-            }, rpc.timeout)
-          },
-        )
+              if (x.isError) {
+                const err: any = x.message
+                reject(new Error(err.message))
+              } else {
+                resolve({
+                  result: <any>x.message,
+                  metadata: <any>x.metadata,
+                })
+              }
+
+              x.complete()
+            })
+
+          const timer = setTimeout(() => {
+            sub.unsubscribe()
+            clearTimeout(timer)
+
+            reject(new RpcTimeoutError(<any>props))
+          }, rpc.timeout)
+        })
       : Promise.resolve(null)
 
     await this.channel.publish(

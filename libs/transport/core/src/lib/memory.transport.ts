@@ -8,26 +8,16 @@ import {
 } from '@nx-cqrs/transport/shared'
 import { Observable, Subject } from 'rxjs'
 
-export class MemoryTransport<
-  TMetadata extends MessageMetadata,
-  TMessage
-> implements Transport<TMetadata, TMessage> {
+export class MemoryTransport<TMetadata extends MessageMetadata>
+  implements Transport<TMetadata> {
   moduleName?: string
 
   message$: Observable<
-    TransportItem<
-      TMetadata & { originModule: string },
-      TMessage,
-      unknown
-    >
+    TransportItem<TMetadata & { originModule: string }>
   >
 
   private internal$ = new Subject<
-    TransportItem<
-      TMetadata & { originModule: string },
-      TMessage,
-      unknown
-    >
+    TransportItem<TMetadata & { originModule: string }>
   >()
 
   constructor(args: { moduleName: string }) {
@@ -37,47 +27,45 @@ export class MemoryTransport<
   }
 
   publish<TResult, TMeta extends TMetadata = never>(
-    props: PublishProps<TMeta, unknown>,
-  ): Promise<PublishResult<TResult, TMeta>> {
+    props: PublishProps<TMeta>,
+  ): Promise<PublishResult<TMeta>> {
     const { message, metadata, route, rpc } = props
 
-    return new Promise<PublishResult<TResult, TMeta>>(
-      (resolve, reject) => {
-        const timeout = rpc.enabled
-          ? setTimeout(() => {
-              reject(new RpcTimeoutError(<any>props))
-            }, rpc.timeout)
-          : undefined
+    return new Promise<PublishResult<TMeta>>((resolve, reject) => {
+      const timeout = rpc.enabled
+        ? setTimeout(() => {
+            reject(new RpcTimeoutError(<any>props))
+          }, rpc.timeout)
+        : undefined
 
-        const item: TransportItem<TMeta, unknown, TResult> = {
-          route,
-          message,
-          metadata,
+      const item: TransportItem<TMeta> = {
+        route,
+        message,
+        metadata,
 
-          // currently ignoring completion, because it's in memory!
-          complete: () => {
-            if (timeout) {
-              clearTimeout(timeout)
-            }
-          },
+        // currently ignoring completion, because it's in memory!
+        complete: () => {
+          if (timeout) {
+            clearTimeout(timeout)
+          }
+        },
 
-          sendReply: async (result, resultMetadata) =>
-            resolve({
-              result,
-              metadata: {
-                ...metadata,
-                ...resultMetadata,
-              },
-            }),
+        sendReply: async (result: any, resultMetadata) =>
+          resolve({
+            result,
+            metadata: {
+              ...metadata,
+              ...resultMetadata,
+            },
+          }),
 
-          sendErrorReply: async err => {
-            reject(err)
-          },
-        }
+        sendErrorReply: async err => {
+          reject(err)
+        },
+      }
 
-        this.internal$.next(<any>item)
-      },
-    )
+      this.internal$.next(<any>item)
+    })
   }
 
   listenPatterns(): void {

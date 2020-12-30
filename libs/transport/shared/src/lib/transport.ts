@@ -1,8 +1,7 @@
 import { Observable } from 'rxjs'
 
 export interface Transport<
-  TMetadata extends MessageMetadata = never,
-  TMessageType = unknown
+  TMetadata extends MessageMetadata = never
 > {
   /**
    * rabbitmq         - name for the queue & response queue (rpc)
@@ -15,7 +14,7 @@ export interface Transport<
    * received message stream
    */
   message$: Observable<
-    TransportItem<TMetadata & { originModule: string }, TMessageType>
+    TransportItem<TMetadata & { originModule: string }>
   >
 
   /**
@@ -23,9 +22,9 @@ export interface Transport<
    * - socket.io-server - send message to the client, based on the socketId in metadata
    * - socket.io-client - send message to the server
    */
-  publish<TResult, TMeta extends TMetadata = TMetadata>(
-    props: PublishProps<TMeta, TMessageType>,
-  ): Promise<{ result: TResult; metadata: TMeta }>
+  publish<TMeta extends TMetadata = TMetadata>(
+    props: PublishProps<TMeta>,
+  ): Promise<{ result: string; metadata: TMeta }>
 
   /**
    * - rabbitmq         - create binding (exchange -> queue)
@@ -56,13 +55,9 @@ export interface Transport<
   dispose(): void
 }
 
-export interface TransportItem<
-  TMetadata extends MessageMetadata,
-  TMessageType = unknown,
-  TResult = unknown
-> {
+export interface TransportItem<TMetadata extends MessageMetadata> {
   route: string
-  message: TMessageType
+  message: string
   isError?: boolean
 
   metadata: TMetadata
@@ -76,7 +71,7 @@ export interface TransportItem<
    *  false - move item to the dead letter queue
    */
   complete(isSuccess?: boolean): void
-  sendReply(result: TResult, metadata?: TMetadata): Promise<void>
+  sendReply(result: string, metadata?: TMetadata): Promise<void>
   sendErrorReply(err: Error): Promise<void>
 }
 
@@ -84,12 +79,9 @@ export interface MessageMetadata {
   [key: string]: unknown
 }
 
-export interface PublishProps<
-  TMetadata extends MessageMetadata,
-  TMessage
-> {
+export interface PublishProps<TMetadata extends MessageMetadata> {
   route: string
-  message: TMessage
+  message: string
 
   metadata: TMetadata
 
@@ -99,7 +91,7 @@ export interface PublishProps<
   }
 }
 
-export interface PublishResult<TMessage, TMetadata> {
-  result: TMessage
+export interface PublishResult<TMetadata> {
+  result: string
   metadata: TMetadata
 }
