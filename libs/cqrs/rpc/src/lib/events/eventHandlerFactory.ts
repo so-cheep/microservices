@@ -1,18 +1,37 @@
 import { Transport } from '@nx-cqrs/cqrs/types'
-import { mergeMap } from 'rxjs/operators'
+import { Observable } from 'rxjs'
+import { map, mergeMap, share } from 'rxjs/operators'
 import { decodeRpc } from '../utils/decodeRpc'
 import { EventRouteKey } from './constants'
-import { EventApi, EventMap, EventPublishFunction } from './types'
+import {
+  EventApi,
+  EventMap,
+  EventPublishFunction,
+  EventWithMetadata,
+} from './types'
 import { getClassEventRoute } from './utils/getClassEventRoute'
 
-export function handleEventsWithAck<
+/**
+ * Call this function to establish an event handler in a module.
+ *
+ * **Should be called once per module** because it creates a constraint of one acknowledged handler per event type
+ *
+ * Returns an object with functional methods to handle events with acknowledgement,
+ * as well as an observable of events which can be used for lossy event handling
+ *
+ * @param transport the transport to use
+ * @param listenModules the array of module names to subscribe events from, limited to the provided API names
+ */
+export function handleEvents<
   TEventApi extends EventApi<string, EventMap>
 >(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   transport: Transport<any, any>,
+  listenModules: TEventApi['namespace'][],
 ): {
   handleFunction: FunctionalEventHandlerFactory<TEventApi>
   handleClass: InheritanceEventHandlerFactory
+  event$: Observable<EventWithMetadata>
 } {
   const handlerMap = new Map<
     string,
@@ -48,7 +67,23 @@ export function handleEventsWithAck<
       }
     })
 
+  const event$ = transport.message$.pipe(
+    map(
+      (item): EventWithMetadata => ({
+        metadata: item.metadata,
+        payload: decodeRpc(item.message),
+        type: item.route,
+      }),
+    ),
+    share(),
+  )
+
+  transport.listenPatterns(
+    listenModules.map(module => `${EventRouteKey}.${module}.`),
+  )
+
   return {
+    event$,
     handleFunction: (eventPick, handler) => {
       // this allows the callback pick of events using the proxy.
       // BUT the proxy has a liar's type, so we need to call the returned proxy to get the path
@@ -57,9 +92,6 @@ export function handleEventsWithAck<
       ) as unknown) as () => string
 
       handlerMap.set(event(), handler)
-
-      // make sure to tell the transport about this binding
-      transport.listenPatterns([event()])
     },
     handleClass: (eventPick, handler) => {
       // eventPick is a constructor
@@ -69,9 +101,6 @@ export function handleEventsWithAck<
       keys.forEach(key =>
         handlerMap.set(`${EventRouteKey}.${key}`, handler),
       )
-
-      // make sure to tell the transport about the bindings
-      transport.listenPatterns(keys)
     },
   }
 }

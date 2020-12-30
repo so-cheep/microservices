@@ -1,3 +1,5 @@
+import { MessageMetadata } from '@nx-cqrs/cqrs/types'
+
 export type EventPublishFunction<TPayload extends unknown> = (
   payload: TPayload,
 ) => void
@@ -21,3 +23,12 @@ export type EventPublisher<
   ((...events: unknown[]) => void)
 
 export abstract class EventBase {}
+
+export type EventWithMetadata<
+  TEventPayload = unknown,
+  TMetadata extends MessageMetadata = MessageMetadata
+> = {
+  type: string
+  payload: TEventPayload
+  metadata: TMetadata
+}

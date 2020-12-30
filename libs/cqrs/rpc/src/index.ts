@@ -1,8 +1,8 @@
 export { EventApi, getEventPublisher } from './lib/events'
-export { handleEventsWithAck } from './lib/events/eventHandlerFactory'
+export { handleEvents } from './lib/events/eventHandlerFactory'
 
-export { handleCqrsApi, handleCqrsSingle } from './lib/handle'
-export { getCqrsClient } from './lib/getClient'
+export { handleCqrsApi, handleCqrsSingle } from './lib/handleCqrs'
+export { getCqrsClient } from './lib/getCqrsClient'
 export {
   CqrsApi,
   HandlerMap as IHandlerMap,
