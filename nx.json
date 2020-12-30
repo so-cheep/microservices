@@ -23,60 +23,6 @@
     }
   },
   "projects": {
-    "pusher-socketio-client": {
-      "tags": []
-    },
-    "pusher-socketio-core": {
-      "tags": []
-    },
-    "user-core": {
-      "tags": []
-    },
-    "user-ui": {
-      "tags": []
-    },
-    "pusher-api-gateway-server": {
-      "tags": []
-    },
-    "pusher-socketio-server": {
-      "tags": []
-    },
-    "user-server": {
-      "tags": []
-    },
-    "shared": {
-      "tags": []
-    },
-    "pusher-shared-client": {
-      "tags": []
-    },
-    "pusher-api": {
-      "tags": []
-    },
-    "pusher-aws-core": {
-      "tags": []
-    },
-    "pusher-aws-client": {
-      "tags": []
-    },
-    "user-api": {
-      "tags": []
-    },
-    "user-shared": {
-      "tags": []
-    },
-    "joker-api": {
-      "tags": []
-    },
-    "joker-ui": {
-      "tags": []
-    },
-    "joker-core": {
-      "tags": []
-    },
-    "joker-shared": {
-      "tags": []
-    },
     "cqrs-rpc": {
       "tags": ["cqrs"]
     },
@@ -86,7 +32,13 @@
     "transport": {
       "tags": []
     },
-    "microservice": {
+    "example-pusher-api": {
+      "tags": []
+    },
+    "example-user-api": {
+      "tags": []
+    },
+    "example-user-core": {
       "tags": []
     }
   }
