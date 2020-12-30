@@ -1,6 +1,6 @@
 module.exports = {
-  displayName: 'transport',
-  preset: '../../jest.preset.js',
+  displayName: 'transport-shared',
+  preset: '../../../jest.preset.js',
   globals: {
     'ts-jest': {
       tsConfig: '<rootDir>/tsconfig.spec.json',
@@ -10,5 +10,5 @@ module.exports = {
     '^.+\\.[tj]sx?$': 'ts-jest',
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
-  coverageDirectory: '../../coverage/libs/transport',
+  coverageDirectory: '../../../coverage/libs/transport/shared',
 }

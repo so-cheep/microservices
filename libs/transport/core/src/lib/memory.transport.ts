@@ -1,12 +1,12 @@
-import { Observable, Subject } from 'rxjs'
-import { RpcTimeoutError } from './rpcTimeout.error'
 import {
   IMessageMetadata,
   IPublishProps,
   ITransport,
   ITransportItem,
   PublishResult,
-} from './transport'
+  RpcTimeoutError,
+} from '@nx-cqrs/transport/shared'
+import { Observable, Subject } from 'rxjs'
 
 export class MemoryTransport<
   TMetadata extends IMessageMetadata,

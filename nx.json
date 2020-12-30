@@ -29,9 +29,6 @@
     "cqrs-types": {
       "tags": []
     },
-    "transport": {
-      "tags": []
-    },
     "example-pusher-api": {
       "tags": []
     },
@@ -39,6 +36,18 @@
       "tags": []
     },
     "example-user-core": {
+      "tags": []
+    },
+    "transport-core": {
+      "tags": []
+    },
+    "transport-rabbitmq": {
+      "tags": []
+    },
+    "transport-aws": {
+      "tags": []
+    },
+    "transport-shared": {
       "tags": []
     }
   }

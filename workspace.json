@@ -81,31 +81,6 @@
         }
       }
     },
-    "transport": {
-      "root": "libs/transport",
-      "sourceRoot": "libs/transport/src",
-      "projectType": "library",
-      "targets": {
-        "lint": {
-          "executor": "@nrwl/linter:eslint",
-          "options": {
-            "lintFilePatterns": [
-              "libs/transport/**/*.ts"
-            ]
-          }
-        },
-        "test": {
-          "executor": "@nrwl/jest:jest",
-          "outputs": [
-            "coverage/libs/transport"
-          ],
-          "options": {
-            "jestConfig": "libs/transport/jest.config.js",
-            "passWithNoTests": true
-          }
-        }
-      }
-    },
     "example-pusher-api": {
       "root": "libs/example/pusher/api",
       "sourceRoot": "libs/example/pusher/api/src",
@@ -176,6 +151,151 @@
           ],
           "options": {
             "jestConfig": "libs/example/user/core/jest.config.js",
+            "passWithNoTests": true
+          }
+        }
+      }
+    },
+    "transport-core": {
+      "root": "libs/transport/core",
+      "sourceRoot": "libs/transport/core/src",
+      "projectType": "library",
+      "targets": {
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "libs/transport/core/**/*.ts"
+            ]
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": [
+            "coverage/libs/transport/core"
+          ],
+          "options": {
+            "jestConfig": "libs/transport/core/jest.config.js",
+            "passWithNoTests": true
+          }
+        },
+        "build": {
+          "executor": "@nrwl/node:package",
+          "outputs": [
+            "{options.outputPath}"
+          ],
+          "options": {
+            "outputPath": "dist/libs/transport/core",
+            "tsConfig": "libs/transport/core/tsconfig.lib.json",
+            "packageJson": "libs/transport/core/package.json",
+            "main": "libs/transport/core/src/index.ts",
+            "assets": [
+              "libs/transport/core/*.md"
+            ]
+          }
+        }
+      }
+    },
+    "transport-rabbitmq": {
+      "root": "libs/transport/rabbitmq",
+      "sourceRoot": "libs/transport/rabbitmq/src",
+      "projectType": "library",
+      "targets": {
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "libs/transport/rabbitmq/**/*.ts"
+            ]
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": [
+            "coverage/libs/transport/rabbitmq"
+          ],
+          "options": {
+            "jestConfig": "libs/transport/rabbitmq/jest.config.js",
+            "passWithNoTests": true
+          }
+        },
+        "build": {
+          "executor": "@nrwl/node:package",
+          "outputs": [
+            "{options.outputPath}"
+          ],
+          "options": {
+            "outputPath": "dist/libs/transport/rabbitmq",
+            "tsConfig": "libs/transport/rabbitmq/tsconfig.lib.json",
+            "packageJson": "libs/transport/rabbitmq/package.json",
+            "main": "libs/transport/rabbitmq/src/index.ts",
+            "assets": [
+              "libs/transport/rabbitmq/*.md"
+            ]
+          }
+        }
+      }
+    },
+    "transport-aws": {
+      "root": "libs/transport/aws",
+      "sourceRoot": "libs/transport/aws/src",
+      "projectType": "library",
+      "targets": {
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "libs/transport/aws/**/*.ts"
+            ]
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": [
+            "coverage/libs/transport/aws"
+          ],
+          "options": {
+            "jestConfig": "libs/transport/aws/jest.config.js",
+            "passWithNoTests": true
+          }
+        },
+        "build": {
+          "executor": "@nrwl/node:package",
+          "outputs": [
+            "{options.outputPath}"
+          ],
+          "options": {
+            "outputPath": "dist/libs/transport/aws",
+            "tsConfig": "libs/transport/aws/tsconfig.lib.json",
+            "packageJson": "libs/transport/aws/package.json",
+            "main": "libs/transport/aws/src/index.ts",
+            "assets": [
+              "libs/transport/aws/*.md"
+            ]
+          }
+        }
+      }
+    },
+    "transport-shared": {
+      "root": "libs/transport/shared",
+      "sourceRoot": "libs/transport/shared/src",
+      "projectType": "library",
+      "targets": {
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "libs/transport/shared/**/*.ts"
+            ]
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": [
+            "coverage/libs/transport/shared"
+          ],
+          "options": {
+            "jestConfig": "libs/transport/shared/jest.config.js",
             "passWithNoTests": true
           }
         }

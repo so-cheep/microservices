@@ -1,14 +1,14 @@
-import * as AWS from 'aws-sdk'
-import { Observable, Subject } from 'rxjs'
-import { filter } from 'rxjs/operators'
-import { RpcTimeoutError } from './rpcTimeout.error'
 import {
   IMessageMetadata,
   IPublishProps,
   ITransport,
   ITransportItem,
   PublishResult,
-} from './transport'
+  RpcTimeoutError,
+} from '@nx-cqrs/transport/shared'
+import * as AWS from 'aws-sdk'
+import { Observable, Subject } from 'rxjs'
+import { filter } from 'rxjs/operators'
 
 interface Options {
   moduleName: string

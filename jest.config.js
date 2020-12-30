@@ -25,5 +25,9 @@ module.exports = {
     '<rootDir>/libs/cqrs/types',
     '<rootDir>/libs/transport',
     '<rootDir>/libs/microservice',
+    '<rootDir>/libs/transport/core',
+    '<rootDir>/libs/transport/rabbitmq',
+    '<rootDir>/libs/transport/aws',
+    '<rootDir>/libs/transport/shared',
   ],
 }
