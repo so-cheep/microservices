@@ -1,5 +1,5 @@
 import { MemoryTransport } from '@nx-cqrs/cqrs/types'
-import { handleEventsWithAck } from '../eventHandlerFactory'
+import { handleEvents } from '../eventHandlerFactory'
 import { getEventPublisher } from '../getEventPublisher'
 import {
   Api2,
@@ -20,7 +20,10 @@ describe('simple implementation', () => {
   })
   it('works', () => {
     // handling service USER
-    const userEvents = handleEventsWithAck<UserApi | Api2>(transport)
+    const userEvents = handleEvents<UserApi | Api2>(
+      transport as any,
+      ['User'],
+    )
 
     userEvents.handleFunction(
       e => e.User.created,
