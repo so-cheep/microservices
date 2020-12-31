@@ -1,4 +1,4 @@
-import { Transport } from '@cheep/transport/shared'
+import { Transport } from '@cheep/transport'
 import { Observable } from 'rxjs'
 import { map, mergeMap, share } from 'rxjs/operators'
 import { constructRouteKey } from '../utils/constructRouteKey'

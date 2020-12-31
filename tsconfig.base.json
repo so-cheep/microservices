@@ -29,9 +29,6 @@
         "libs/transport/rabbitmq/src/index.ts"
       ],
       "@cheep/transport-aws": ["libs/transport/aws/src/index.ts"],
-      "@cheep/transport/shared": [
-        "libs/transport/shared/src/index.ts"
-      ],
       "@cheep/microservices": ["libs/microservices/src/index.ts"],
       "@cheep/nestjs": ["libs/adapters/nest/src/index.ts"]
     }

@@ -1,12 +1,12 @@
-import { CqrsApi, HandlerMap, RpcMetadata } from '../types'
-import { handleCqrsSingle } from '../handleCqrs'
-import { CqrsType } from '../constants'
-import { mockTransport } from '../../__mocks__/transport'
-import { encodeRpc } from '../../utils/encodeRpc'
-import { constructRouteKey } from '../../utils/constructRouteKey'
-import { Subject } from 'rxjs'
+import { TransportItem } from '@cheep/transport'
 import * as faker from 'faker'
-import { TransportItem } from '@cheep/transport/shared'
+import { Subject } from 'rxjs'
+import { constructRouteKey } from '../../utils/constructRouteKey'
+import { encodeRpc } from '../../utils/encodeRpc'
+import { mockTransport } from '../../__mocks__/transport'
+import { CqrsType } from '../constants'
+import { handleCqrsSingle } from '../handleCqrs'
+import { CqrsApi, HandlerMap, RpcMetadata } from '../types'
 interface User {
   name: string
 }

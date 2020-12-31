@@ -1,18 +1,16 @@
+import { Transport, TransportItem } from '@cheep/transport'
 import { filter } from 'rxjs/operators'
-
-import { Transport, TransportItem } from '@cheep/transport/shared'
-
-import { CqrsType } from './constants'
 import { constructRouteKey } from '../utils/constructRouteKey'
 import { decodeRpc } from '../utils/decodeRpc'
+import { encodeRpc } from '../utils/encodeRpc'
+import { CqrsType } from './constants'
 import {
-  RpcMetadata,
+  CqrsApi,
   Handler,
   HandlerArg,
   HandlerMap,
-  CqrsApi,
+  RpcMetadata,
 } from './types'
-import { encodeRpc } from '../utils/encodeRpc'
 
 /**
  *

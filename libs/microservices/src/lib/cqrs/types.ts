@@ -1,4 +1,4 @@
-import { MessageMetadata } from '@cheep/transport/shared'
+import { MessageMetadata } from '@cheep/transport'
 import { CqrsType } from './constants'
 
 /** A function which can be called over RPC */

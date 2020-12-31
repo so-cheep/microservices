@@ -1,11 +1,9 @@
-import { Module } from '@nestjs/common'
-
 import { CheepMicroservicesModule } from '@cheep/nestjs'
-
+import { Module } from '@nestjs/common'
+import { UserApi } from './types'
+import { UserCommandService } from './user.command.service'
 import { UserQueryService } from './user.query.service'
 import { UserGroupQueryService } from './userGroup.query.service'
-import { UserCommandService } from './user.command.service'
-import { UserApi } from './types'
 
 @Module({
   imports: [

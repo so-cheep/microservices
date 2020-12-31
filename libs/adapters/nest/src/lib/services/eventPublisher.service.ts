@@ -1,15 +1,14 @@
-import { Inject, Injectable } from '@nestjs/common'
-
 import {
   CommandMap,
   EventMap,
-  MicroserviceApi,
-  QueryMap,
   EventPublisher,
   getEventPublisher,
+  MicroserviceApi,
+  QueryMap,
 } from '@cheep/microservices'
+import { Transport } from '@cheep/transport'
+import { Inject, Injectable } from '@nestjs/common'
 import { TransportToken } from '../constants'
-import { Transport } from '@cheep/transport/shared'
 
 @Injectable()
 export class EventPublisherService<

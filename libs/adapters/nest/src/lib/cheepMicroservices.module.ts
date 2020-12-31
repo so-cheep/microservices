@@ -1,19 +1,3 @@
-import { Module, DynamicModule } from '@nestjs/common'
-
-import type { Transport } from '@cheep/transport/shared'
-
-import type {
-  CheepMicroservicesModuleConfig,
-  CheepMicroservicesRootConfig,
-  CheepNestApi,
-} from './types'
-import {
-  ModuleNameToken,
-  ModuleOptionsToken,
-  TransportToken,
-} from './constants'
-import { registerModuleName } from './util/moduleRegistry'
-import { CqrsClientService } from './services/cqrsClient.service'
 import {
   CommandMap,
   EventMap,
@@ -23,9 +7,23 @@ import {
   QueryMap,
   RpcMetadata,
 } from '@cheep/microservices'
+import type { Transport } from '@cheep/transport'
+import { DynamicModule, Module } from '@nestjs/common'
+import {
+  ModuleNameToken,
+  ModuleOptionsToken,
+  TransportToken,
+} from './constants'
 import { MissingTransportError } from './errors/missingTransport.error'
+import { CqrsClientService } from './services/cqrsClient.service'
 import { EventHandlerService } from './services/eventHandler.service'
 import { EventPublisherService } from './services/eventPublisher.service'
+import type {
+  CheepMicroservicesModuleConfig,
+  CheepMicroservicesRootConfig,
+  CheepNestApi,
+} from './types'
+import { registerModuleName } from './util/moduleRegistry'
 
 @Module({
   providers: [

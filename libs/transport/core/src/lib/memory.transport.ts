@@ -1,12 +1,12 @@
+import { Observable, Subject } from 'rxjs'
+import { RpcTimeoutError } from './rpcTimeout.error'
 import {
   MessageMetadata,
   PublishProps,
   PublishResult,
-  RpcTimeoutError,
   Transport,
   TransportItem,
-} from '@cheep/transport/shared'
-import { Observable, Subject } from 'rxjs'
+} from './transport'
 
 export class MemoryTransport<
   TMetadata extends MessageMetadata = MessageMetadata
