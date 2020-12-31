@@ -1,4 +1,6 @@
-import { InvalidRpcPathError, Transport } from '@nx-cqrs/cqrs/types'
+import { Transport } from '@cheep/transport/shared'
+import { InvalidRpcPathError } from '../errors/invalidRpcPath.error'
+import { constructRouteKey } from '../utils/constructRouteKey'
 import { encodeRpc } from '../utils/encodeRpc'
 import { EventRouteKey } from './constants'
 import { EventApi, EventMap, EventPublisher } from './types'
@@ -10,6 +12,7 @@ export function getEventPublisher<
   return buildRecursiveProxy(transport, [EventRouteKey])
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function buildRecursiveProxy(transport: Transport, path: string[]) {
   return new Proxy(() => undefined, {
     get(_, prop) {
@@ -25,7 +28,7 @@ function buildRecursiveProxy(transport: Transport, path: string[]) {
             publish(
               transport,
               [arg],
-              `${path.join('.')}.${getInstanceEventRoute(arg)}`,
+              path.concat(getInstanceEventRoute(arg)),
             ),
           )
         } else {
@@ -34,7 +37,7 @@ function buildRecursiveProxy(transport: Transport, path: string[]) {
         }
       } else {
         // normal proxy object call here
-        publish(transport, args, path.join('.'))
+        publish(transport, args, path)
       }
     },
   })
@@ -43,11 +46,11 @@ function buildRecursiveProxy(transport: Transport, path: string[]) {
 function publish(
   transport: Transport,
   args: unknown[],
-  path: string,
+  path: string[],
 ) {
-  transport.publish<void>({
+  transport.publish({
     message: encodeRpc(...args),
     metadata: {} as never,
-    route: path,
+    route: constructRouteKey(path),
   })
 }

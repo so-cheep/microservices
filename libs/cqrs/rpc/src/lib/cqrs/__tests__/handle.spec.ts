@@ -1,12 +1,12 @@
-import { HandlerMap, RpcMetadata } from '../types'
-import { handleCqrsSingle } from '../handle'
+import { CqrsApi, Handler, HandlerMap, RpcMetadata } from '../types'
+import { handleCqrsSingle } from '../handleCqrs'
 import { CqrsType } from '../constants'
 import { mockTransport } from '../__mocks__/transport'
-import { TransportItem } from '../../../../types/src'
 import { encodeRpc } from '../utils/encodeRpc'
 import { constructRouteKey } from '../utils/constructRouteKey'
 import { Subject } from 'rxjs'
 import * as faker from 'faker'
+import { TransportItem } from '@cheep/transport/shared'
 interface User {
   name: string
 }
@@ -15,13 +15,15 @@ interface UserService extends HandlerMap {
   getById: (id: string) => Promise<User>
 }
 
+type Api = CqrsApi<'TestUser', UserService, HandlerMap>
+
 const mockGet = jest.fn().mockResolvedValue({})
 const userService: UserService = {
   // we have to put the jest mock INSIDE the getById definition so that we can use `getById` to build handler
   getById: (...args) => mockGet(...args),
 }
 const message$ = (mockTransport.message$ as unknown) as Subject<
-  TransportItem<RpcMetadata, string>
+  TransportItem<RpcMetadata>
 >
 
 beforeEach(() => {
@@ -39,16 +41,22 @@ describe('handler tests', () => {
       callTime: new Date().toISOString(),
       originModule: '',
     }
-    handleCqrsSingle(CqrsType.Query, mockTransport, userService)
+    handleCqrsSingle<Api>(
+      CqrsType.Query,
+      mockTransport,
+      userService,
+      'TestUser',
+    )
 
     message$.next({
       complete: mockComplete,
       sendReply: mockReturn,
+      sendErrorReply: jest.fn(),
       message: encodeRpc(id),
       metadata: metadata,
       route: constructRouteKey({
         busType: CqrsType.Query,
-        moduleName: mockTransport.moduleName,
+        moduleName: <Api['namespace']>'TestUser',
         functionName: ([
           'getById',
         ] as (keyof UserService)[]) as string[],
@@ -85,16 +93,22 @@ describe('handler tests', () => {
       originModule: '',
     }
 
-    handleCqrsSingle(CqrsType.Query, mockTransport, api)
+    handleCqrsSingle<Api>(
+      CqrsType.Query,
+      mockTransport,
+      api,
+      'TestUser',
+    )
 
     message$.next({
       complete: mockComplete,
       sendReply: mockReturn,
+      sendErrorReply: jest.fn(),
       message: encodeRpc(id),
       metadata: metadata,
       route: constructRouteKey({
         busType: CqrsType.Query,
-        moduleName: mockTransport.moduleName,
+        moduleName: <Api['namespace']>'TestUser',
         functionName: ([
           'users',
           'getById',

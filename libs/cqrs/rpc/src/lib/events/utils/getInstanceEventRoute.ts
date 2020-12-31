@@ -2,7 +2,7 @@ import { EventNamespaceMetadataKey } from '../constants'
 import 'reflect-metadata'
 import { EventBase } from '../types'
 
-export function getInstanceEventRoute<T>(eventInstance: T): string {
+export function getInstanceEventRoute<T>(eventInstance: T): string[] {
   const namespace = Reflect.getMetadata(
     EventNamespaceMetadataKey,
     eventInstance.constructor,
@@ -15,7 +15,7 @@ export function getInstanceEventRoute<T>(eventInstance: T): string {
   // resolve the inheritance tree of the event
   const path = recursePrototypes(Object.getPrototypeOf(eventInstance))
 
-  return [namespace, ...path].join('.')
+  return [namespace, ...path]
 }
 
 function recursePrototypes<T>(

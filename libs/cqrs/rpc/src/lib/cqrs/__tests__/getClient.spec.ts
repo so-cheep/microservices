@@ -1,5 +1,4 @@
 // eslint-disable-next-line @nrwl/nx/enforce-module-boundaries
-import { PublishProps } from '@nx-cqrs/cqrs/types'
 import { CqrsType } from '../constants'
 import {
   RpcMetadata,
@@ -7,7 +6,7 @@ import {
   HandlerMap,
   CqrsApi,
 } from '../types'
-import { getClient } from '../getClient'
+import { getCqrsClient } from '../getCqrsClient'
 import { encodeRpc } from '../utils/encodeRpc'
 import { constructRouteKey } from '../utils/constructRouteKey'
 import { mockTransport } from '../__mocks__/transport'
@@ -45,7 +44,7 @@ beforeEach(() => {
 describe('client functionality', () => {
   it('can proxy a 1 layer object', async () => {
     const options: RpcOptions = { timeout: 12345 }
-    const base = getClient<SillyApi>(mockTransport, options)
+    const base = getCqrsClient<SillyApi>(mockTransport, options)
     const args = ['thing'] as [string]
     await base.Query.Silly.get(...args)
 
@@ -67,7 +66,10 @@ describe('client functionality', () => {
 
   it('can proxy a 2 layered object', async () => {
     const options: RpcOptions = { timeout: 12345 }
-    const base = getClient<SillyRecursiveApi>(mockTransport, options)
+    const base = getCqrsClient<SillyRecursiveApi>(
+      mockTransport,
+      options,
+    )
     const args = 'thing'
     await base.Query.Silly.recurse.get(args)
 
@@ -88,7 +90,10 @@ describe('client functionality', () => {
   })
   it('can proxy a many layered object', async () => {
     const options: RpcOptions = { timeout: 12345 }
-    const base = getClient<SillyRecursiveApi>(mockTransport, options)
+    const base = getCqrsClient<SillyRecursiveApi>(
+      mockTransport,
+      options,
+    )
     const args = 'thing'
     // 10 recurse!
     await base.Query.Silly.recurse.recurse.recurse.recurse.recurse.recurse.recurse.recurse.recurse.recurse.get(

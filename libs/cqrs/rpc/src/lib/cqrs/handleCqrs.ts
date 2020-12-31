@@ -1,6 +1,6 @@
 import { filter } from 'rxjs/operators'
 
-import { Transport, TransportItem } from '@nx-cqrs/cqrs/types'
+import { Transport, TransportItem } from '@cheep/transport/shared'
 
 import { CqrsType } from './constants'
 import { constructRouteKey } from './utils/constructRouteKey'
@@ -27,11 +27,7 @@ import { encodeRpc } from './utils/encodeRpc'
 
 export function handleCqrsSingle<
   TApi extends CqrsApi<string, HandlerMap, HandlerMap>,
-  TTransport extends Transport<
-    RpcMetadata,
-    unknown,
-    TApi['namespace']
-  > = Transport<RpcMetadata, string, TApi['namespace']>
+  TTransport extends Transport<RpcMetadata> = Transport<RpcMetadata>
 >(
   type: CqrsType,
   transport: TTransport,
@@ -51,11 +47,7 @@ export function handleCqrsSingle<
 
 export function handleCqrsApi<
   TApi extends CqrsApi<string, HandlerMap, HandlerMap>,
-  TTransport extends Transport<
-    RpcMetadata,
-    unknown,
-    TApi['namespace']
-  > = Transport<RpcMetadata, string, TApi['namespace']>
+  TTransport extends Transport<RpcMetadata> = Transport<RpcMetadata>
 >(transport: TTransport, api: TApi, namespace: TApi['namespace']) {
   const queryKeys = buildRecursiveHandler(
     CqrsType.Query,
@@ -197,16 +189,11 @@ function buildSingleHandler<T extends Handler>(
 
 // helpers per transport item
 const sendError = (
-  transportItem: TransportItem<RpcMetadata, unknown>,
-) => error =>
-  transportItem.sendReply(undefined, {
-    ...transportItem.metadata,
-    error,
-    replyTime: new Date().toISOString(),
-  })
+  transportItem: TransportItem<RpcMetadata>,
+) => error => transportItem.sendErrorReply(error)
 // helper
 const sendReply = (
-  transportItem: TransportItem<RpcMetadata, unknown>,
+  transportItem: TransportItem<RpcMetadata>,
 ) => result =>
   transportItem.sendReply(encodeRpc(result), {
     ...transportItem.metadata,

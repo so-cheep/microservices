@@ -1,10 +1,26 @@
-export { EventApi, getEventPublisher } from './lib/events'
-export { handleEvents } from './lib/events/eventHandlerFactory'
+export type { MicroserviceApi } from './lib/types'
 
-export { handleCqrsApi, handleCqrsSingle } from './lib/handleCqrs'
-export { getCqrsClient } from './lib/getCqrsClient'
+// CQRS Exports
 export {
-  CqrsApi,
-  HandlerMap as IHandlerMap,
-  MicroserviceApi,
-} from './lib/types'
+  handleCqrsApi,
+  handleCqrsSingle,
+  getCqrsClient,
+} from './lib/cqrs'
+export type {
+  QueryMap,
+  CommandMap,
+  ClientApi,
+  RpcMetadata,
+  RpcOptions,
+} from './lib/cqrs/types'
+
+// Event Exports
+export { getEventPublisher, handleEvents } from './lib/events'
+export type {
+  EventMap,
+  EventApi,
+  EventHandler,
+  EventBase,
+  AllEventsMap,
+  EventWithMetadata,
+} from './lib/events/types'

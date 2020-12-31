@@ -1,14 +1,11 @@
 import * as faker from 'faker'
 
-import {
-  MemoryTransport,
-  Transport,
-  RpcTimeoutError,
-} from '@nx-cqrs/cqrs/types'
+import { Transport, RpcTimeoutError } from '@cheep/transport/shared'
 
 import { ClientApi, CqrsApi, HandlerMap, RpcMetadata } from '../types'
-import { getClient } from '../getClient'
-import { handleCqrsApi } from '../handle'
+import { getCqrsClient } from '../getCqrsClient'
+import { handleCqrsApi } from '../handleCqrs'
+import { MemoryTransport } from '@cheep/transport'
 
 interface User {
   name: string
@@ -70,13 +67,12 @@ const api: Api = {
   Query: queryHandler,
 }
 
-let transport: Transport<RpcMetadata, unknown, 'Users'>,
-  apiClient: ClientApi<Api>
+let transport: Transport<RpcMetadata>, apiClient: ClientApi<Api>
 beforeEach(() => {
   transport = new MemoryTransport({ moduleName: api.namespace })
-  handleCqrsApi(transport, api)
+  handleCqrsApi(transport, api, 'Users')
 
-  apiClient = getClient<Api>(transport, {
+  apiClient = getCqrsClient<Api>(transport, {
     timeout: 5000,
   })
 

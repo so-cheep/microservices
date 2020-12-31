@@ -1,13 +1,14 @@
-import { Transport } from '@nx-cqrs/cqrs/types'
+import { Transport } from '@cheep/transport/shared'
 import { Observable } from 'rxjs'
 import { map, mergeMap, share } from 'rxjs/operators'
+import { constructRouteKey } from '../utils/constructRouteKey'
 import { decodeRpc } from '../utils/decodeRpc'
 import { EventRouteKey } from './constants'
 import {
+  AllEventsMap,
   EventApi,
+  EventHandler,
   EventMap,
-  EventPublishFunction,
-  EventWithMetadata,
 } from './types'
 import { getClassEventRoute } from './utils/getClassEventRoute'
 
@@ -26,13 +27,9 @@ export function handleEvents<
   TEventApi extends EventApi<string, EventMap>
 >(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  transport: Transport<any, any>,
+  transport: Transport,
   listenModules: TEventApi['namespace'][],
-): {
-  handleFunction: FunctionalEventHandlerFactory<TEventApi>
-  handleClass: InheritanceEventHandlerFactory
-  event$: Observable<EventWithMetadata>
-} {
+): EventHandler<TEventApi> {
   const handlerMap = new Map<
     string,
     (...args: unknown[]) => void | Promise<void>
@@ -68,13 +65,13 @@ export function handleEvents<
     })
 
   const event$ = transport.message$.pipe(
-    map(
-      (item): EventWithMetadata => ({
-        metadata: item.metadata,
-        payload: decodeRpc(item.message),
-        type: item.route,
-      }),
-    ),
+    map(item => ({
+      metadata: item.metadata,
+      // the event function type requires a single arg, so this is safe
+      payload: decodeRpc(item.message).shift(),
+      // split by `.` then remove the first, which is the EventRouteKey (Event)
+      type: item.route.split('.').slice(1),
+    })),
     share(),
   )
 
@@ -83,7 +80,9 @@ export function handleEvents<
   )
 
   return {
-    event$,
+    event$: (event$ as unknown) as Observable<
+      AllEventsMap<TEventApi>
+    >,
     handleFunction: (eventPick, handler) => {
       // this allows the callback pick of events using the proxy.
       // BUT the proxy has a liar's type, so we need to call the returned proxy to get the path
@@ -99,7 +98,10 @@ export function handleEvents<
         ? eventPick.map(getClassEventRoute)
         : [getClassEventRoute(eventPick)]
       keys.forEach(key =>
-        handlerMap.set(`${EventRouteKey}.${key}`, handler),
+        handlerMap.set(
+          constructRouteKey([EventRouteKey, ...key]),
+          handler,
+        ),
       )
     },
   }
@@ -110,62 +112,6 @@ function generateEventHandlerProxy(path: string[]) {
     get: (_, prop) => {
       return generateEventHandlerProxy([...path, String(prop)])
     },
-    apply: () => path.join('.'),
+    apply: () => constructRouteKey(path),
   })
 }
-
-type EventMapReturn<TPayload, TPath> = {
-  payload: TPayload
-  path: TPath
-}
-type EventMapToReturns<
-  TEventMap extends EventMap,
-  TKey extends string[]
-> = {
-  [K in keyof TEventMap]: TEventMap[K] extends EventPublishFunction<
-    infer R
-  >
-    ? EventMapReturn<R, [...TKey, K extends string ? K : string]>
-    : TEventMap[K] extends EventMap
-    ? EventMapToReturns<
-        TEventMap[K],
-        [...TKey, K extends string ? K : string]
-      >
-    : unknown
-}
-
-type EventSelector<TEventApi extends EventApi<string, EventMap>> = {
-  [key in TEventApi['namespace']]: TEventApi extends EventApi<
-    key,
-    infer Events
-  >
-    ? EventMapToReturns<Events, [key]>
-    : never
-}
-
-type FunctionalEventHandlerFactory<
-  TEventApi extends EventApi<string, EventMap>
-> = <
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  TEventSelection extends EventMapReturn<unknown, string[]>,
-  TPayload = TEventSelection extends EventMapReturn<infer R, string[]>
-    ? R
-    : never
-  // TODO: this is for handling partial event matches, not supported yet
-  // : TEventSelection extends EventMapToReturns<EventMap, infer K>
-  // ? TEventSelection
-  // : 'WOOT'
->(
-  event: (event: EventSelector<TEventApi>) => TEventSelection,
-  handler: (payload: TPayload) => void | Promise<void>,
-) => void
-
-type InheritanceEventHandlerFactory = <
-  TEvent extends { new (...args: unknown[]): unknown },
-  TPayload = TEvent extends { new (...args: unknown[]): infer R }
-    ? R
-    : never
->(
-  event: TEvent | TEvent[],
-  handler: (payload: TPayload) => void | Promise<void>,
-) => void

@@ -1,5 +1,6 @@
 import * as faker from 'faker'
 import { mocked } from 'ts-jest/utils'
+import { constructRouteKey } from '../../utils/constructRouteKey'
 import { encodeRpc } from '../../utils/encodeRpc'
 import { mockTransport } from '../../__mocks__/transport'
 import { EventRouteKey } from '../constants'
@@ -47,7 +48,7 @@ describe('get publisher', () => {
       .mock.calls.slice(-1)
       .pop()[0]
     expect(publishCallArg.route).toMatch(
-      getClassEventRoute(UserUpdateEvent),
+      constructRouteKey(getClassEventRoute(UserUpdateEvent)),
     )
     expect(publishCallArg.message).toMatch(encodeRpc({ user }))
   })

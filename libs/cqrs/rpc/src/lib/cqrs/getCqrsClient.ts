@@ -1,4 +1,4 @@
-import { InvalidRpcPathError, Transport } from '@nx-cqrs/cqrs/types'
+import { Transport } from '@cheep/transport/shared'
 import { constructRouteKey } from './utils/constructRouteKey'
 import { decodeRpc } from './utils/decodeRpc'
 import { encodeRpc } from './utils/encodeRpc'
@@ -9,6 +9,7 @@ import {
   CqrsApi,
   ClientApi,
 } from './types'
+import { InvalidRpcPathError } from './errors/invalidRpcPath.error'
 
 export function getCqrsClient<
   Api extends CqrsApi<string, HandlerMap, HandlerMap>
@@ -42,7 +43,7 @@ function recursiveHandler(
       }
       const routeKey = constructRouteKey(path)
       return transport
-        .publish<string, RpcMetadata>({
+        .publish<RpcMetadata>({
           message: encodeRpc(...args),
           metadata: { callTime: new Date().toISOString() },
           route: routeKey,

@@ -4,7 +4,7 @@ import { EventBase } from '../types'
 
 export function getClassEventRoute<T>(eventClass: {
   new (...args: unknown[]): T
-}) {
+}): string[] {
   // get namespace off the reflected metadata
   const namespace = Reflect.getMetadata(
     EventNamespaceMetadataKey,
@@ -17,7 +17,7 @@ export function getClassEventRoute<T>(eventClass: {
   // resolve the inheritance tree of the event
   const path = recursePrototypes(eventClass)
 
-  return [namespace, ...path].join('.')
+  return [namespace, ...path]
 }
 
 function recursePrototypes<T>(
