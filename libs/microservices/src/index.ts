@@ -6,7 +6,9 @@ export {
   handleCqrsSingle,
   getCqrsClient,
 } from './lib/cqrs'
+export { CqrsType } from './lib/cqrs/constants'
 export type {
+  Handler,
   QueryMap,
   CommandMap,
   ClientApi,
@@ -20,6 +22,7 @@ export type {
   EventMap,
   EventApi,
   EventHandler,
+  EventPublisher,
   EventBase,
   AllEventsMap,
   EventWithMetadata,

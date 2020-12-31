@@ -70,7 +70,7 @@ const api: Api = {
 let transport: Transport<RpcMetadata>, apiClient: ClientApi<Api>
 beforeEach(() => {
   transport = new MemoryTransport({ moduleName: api.namespace })
-  handleCqrsApi(transport, api, 'Users')
+  handleCqrsApi(transport, api)
 
   apiClient = getCqrsClient<Api>(transport, {
     timeout: 5000,

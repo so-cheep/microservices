@@ -12,12 +12,10 @@ export type EventMap<
 
 export interface EventApi<
   TNamespace extends string,
-  TEvents extends EventMap,
-  TEventClasses extends EventBase = EventBase
+  TEvents extends EventMap
 > {
   namespace: TNamespace
   events: TEvents
-  eventClasses: TEventClasses
 }
 
 export type EventPublisher<

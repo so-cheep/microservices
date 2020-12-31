@@ -315,9 +315,109 @@
           }
         }
       }
+    },
+    "adapters-nest": {
+      "root": "libs/adapters/nest",
+      "sourceRoot": "libs/adapters/nest/src",
+      "projectType": "library",
+      "targets": {
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "libs/adapters/nest/**/*.ts"
+            ]
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": [
+            "coverage/libs/adapters/nest"
+          ],
+          "options": {
+            "jestConfig": "libs/adapters/nest/jest.config.js",
+            "passWithNoTests": true
+          }
+        },
+        "build": {
+          "executor": "@nrwl/node:package",
+          "outputs": [
+            "{options.outputPath}"
+          ],
+          "options": {
+            "outputPath": "dist/libs/adapters/nest",
+            "tsConfig": "libs/adapters/nest/tsconfig.lib.json",
+            "packageJson": "libs/adapters/nest/package.json",
+            "main": "libs/adapters/nest/src/index.ts",
+            "assets": [
+              "libs/adapters/nest/*.md"
+            ]
+          }
+        }
+      }
+    },
+    "examples-nestjs-inmemory": {
+      "root": "apps/examples/nestjs-inmemory",
+      "sourceRoot": "apps/examples/nestjs-inmemory/src",
+      "projectType": "application",
+      "prefix": "examples-nestjs-inmemory",
+      "targets": {
+        "build": {
+          "executor": "@nrwl/node:build",
+          "outputs": [
+            "{options.outputPath}"
+          ],
+          "options": {
+            "outputPath": "dist/apps/examples/nestjs-inmemory",
+            "main": "apps/examples/nestjs-inmemory/src/main.ts",
+            "tsConfig": "apps/examples/nestjs-inmemory/tsconfig.app.json",
+            "assets": [
+              "apps/examples/nestjs-inmemory/src/assets"
+            ]
+          },
+          "configurations": {
+            "production": {
+              "optimization": true,
+              "extractLicenses": true,
+              "inspect": false,
+              "fileReplacements": [
+                {
+                  "replace": "apps/examples/nestjs-inmemory/src/environments/environment.ts",
+                  "with": "apps/examples/nestjs-inmemory/src/environments/environment.prod.ts"
+                }
+              ]
+            }
+          }
+        },
+        "serve": {
+          "executor": "@nrwl/node:execute",
+          "options": {
+            "buildTarget": "examples-nestjs-inmemory:build"
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "apps/examples/nestjs-inmemory/**/*.ts"
+            ]
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": [
+            "coverage/apps/examples/nestjs-inmemory"
+          ],
+          "options": {
+            "jestConfig": "apps/examples/nestjs-inmemory/jest.config.js",
+            "passWithNoTests": true
+          }
+        }
+      }
     }
   },
   "cli": {
     "defaultCollection": "@nrwl/node"
-  }
+  },
+  "defaultProject": "examples-nestjs-inmemory"
 }

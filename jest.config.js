@@ -29,5 +29,7 @@ module.exports = {
     '<rootDir>/libs/transport/rabbitmq',
     '<rootDir>/libs/transport/aws',
     '<rootDir>/libs/transport/shared',
+    '<rootDir>/libs/adapters/nest',
+    '<rootDir>/apps/examples/nestjs-inmemory',
   ],
 }

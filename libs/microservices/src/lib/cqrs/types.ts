@@ -9,8 +9,14 @@ export interface HandlerMap {
   [key: string]: Handler | HandlerMap
 }
 
-export type QueryMap = HandlerMap
-export type CommandMap = HandlerMap
+export type QueryMap =
+  | HandlerMap
+  | Record<string, Handler>
+  | Record<string, Record<string, Handler>>
+export type CommandMap =
+  | HandlerMap
+  | Record<string, Handler>
+  | Record<string, Record<string, Handler>>
 
 export type HandlerArg = Handler | Array<Handler> | HandlerMap
 

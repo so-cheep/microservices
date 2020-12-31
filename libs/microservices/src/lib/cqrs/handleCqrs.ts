@@ -48,11 +48,11 @@ export function handleCqrsSingle<
 export function handleCqrsApi<
   TApi extends CqrsApi<string, HandlerMap, HandlerMap>,
   TTransport extends Transport<RpcMetadata> = Transport<RpcMetadata>
->(transport: TTransport, api: TApi, namespace: TApi['namespace']) {
+>(transport: TTransport, api: TApi) {
   const queryKeys = buildRecursiveHandler(
     CqrsType.Query,
     transport,
-    namespace,
+    api.namespace,
     api[CqrsType.Query],
   )
   if (queryKeys.length === 0) {
@@ -62,7 +62,7 @@ export function handleCqrsApi<
   const commandKeys = buildRecursiveHandler(
     CqrsType.Command,
     transport,
-    namespace,
+    api.namespace,
     api[CqrsType.Command],
   )
   if (commandKeys.length === 0) {
