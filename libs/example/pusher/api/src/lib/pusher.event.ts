@@ -1,4 +1,4 @@
-import { IHandlerMap } from '@nx-cqrs/cqrs/rpc'
+import { IHandlerMap } from '@cheep/microservices'
 
 export interface PusherEvent extends IHandlerMap {
   socketConnected(props: {

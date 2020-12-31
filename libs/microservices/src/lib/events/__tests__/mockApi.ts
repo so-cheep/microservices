@@ -1,5 +1,6 @@
 import { EventNamespaceMetadataKey } from '../constants'
 import { EventApi, EventBase } from '../types'
+import 'reflect-metadata'
 
 export interface User {
   name: string

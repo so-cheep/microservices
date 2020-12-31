@@ -1,4 +1,4 @@
-import { IHandlerMap } from '@nx-cqrs/cqrs/rpc'
+import { IHandlerMap } from '@cheep/microservices'
 
 export interface PusherCommand<TMessage = any> extends IHandlerMap {
   sendToSocket(props: {

@@ -7,9 +7,9 @@ import {
   CqrsApi,
 } from '../types'
 import { getCqrsClient } from '../getCqrsClient'
-import { encodeRpc } from '../utils/encodeRpc'
-import { constructRouteKey } from '../utils/constructRouteKey'
-import { mockTransport } from '../__mocks__/transport'
+import { encodeRpc } from '../../utils/encodeRpc'
+import { constructRouteKey } from '../../utils/constructRouteKey'
+import { mockTransport } from '../../__mocks__/transport'
 
 interface Thing {
   x: number

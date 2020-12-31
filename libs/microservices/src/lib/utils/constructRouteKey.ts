@@ -1,4 +1,4 @@
-import { RouteKey } from '../types'
+import type { RouteKey } from '../cqrs/types'
 
 export function constructRouteKey(args: string[]): string
 export function constructRouteKey(args: RouteKey): string

@@ -1,4 +1,4 @@
-import { IHandlerMap } from '@nx-cqrs/cqrs/rpc'
+import { IHandlerMap } from '@cheep/microservices'
 
 export interface PusherQuery extends IHandlerMap {
   getUserSockets(props: { socketId: string }): Promise<void>

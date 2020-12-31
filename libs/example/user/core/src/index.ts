@@ -1,4 +1,4 @@
-import { getClient, handleEventsWithAck } from '@nx-cqrs/cqrs/rpc'
+import { getClient, handleEventsWithAck } from '@cheep/microservices'
 import { MemoryTransport } from '@cheep/transport/shared'
 import { PusherApi } from '@nx-cqrs/example/pusher/api'
 import { UserApi } from '@nx-cqrs/example/user/api'

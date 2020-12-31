@@ -1,7 +1,7 @@
 {
-  "npmScope": "nx-cqrs",
+  "npmScope": "cheep",
   "affected": {
-    "defaultBase": "master"
+    "defaultBase": "main"
   },
   "implicitDependencies": {
     "workspace.json": "*",
@@ -18,14 +18,16 @@
     "default": {
       "runner": "@nrwl/workspace/tasks-runners/default",
       "options": {
-        "cacheableOperations": ["build", "lint", "test", "e2e"]
+        "cacheableOperations": [
+          "build",
+          "lint",
+          "test",
+          "e2e"
+        ]
       }
     }
   },
   "projects": {
-    "cqrs-rpc": {
-      "tags": ["cqrs"]
-    },
     "cqrs-types": {
       "tags": []
     },
@@ -49,6 +51,11 @@
     },
     "transport-shared": {
       "tags": []
+    },
+    "microservices": {
+      "tags": [
+        "cqrs"
+      ]
     }
   }
 }

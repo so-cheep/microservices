@@ -1,6 +1,6 @@
 import { Subject } from 'rxjs'
 import { encodeRpc } from '../utils/encodeRpc'
-import { RpcMetadata } from '../types'
+import { RpcMetadata } from '../cqrs/types'
 import { Transport } from '@cheep/transport/shared'
 
 export const mockTransport = <Transport<RpcMetadata>>{

@@ -3,8 +3,8 @@ import { filter } from 'rxjs/operators'
 import { Transport, TransportItem } from '@cheep/transport/shared'
 
 import { CqrsType } from './constants'
-import { constructRouteKey } from './utils/constructRouteKey'
-import { decodeRpc } from './utils/decodeRpc'
+import { constructRouteKey } from '../utils/constructRouteKey'
+import { decodeRpc } from '../utils/decodeRpc'
 import {
   RpcMetadata,
   Handler,
@@ -12,7 +12,7 @@ import {
   HandlerMap,
   CqrsApi,
 } from './types'
-import { encodeRpc } from './utils/encodeRpc'
+import { encodeRpc } from '../utils/encodeRpc'
 
 /**
  *
