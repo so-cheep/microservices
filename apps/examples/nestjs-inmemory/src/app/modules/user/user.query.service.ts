@@ -1,28 +1,34 @@
-import { EventPublisherService } from '@cheep/nestjs'
-import { Injectable } from '@nestjs/common'
+import { EventHandlerService } from '@cheep/nestjs'
+import { Injectable, OnApplicationBootstrap } from '@nestjs/common'
 import { User, UserApi } from './types'
 
 @Injectable()
-export class UserQueryService {
-  constructor(private events: EventPublisherService<UserApi>) {}
+export class UserQueryService implements OnApplicationBootstrap {
+  private users: User[] = [
+    { id: 0, name: 'default', email: 'default' },
+  ]
+
+  constructor(private events: EventHandlerService<UserApi>) {}
+
+  onApplicationBootstrap() {
+    // update query model from events!
+    this.events.handleFunction(
+      e => e.User.user.created,
+      user => {
+        this.users.push(user)
+      },
+    )
+  }
+
+  async getById(props: { id: number }): Promise<User> {
+    return this.users.find(u => u.id === props.id)
+  }
+
   async getByEmail(props: { email: string }): Promise<User> {
-    return {
-      id: 1234,
-      name: 'fake user',
-      email: props.email,
-    }
+    return this.users.find(u => u.email === props.email)
   }
 
   async getAll(): Promise<User[]> {
-    return []
-  }
-
-  test(): number {
-    this.events.publish.User.user.created({
-      id: 1,
-      name: 'test',
-      email: '',
-    })
-    return 2
+    return this.users
   }
 }

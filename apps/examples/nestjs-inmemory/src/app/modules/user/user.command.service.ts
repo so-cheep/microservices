@@ -1,6 +1,7 @@
 import { EventPublisherService } from '@cheep/nestjs'
 import { Injectable } from '@nestjs/common'
 import { User, UserApi } from './types'
+import * as faker from 'faker'
 
 @Injectable()
 export class UserCommandService {
@@ -8,7 +9,7 @@ export class UserCommandService {
   async create(props: { user: Omit<User, 'id'> }): Promise<number> {
     const newUser = {
       ...props.user,
-      id: 1234,
+      id: faker.random.number(),
     }
     this.events.publish.User.user.created(newUser)
     return newUser.id

@@ -3,7 +3,7 @@ import { UserGroup } from './types'
 
 @Injectable()
 export class UserGroupQueryService {
-  async getById(props: { id: number }): Promise<UserGroup> {
+  async groupById(props: { id: number }): Promise<UserGroup> {
     return {
       id: props.id,
       name: 'fake group',

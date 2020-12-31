@@ -1,15 +1,17 @@
 import { CheepMicroservicesModule } from '@cheep/nestjs'
 import { Module } from '@nestjs/common'
-import { UserApi } from '../user/types'
+import { GatewayService } from './gateway.controller'
+import { ConsumedApis } from './types'
 
 @Module({
   imports: [
-    CheepMicroservicesModule.forModule<never, UserApi>({
+    CheepMicroservicesModule.forModule<never, ConsumedApis>({
       moduleName: 'Gateway',
       commandHandlers: [],
       queryHandlers: [],
       listenEventsFrom: ['User'],
     }),
   ],
+  controllers: [GatewayService],
 })
 export class GatewayModule {}
