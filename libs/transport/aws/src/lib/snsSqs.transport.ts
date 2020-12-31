@@ -5,7 +5,7 @@ import {
   RpcTimeoutError,
   Transport,
   TransportItem,
-} from '@nx-cqrs/transport/shared'
+} from '@cheep/transport/shared'
 import * as AWS from 'aws-sdk'
 import { Observable, Subject } from 'rxjs'
 import { filter } from 'rxjs/operators'

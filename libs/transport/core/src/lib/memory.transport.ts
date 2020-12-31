@@ -5,11 +5,12 @@ import {
   RpcTimeoutError,
   Transport,
   TransportItem,
-} from '@nx-cqrs/transport/shared'
+} from '@cheep/transport/shared'
 import { Observable, Subject } from 'rxjs'
 
-export class MemoryTransport<TMetadata extends MessageMetadata>
-  implements Transport<TMetadata> {
+export class MemoryTransport<
+  TMetadata extends MessageMetadata = MessageMetadata
+> implements Transport<TMetadata> {
   moduleName?: string
 
   message$: Observable<
@@ -26,13 +27,13 @@ export class MemoryTransport<TMetadata extends MessageMetadata>
     this.message$ = this.internal$.asObservable()
   }
 
-  publish<TResult, TMeta extends TMetadata = never>(
+  publish<TMeta extends TMetadata = never>(
     props: PublishProps<TMeta>,
   ): Promise<PublishResult<TMeta>> {
     const { message, metadata, route, rpc } = props
 
     return new Promise<PublishResult<TMeta>>((resolve, reject) => {
-      const timeout = rpc.enabled
+      const timeout = rpc?.enabled
         ? setTimeout(() => {
             reject(new RpcTimeoutError(<any>props))
           }, rpc.timeout)

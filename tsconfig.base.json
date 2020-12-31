@@ -17,7 +17,6 @@
     "paths": {
       "@nx-cqrs/cqrs/rpc": ["libs/cqrs/rpc/src/index.ts"],
       "@nx-cqrs/cqrs/types": ["libs/cqrs/types/src/index.ts"],
-      "@cheep/microservice": ["libs/microservice/src/index.ts"],
       "@nx-cqrs/example/pusher/api": [
         "libs/example/pusher/api/src/index.ts"
       ],
@@ -27,12 +26,13 @@
       "@nx-cqrs/example/user/core": [
         "libs/example/user/core/src/index.ts"
       ],
+      "@cheep/microservice": ["libs/microservice/src/index.ts"],
       "@cheep/transport": ["libs/transport/core/src/index.ts"],
       "@cheep/transport-rabbitmq": [
         "libs/transport/rabbitmq/src/index.ts"
       ],
       "@cheep/transport-aws": ["libs/transport/aws/src/index.ts"],
-      "@nx-cqrs/transport/shared": [
+      "@cheep/transport/shared": [
         "libs/transport/shared/src/index.ts"
       ]
     }

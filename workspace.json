@@ -9,16 +9,12 @@
         "lint": {
           "executor": "@nrwl/linter:eslint",
           "options": {
-            "lintFilePatterns": [
-              "libs/cqrs/rpc/**/*.ts"
-            ]
+            "lintFilePatterns": ["libs/cqrs/rpc/**/*.ts"]
           }
         },
         "test": {
           "executor": "@nrwl/jest:jest",
-          "outputs": [
-            "coverage/libs/cqrs/rpc"
-          ],
+          "outputs": ["coverage/libs/cqrs/rpc"],
           "options": {
             "jestConfig": "libs/cqrs/rpc/jest.config.js",
             "passWithNoTests": true
@@ -26,17 +22,13 @@
         },
         "build": {
           "executor": "@nrwl/node:package",
-          "outputs": [
-            "{options.outputPath}"
-          ],
+          "outputs": ["{options.outputPath}"],
           "options": {
             "outputPath": "dist/libs/cqrs/rpc",
             "tsConfig": "libs/cqrs/rpc/tsconfig.lib.json",
             "packageJson": "libs/cqrs/rpc/package.json",
             "main": "libs/cqrs/rpc/src/index.ts",
-            "assets": [
-              "libs/cqrs/rpc/*.md"
-            ]
+            "assets": ["libs/cqrs/rpc/*.md"]
           }
         }
       }
@@ -49,16 +41,12 @@
         "lint": {
           "executor": "@nrwl/linter:eslint",
           "options": {
-            "lintFilePatterns": [
-              "libs/cqrs/types/**/*.ts"
-            ]
+            "lintFilePatterns": ["libs/cqrs/types/**/*.ts"]
           }
         },
         "test": {
           "executor": "@nrwl/jest:jest",
-          "outputs": [
-            "coverage/libs/cqrs/types"
-          ],
+          "outputs": ["coverage/libs/cqrs/types"],
           "options": {
             "jestConfig": "libs/cqrs/types/jest.config.js",
             "passWithNoTests": true
@@ -66,17 +54,13 @@
         },
         "build": {
           "executor": "@nrwl/node:package",
-          "outputs": [
-            "{options.outputPath}"
-          ],
+          "outputs": ["{options.outputPath}"],
           "options": {
             "outputPath": "dist/libs/cqrs/types",
             "tsConfig": "libs/cqrs/types/tsconfig.lib.json",
             "packageJson": "libs/cqrs/types/package.json",
             "main": "libs/cqrs/types/src/index.ts",
-            "assets": [
-              "libs/cqrs/types/*.md"
-            ]
+            "assets": ["libs/cqrs/types/*.md"]
           }
         }
       }
@@ -89,16 +73,12 @@
         "lint": {
           "executor": "@nrwl/linter:eslint",
           "options": {
-            "lintFilePatterns": [
-              "libs/example/pusher/api/**/*.ts"
-            ]
+            "lintFilePatterns": ["libs/example/pusher/api/**/*.ts"]
           }
         },
         "test": {
           "executor": "@nrwl/jest:jest",
-          "outputs": [
-            "coverage/libs/example/pusher/api"
-          ],
+          "outputs": ["coverage/libs/example/pusher/api"],
           "options": {
             "jestConfig": "libs/example/pusher/api/jest.config.js",
             "passWithNoTests": true
@@ -114,16 +94,12 @@
         "lint": {
           "executor": "@nrwl/linter:eslint",
           "options": {
-            "lintFilePatterns": [
-              "libs/example/user/api/**/*.ts"
-            ]
+            "lintFilePatterns": ["libs/example/user/api/**/*.ts"]
           }
         },
         "test": {
           "executor": "@nrwl/jest:jest",
-          "outputs": [
-            "coverage/libs/example/user/api"
-          ],
+          "outputs": ["coverage/libs/example/user/api"],
           "options": {
             "jestConfig": "libs/example/user/api/jest.config.js",
             "passWithNoTests": true
@@ -139,16 +115,12 @@
         "lint": {
           "executor": "@nrwl/linter:eslint",
           "options": {
-            "lintFilePatterns": [
-              "libs/example/user/core/**/*.ts"
-            ]
+            "lintFilePatterns": ["libs/example/user/core/**/*.ts"]
           }
         },
         "test": {
           "executor": "@nrwl/jest:jest",
-          "outputs": [
-            "coverage/libs/example/user/core"
-          ],
+          "outputs": ["coverage/libs/example/user/core"],
           "options": {
             "jestConfig": "libs/example/user/core/jest.config.js",
             "passWithNoTests": true
@@ -164,16 +136,12 @@
         "lint": {
           "executor": "@nrwl/linter:eslint",
           "options": {
-            "lintFilePatterns": [
-              "libs/transport/core/**/*.ts"
-            ]
+            "lintFilePatterns": ["libs/transport/core/**/*.ts"]
           }
         },
         "test": {
           "executor": "@nrwl/jest:jest",
-          "outputs": [
-            "coverage/libs/transport/core"
-          ],
+          "outputs": ["coverage/libs/transport/core"],
           "options": {
             "jestConfig": "libs/transport/core/jest.config.js",
             "passWithNoTests": true
@@ -181,17 +149,13 @@
         },
         "build": {
           "executor": "@nrwl/node:package",
-          "outputs": [
-            "{options.outputPath}"
-          ],
+          "outputs": ["{options.outputPath}"],
           "options": {
             "outputPath": "dist/libs/transport/core",
             "tsConfig": "libs/transport/core/tsconfig.lib.json",
             "packageJson": "libs/transport/core/package.json",
             "main": "libs/transport/core/src/index.ts",
-            "assets": [
-              "libs/transport/core/*.md"
-            ]
+            "assets": ["libs/transport/core/*.md"]
           }
         }
       }
@@ -204,16 +168,12 @@
         "lint": {
           "executor": "@nrwl/linter:eslint",
           "options": {
-            "lintFilePatterns": [
-              "libs/transport/rabbitmq/**/*.ts"
-            ]
+            "lintFilePatterns": ["libs/transport/rabbitmq/**/*.ts"]
           }
         },
         "test": {
           "executor": "@nrwl/jest:jest",
-          "outputs": [
-            "coverage/libs/transport/rabbitmq"
-          ],
+          "outputs": ["coverage/libs/transport/rabbitmq"],
           "options": {
             "jestConfig": "libs/transport/rabbitmq/jest.config.js",
             "passWithNoTests": true
@@ -221,17 +181,13 @@
         },
         "build": {
           "executor": "@nrwl/node:package",
-          "outputs": [
-            "{options.outputPath}"
-          ],
+          "outputs": ["{options.outputPath}"],
           "options": {
             "outputPath": "dist/libs/transport/rabbitmq",
             "tsConfig": "libs/transport/rabbitmq/tsconfig.lib.json",
             "packageJson": "libs/transport/rabbitmq/package.json",
             "main": "libs/transport/rabbitmq/src/index.ts",
-            "assets": [
-              "libs/transport/rabbitmq/*.md"
-            ]
+            "assets": ["libs/transport/rabbitmq/*.md"]
           }
         }
       }
@@ -244,16 +200,12 @@
         "lint": {
           "executor": "@nrwl/linter:eslint",
           "options": {
-            "lintFilePatterns": [
-              "libs/transport/aws/**/*.ts"
-            ]
+            "lintFilePatterns": ["libs/transport/aws/**/*.ts"]
           }
         },
         "test": {
           "executor": "@nrwl/jest:jest",
-          "outputs": [
-            "coverage/libs/transport/aws"
-          ],
+          "outputs": ["coverage/libs/transport/aws"],
           "options": {
             "jestConfig": "libs/transport/aws/jest.config.js",
             "passWithNoTests": true
@@ -261,17 +213,13 @@
         },
         "build": {
           "executor": "@nrwl/node:package",
-          "outputs": [
-            "{options.outputPath}"
-          ],
+          "outputs": ["{options.outputPath}"],
           "options": {
             "outputPath": "dist/libs/transport/aws",
             "tsConfig": "libs/transport/aws/tsconfig.lib.json",
             "packageJson": "libs/transport/aws/package.json",
             "main": "libs/transport/aws/src/index.ts",
-            "assets": [
-              "libs/transport/aws/*.md"
-            ]
+            "assets": ["libs/transport/aws/*.md"]
           }
         }
       }
@@ -284,19 +232,26 @@
         "lint": {
           "executor": "@nrwl/linter:eslint",
           "options": {
-            "lintFilePatterns": [
-              "libs/transport/shared/**/*.ts"
-            ]
+            "lintFilePatterns": ["libs/transport/shared/**/*.ts"]
           }
         },
         "test": {
           "executor": "@nrwl/jest:jest",
-          "outputs": [
-            "coverage/libs/transport/shared"
-          ],
+          "outputs": ["coverage/libs/transport/shared"],
           "options": {
             "jestConfig": "libs/transport/shared/jest.config.js",
             "passWithNoTests": true
+          }
+        },
+        "build": {
+          "executor": "@nrwl/node:package",
+          "outputs": ["{options.outputPath}"],
+          "options": {
+            "outputPath": "dist/libs/transport/shared",
+            "tsConfig": "libs/transport/shared/tsconfig.lib.json",
+            "packageJson": "libs/transport/shared/package.json",
+            "main": "libs/transport/shared/src/index.ts",
+            "assets": ["libs/transport/shared/*.md"]
           }
         }
       }

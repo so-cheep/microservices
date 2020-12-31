@@ -1,7 +1,7 @@
 import { Observable } from 'rxjs'
 
 export interface Transport<
-  TMetadata extends MessageMetadata = never
+  TMetadata extends MessageMetadata = MessageMetadata
 > {
   /**
    * rabbitmq         - name for the queue & response queue (rpc)
@@ -75,9 +75,7 @@ export interface TransportItem<TMetadata extends MessageMetadata> {
   sendErrorReply(err: Error): Promise<void>
 }
 
-export interface MessageMetadata {
-  [key: string]: unknown
-}
+export type MessageMetadata = Record<string, unknown>
 
 export interface PublishProps<TMetadata extends MessageMetadata> {
   route: string

@@ -5,7 +5,7 @@ import {
   RpcTimeoutError,
   Transport,
   TransportItem,
-} from '@nx-cqrs/transport/shared'
+} from '@cheep/transport/shared'
 import * as amqp from 'amqp-connection-manager'
 import { ConfirmChannel } from 'amqplib'
 import { Observable, Subject } from 'rxjs'

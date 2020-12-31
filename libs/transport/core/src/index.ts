@@ -1,5 +1,5 @@
 export {
   Transport as ITransport,
   TransportItem as ITransportItem,
-} from '@nx-cqrs/transport/shared'
+} from '@cheep/transport/shared'
 export * from './lib/memory.transport'

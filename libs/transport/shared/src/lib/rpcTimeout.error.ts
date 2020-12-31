@@ -3,7 +3,8 @@ import { PublishProps } from './transport'
 export class RpcTimeoutError extends Error {
   public readonly code = 'RPC_TIMEOUT_ERROR'
   constructor(
-    public readonly originalPublishArgs: PublishProps<never, unknown>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    public readonly originalPublishArgs: PublishProps<any>,
   ) {
     super(`RPC Timeout for [${originalPublishArgs.route}]`)
   }
