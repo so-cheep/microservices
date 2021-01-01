@@ -3,10 +3,6 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
 
 import {
-  CommandMap,
-  EventMap,
-  MicroserviceApi,
-  QueryMap,
   EventHandler as EventHandlerType,
   EventPublisher,
   handleEvents,
@@ -16,27 +12,29 @@ import {
 } from '@cheep/microservices'
 import { ModuleOptionsToken, TransportToken } from '../constants'
 import type { Transport } from '@cheep/transport'
+import { GenericMicroserviceApi } from '../types'
 
 @Injectable()
 export class CheepEvents<
-  TApi extends MicroserviceApi<string, QueryMap, CommandMap, EventMap>
-> implements EventHandlerType<TApi>, OnModuleInit {
-  private eventHandler: EventHandler<TApi>
-  private eventPublisher: EventPublisher<TApi>
+  THandleableApi extends GenericMicroserviceApi = never,
+  TPublishableApi extends GenericMicroserviceApi = never
+> implements EventHandlerType<THandleableApi>, OnModuleInit {
+  private eventHandler: EventHandler<THandleableApi>
+  private eventPublisher: EventPublisher<TPublishableApi>
 
-  get handleClass(): EventHandlerType<TApi>['handleClass'] {
+  get handleClass(): EventHandlerType<THandleableApi>['handleClass'] {
     return this.eventHandler.handleClass
   }
 
-  get on(): EventHandlerType<TApi>['on'] {
+  get on(): EventHandlerType<THandleableApi>['on'] {
     return this.eventHandler.on
   }
 
-  get event$(): EventHandlerType<TApi>['event$'] {
+  get event$(): EventHandlerType<THandleableApi>['event$'] {
     return this.eventHandler.event$
   }
 
-  get publish(): EventPublisher<TApi> {
+  get publish(): EventPublisher<TPublishableApi> {
     return this.eventPublisher
   }
 
@@ -46,8 +44,10 @@ export class CheepEvents<
   ) {}
 
   onModuleInit() {
-    this.eventPublisher = getEventPublisher(this.transport)
-    this.eventHandler = handleEvents<TApi>(
+    this.eventPublisher = getEventPublisher<TPublishableApi>(
+      this.transport,
+    )
+    this.eventHandler = handleEvents<THandleableApi>(
       this.transport,
       this.moduleOptions.listenEventsFrom,
     )
