@@ -218,7 +218,7 @@
             "outputPath": "dist/libs/microservices",
             "tsConfig": "libs/microservices/tsconfig.lib.json",
             "packageJson": "libs/microservices/package.json",
-            "buildableProjectDepsInPackageJsonType": "dependencies",
+            "buildableProjectDepsInPackageJsonType": "peerDependencies",
             "main": "libs/microservices/src/index.ts",
             "assets": ["libs/microservices/*.md"]
           }
@@ -251,6 +251,7 @@
             "outputPath": "dist/libs/adapters/nestjs",
             "tsConfig": "libs/adapters/nestjs/tsconfig.lib.json",
             "packageJson": "libs/adapters/nestjs/package.json",
+            "buildableProjectDepsInPackageJsonType": "peerDependencies",
             "main": "libs/adapters/nestjs/src/index.ts",
             "assets": ["libs/adapters/nestjs/*.md"]
           }
