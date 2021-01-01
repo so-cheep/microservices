@@ -30,7 +30,7 @@
       ],
       "@cheep/transport-aws": ["libs/transport/aws/src/index.ts"],
       "@cheep/microservices": ["libs/microservices/src/index.ts"],
-      "@cheep/nestjs": ["libs/adapters/nest/src/index.ts"]
+      "@cheep/nestjs": ["libs/adapters/nestjs/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

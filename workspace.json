@@ -218,28 +218,29 @@
             "outputPath": "dist/libs/microservices",
             "tsConfig": "libs/microservices/tsconfig.lib.json",
             "packageJson": "libs/microservices/package.json",
+            "buildableProjectDepsInPackageJsonType": "dependencies",
             "main": "libs/microservices/src/index.ts",
             "assets": ["libs/microservices/*.md"]
           }
         }
       }
     },
-    "adapters-nest": {
-      "root": "libs/adapters/nest",
-      "sourceRoot": "libs/adapters/nest/src",
+    "adapters-nestjs": {
+      "root": "libs/adapters/nestjs",
+      "sourceRoot": "libs/adapters/nestjs/src",
       "projectType": "library",
       "targets": {
         "lint": {
           "executor": "@nrwl/linter:eslint",
           "options": {
-            "lintFilePatterns": ["libs/adapters/nest/**/*.ts"]
+            "lintFilePatterns": ["libs/adapters/nestjs/**/*.ts"]
           }
         },
         "test": {
           "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/libs/adapters/nest"],
+          "outputs": ["coverage/libs/adapters/nestjs"],
           "options": {
-            "jestConfig": "libs/adapters/nest/jest.config.js",
+            "jestConfig": "libs/adapters/nestjs/jest.config.js",
             "passWithNoTests": true
           }
         },
@@ -247,11 +248,11 @@
           "executor": "@nrwl/node:package",
           "outputs": ["{options.outputPath}"],
           "options": {
-            "outputPath": "dist/libs/adapters/nest",
-            "tsConfig": "libs/adapters/nest/tsconfig.lib.json",
-            "packageJson": "libs/adapters/nest/package.json",
-            "main": "libs/adapters/nest/src/index.ts",
-            "assets": ["libs/adapters/nest/*.md"]
+            "outputPath": "dist/libs/adapters/nestjs",
+            "tsConfig": "libs/adapters/nestjs/tsconfig.lib.json",
+            "packageJson": "libs/adapters/nestjs/package.json",
+            "main": "libs/adapters/nestjs/src/index.ts",
+            "assets": ["libs/adapters/nestjs/*.md"]
           }
         }
       }

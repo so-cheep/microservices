@@ -47,7 +47,7 @@
     "microservices": {
       "tags": ["cqrs"]
     },
-    "adapters-nest": {
+    "adapters-nestjs": {
       "tags": []
     },
     "examples-nestjs-inmemory": {
