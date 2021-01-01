@@ -11,6 +11,7 @@ export type {
   Handler,
   QueryMap,
   CommandMap,
+  CqrsApi,
   ClientApi,
   RpcMetadata,
   RpcOptions,

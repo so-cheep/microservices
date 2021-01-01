@@ -1,4 +1,4 @@
-import Flatted = require('flatted')
+import * as Flatted from 'flatted'
 
 export function encodeRpc(...args: unknown[]) {
   // TODO: support injecting constructor/inheritance metadata?
