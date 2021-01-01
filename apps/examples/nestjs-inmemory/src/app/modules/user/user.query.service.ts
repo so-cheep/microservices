@@ -3,7 +3,7 @@ import { Injectable, OnApplicationBootstrap } from '@nestjs/common'
 import { User, UserApi } from './types'
 
 @Injectable()
-export class UserQueryService implements OnApplicationBootstrap {
+export class UserQueries implements OnApplicationBootstrap {
   private users: User[] = [
     { id: 0, name: 'default', email: 'default' },
   ]

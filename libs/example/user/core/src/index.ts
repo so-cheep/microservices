@@ -1,21 +1,16 @@
-import { getClient, handleEventsWithAck } from '@cheep/microservices'
+import { getCqrsClient, handleEvents } from '@cheep/microservices'
 import { MemoryTransport } from '@cheep/transport'
 import { PusherApi } from '@nx-cqrs/example/pusher/api'
-import { UserApi } from '@nx-cqrs/example/user/api'
 
-export * from './lib/user.command'
-
-const transport = new MemoryTransport<any, string>({
+const transport = new MemoryTransport<any>({
   moduleName: 'User',
 })
 
-const pusherApi = getClient<PusherApi>(transport)
-const pusherEvents = handleEventsWithAck<PusherApi | UserApi>(
-  transport,
-)
+const pusherApi = getCqrsClient<PusherApi>(transport)
+const pusherEvents = handleEvents<PusherApi>(transport, ['Pusher'])
 
-pusherEvents.handleFunction(
-  x => x.User.userCreated,
+pusherEvents.on(
+  x => x.Pusher.socketConnected,
   async x => {
     await pusherApi.Command.Pusher.getUserSockets({ socketId: '1' })
   },

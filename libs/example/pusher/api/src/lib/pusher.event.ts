@@ -1,6 +1,6 @@
-import { IHandlerMap } from '@cheep/microservices'
+import { HandlerMap } from '@cheep/microservices'
 
-export interface PusherEvent extends IHandlerMap {
+export interface PusherEvent extends HandlerMap {
   socketConnected(props: {
     socketId: string
     userId: string
