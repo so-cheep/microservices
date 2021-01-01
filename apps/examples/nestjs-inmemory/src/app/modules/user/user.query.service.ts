@@ -1,4 +1,4 @@
-import { EventHandlerService } from '@cheep/nestjs'
+import { CheepEvents } from '@cheep/nestjs'
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common'
 import { User, UserApi } from './types'
 
@@ -8,11 +8,11 @@ export class UserQueryService implements OnApplicationBootstrap {
     { id: 0, name: 'default', email: 'default' },
   ]
 
-  constructor(private events: EventHandlerService<UserApi>) {}
+  constructor(private events: CheepEvents<UserApi>) {}
 
   onApplicationBootstrap() {
     // update query model from events!
-    this.events.handleFunction(
+    this.events.on(
       e => e.User.user.created,
       user => {
         this.users.push(user)

@@ -1,9 +1,8 @@
-import { CqrsClientService, EventHandlerService } from '@cheep/nestjs'
+import { CheepApi, CheepEvents } from '@cheep/nestjs'
 import {
   Controller,
   Get,
   OnApplicationBootstrap,
-  Post,
 } from '@nestjs/common'
 import { ConsumedApis } from './types'
 import * as faker from 'faker'
@@ -11,8 +10,8 @@ import * as faker from 'faker'
 @Controller()
 export class GatewayService implements OnApplicationBootstrap {
   constructor(
-    private client: CqrsClientService<ConsumedApis>,
-    private events: EventHandlerService<ConsumedApis>,
+    private client: CheepApi<ConsumedApis>,
+    private events: CheepEvents<ConsumedApis>,
   ) {}
 
   onApplicationBootstrap() {
@@ -36,5 +35,10 @@ export class GatewayService implements OnApplicationBootstrap {
     })
 
     return this.client.Query.User.getById({ id })
+  }
+
+  @Get('test')
+  async test() {
+    return await this.client.Command.User['thisIsPrivate']()
   }
 }

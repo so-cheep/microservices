@@ -1,11 +1,11 @@
-import { EventPublisherService } from '@cheep/nestjs'
+import { CheepEvents } from '@cheep/nestjs'
 import { Injectable } from '@nestjs/common'
 import { User, UserApi } from './types'
 import * as faker from 'faker'
 
 @Injectable()
 export class UserCommandService {
-  constructor(private events: EventPublisherService<UserApi>) {}
+  constructor(private events: CheepEvents<UserApi>) {}
   async create(props: { user: Omit<User, 'id'> }): Promise<number> {
     const newUser = {
       ...props.user,
