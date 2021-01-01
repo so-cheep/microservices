@@ -1,6 +1,24 @@
 {
   "name": "@cheep/nestjs",
   "version": "0.0.2",
+  "contributors": [
+    "Ezeki",
+    "Kyle"
+  ],
+  "keywords": [
+    "nestjs",
+    "nest",
+    "microservices",
+    "cqrs",
+    "events",
+    "eventsourcing",
+    "cheep"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/so-cheep/microservices",
+    "directory": "libs/adapters/nestjs"
+  },
   "peerDependencies": {
     "@nestjs/common": "^7.6.5",
     "@nestjs/core": "^7.6.5"
