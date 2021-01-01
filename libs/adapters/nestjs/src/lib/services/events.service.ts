@@ -14,6 +14,12 @@ import { ModuleOptionsToken, TransportToken } from '../constants'
 import type { Transport } from '@cheep/transport'
 import { GenericMicroserviceApi } from '../types'
 
+/**
+ * Provides access to handling and publishing events using Cheep
+ *
+ * @argument THandleableApi - api type union for events to be handled
+ * @argument TPublishableApi - api type for events to be published
+ */
 @Injectable()
 export class CheepEvents<
   THandleableApi extends GenericMicroserviceApi = never,
