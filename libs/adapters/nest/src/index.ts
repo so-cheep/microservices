@@ -1,7 +1,6 @@
 export * from './lib/cheepMicroservices.module'
-export * from './lib/services/cqrsClient.service'
-export * from './lib/services/eventHandler.service'
-export * from './lib/services/eventPublisher.service'
+export * from './lib/services/api.service'
+export * from './lib/services/events.service'
 
 export type {
   CheepMicroservicesModuleConfig,

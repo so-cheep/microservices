@@ -7,9 +7,9 @@ const registry = new Set<string>()
  * This uniqueness only extends to one memory space (not over transports)
  */
 export function registerModuleName(moduleName: string) {
-  if (this.registry.has(moduleName)) {
+  if (registry.has(moduleName)) {
     throw new ModuleAlreadyRegisteredError(moduleName)
   }
 
-  this.registry.add(moduleName)
+  registry.add(moduleName)
 }

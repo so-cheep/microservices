@@ -1,6 +1,4 @@
-import { Module, DynamicModule } from '@nestjs/common'
-
-import type { Transport } from '@cheep/transport/shared'
+import { Module, DynamicModule, Inject } from '@nestjs/common'
 
 import type {
   CheepMicroservicesModuleConfig,
@@ -10,55 +8,24 @@ import type {
 import {
   ModuleNameToken,
   ModuleOptionsToken,
+  RootOptionsToken,
   TransportToken,
 } from './constants'
 import { registerModuleName } from './util/moduleRegistry'
-import { CqrsClientService } from './services/cqrsClient.service'
+import { CheepApi } from './services/api.service'
 import {
   CommandMap,
   EventMap,
-  getCqrsClient,
-  handleEvents,
   MicroserviceApi,
   QueryMap,
-  RpcMetadata,
 } from '@cheep/microservices'
-import { MissingTransportError } from './errors/missingTransport.error'
-import { EventHandlerService } from './services/eventHandler.service'
-import { EventPublisherService } from './services/eventPublisher.service'
+import { CheepEvents } from './services/events.service'
+import { CqrsHandlerRegistryService } from './services/cqrsHandlerRegistry.service'
+import { CheepCoreModule } from './modules/core/core.module'
+import { Transport } from '@cheep/transport/shared'
 
 @Module({
-  providers: [
-    {
-      provide: TransportToken,
-      useFactory: () => {
-        throw new MissingTransportError()
-      },
-    },
-    {
-      provide: CqrsClientService,
-      useFactory: (transport: Transport<RpcMetadata>) => {
-        getCqrsClient(transport)
-      },
-      inject: [TransportToken],
-    },
-    {
-      provide: EventHandlerService,
-      useFactory: (
-        transport: Transport<RpcMetadata>,
-        options: CheepMicroservicesModuleConfig<never, never>,
-      ) => {
-        handleEvents(transport, options.listenEventsFrom)
-      },
-      inject: [TransportToken, ModuleOptionsToken],
-    },
-    EventPublisherService,
-  ],
-  exports: [
-    CqrsClientService,
-    EventHandlerService,
-    EventPublisherService,
-  ],
+  imports: [CheepCoreModule],
 })
 export class CheepMicroservicesModule {
   static forRoot(
@@ -68,10 +35,11 @@ export class CheepMicroservicesModule {
       module: CheepMicroservicesModule,
       providers: [
         {
-          provide: TransportToken,
-          useValue: options.transport,
+          provide: RootOptionsToken,
+          useValue: options,
         },
       ],
+      imports: [CheepCoreModule.forRoot(options.transport)],
     }
   }
 
@@ -95,7 +63,10 @@ export class CheepMicroservicesModule {
 
     return {
       module: CheepMicroservicesModule,
+      imports: [CheepCoreModule],
       providers: [
+        CqrsHandlerRegistryService,
+        CheepEvents,
         {
           provide: ModuleNameToken,
           useValue: options.moduleName,
@@ -104,7 +75,15 @@ export class CheepMicroservicesModule {
           provide: ModuleOptionsToken,
           useValue: options,
         },
+        CheepApi,
       ],
+      exports: [CheepEvents, CheepApi],
     }
+  }
+
+  constructor(@Inject(TransportToken) private transport: Transport) {}
+
+  onApplicationBootstrap() {
+    this.transport.start()
   }
 }

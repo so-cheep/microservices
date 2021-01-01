@@ -62,7 +62,7 @@ type HandlerKeysOf<T> = {
 
 type HandlersIn<T> = Pick<T, HandlerKeysOf<T>>
 
-type Class<T> = { new (...args: unknown[]): T }
+export type ClassOf<T> = { new (...args: unknown[]): T }
 
 type ArrayToUnion<A extends Array<unknown>> = A[number]
 
@@ -76,5 +76,5 @@ type UnionToIntersection<U> = (
   : never
 
 type Classify<T extends Array<unknown>> = {
-  [K in keyof T]: Class<T[K]>
+  [K in keyof T]: ClassOf<T[K]>
 }
