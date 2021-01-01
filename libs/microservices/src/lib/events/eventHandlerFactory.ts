@@ -1,6 +1,6 @@
 import { Transport } from '@cheep/transport/shared'
 import { Observable } from 'rxjs'
-import { map, mergeMap, share } from 'rxjs/operators'
+import { filter, map, mergeMap, share } from 'rxjs/operators'
 import { constructRouteKey } from '../utils/constructRouteKey'
 import { decodeRpc } from '../utils/decodeRpc'
 import { EventRouteKey } from './constants'
@@ -65,6 +65,7 @@ export function handleEvents<
     })
 
   const event$ = transport.message$.pipe(
+    filter(item => item.route.startsWith(EventRouteKey)),
     map(item => ({
       metadata: item.metadata,
       // the event function type requires a single arg, so this is safe
@@ -83,7 +84,7 @@ export function handleEvents<
     event$: (event$ as unknown) as Observable<
       AllEventsMap<TEventApi>
     >,
-    handleFunction: (eventPick, handler) => {
+    on: (eventPick, handler) => {
       // this allows the callback pick of events using the proxy.
       // BUT the proxy has a liar's type, so we need to call the returned proxy to get the path
       const event = (eventPick(
