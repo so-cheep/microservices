@@ -5,7 +5,7 @@ import * as faker from 'faker'
 
 @Injectable()
 export class UserCommandService {
-  constructor(private events: CheepEvents<UserApi>) {}
+  constructor(private events: CheepEvents<never, UserApi>) {}
   async create(props: { user: Omit<User, 'id'> }): Promise<number> {
     const newUser = {
       ...props.user,

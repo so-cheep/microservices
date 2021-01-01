@@ -5,7 +5,7 @@ import * as faker from 'faker'
 
 @Injectable()
 export class GroupCommandService {
-  constructor(private events: CheepEvents<GroupApi>) {}
+  constructor(private events: CheepEvents<never, GroupApi>) {}
   async create(props: { group: Omit<Group, 'id'> }): Promise<number> {
     const newUser = {
       ...props.group,
