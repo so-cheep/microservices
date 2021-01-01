@@ -44,9 +44,6 @@
     "transport-aws": {
       "tags": []
     },
-    "transport-shared": {
-      "tags": []
-    },
     "microservices": {
       "tags": ["cqrs"]
     },

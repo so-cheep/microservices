@@ -22,7 +22,7 @@ import {
 import { CheepEvents } from './services/events.service'
 import { CqrsHandlerRegistryService } from './services/cqrsHandlerRegistry.service'
 import { CheepCoreModule } from './modules/core/core.module'
-import { Transport } from '@cheep/transport/shared'
+import type { Transport } from '@cheep/transport'
 
 @Module({
   imports: [CheepCoreModule],

@@ -1,11 +1,12 @@
+import {
+  MemoryTransport,
+  RpcTimeoutError,
+  Transport,
+} from '@cheep/transport'
 import * as faker from 'faker'
-
-import { Transport, RpcTimeoutError } from '@cheep/transport/shared'
-
-import { ClientApi, CqrsApi, HandlerMap, RpcMetadata } from '../types'
 import { getCqrsClient } from '../getCqrsClient'
 import { handleCqrsApi } from '../handleCqrs'
-import { MemoryTransport } from '@cheep/transport'
+import { ClientApi, CqrsApi, HandlerMap, RpcMetadata } from '../types'
 
 interface User {
   name: string

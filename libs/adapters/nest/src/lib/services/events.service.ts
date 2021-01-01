@@ -15,7 +15,7 @@ import {
   getEventPublisher,
 } from '@cheep/microservices'
 import { ModuleOptionsToken, TransportToken } from '../constants'
-import { Transport } from '@cheep/transport/shared'
+import type { Transport } from '@cheep/transport'
 
 @Injectable()
 export class CheepEvents<

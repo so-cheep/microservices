@@ -9,7 +9,7 @@ import {
   getCqrsClient,
   RpcMetadata,
 } from '@cheep/microservices'
-import type { Transport } from '@cheep/transport/shared'
+import type { Transport } from '@cheep/transport'
 
 import { TransportToken } from '../constants'
 

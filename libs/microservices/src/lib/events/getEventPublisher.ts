@@ -1,4 +1,4 @@
-import { Transport } from '@cheep/transport/shared'
+import { Transport } from '@cheep/transport'
 import { InvalidRpcPathError } from '../errors/invalidRpcPath.error'
 import { constructRouteKey } from '../utils/constructRouteKey'
 import { encodeRpc } from '../utils/encodeRpc'

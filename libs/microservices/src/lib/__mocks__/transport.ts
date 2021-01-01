@@ -1,7 +1,7 @@
+import { Transport } from '@cheep/transport'
 import { Subject } from 'rxjs'
-import { encodeRpc } from '../utils/encodeRpc'
 import { RpcMetadata } from '../cqrs/types'
-import { Transport } from '@cheep/transport/shared'
+import { encodeRpc } from '../utils/encodeRpc'
 
 export const mockTransport = <Transport<RpcMetadata>>{
   publish: jest.fn().mockResolvedValue({

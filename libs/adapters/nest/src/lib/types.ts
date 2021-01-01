@@ -1,13 +1,11 @@
 import type {
   CommandMap,
-  CqrsType,
   EventMap,
   Handler,
   MicroserviceApi,
   QueryMap,
 } from '@cheep/microservices'
-import type { Transport } from '@cheep/transport/shared'
-import { Type, Abstract } from '@nestjs/common'
+import type { Transport } from '@cheep/transport'
 
 export interface CheepMicroservicesRootConfig {
   transport: Transport

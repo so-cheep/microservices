@@ -17,10 +17,9 @@ import {
   ModuleOptionsToken,
   TransportToken,
 } from '../constants'
-import { CheepMicroservicesModuleConfig } from '../types'
-import type { Transport } from '@cheep/transport/shared'
+import type { CheepMicroservicesModuleConfig } from '../types'
+import type { Transport } from '@cheep/transport'
 import { ModuleRef } from '@nestjs/core'
-import type { ClassOf } from '../types'
 import { HandlerRegistrationError } from '../errors/handlerRegistration.error'
 
 const NestLifecycleFunctions = [

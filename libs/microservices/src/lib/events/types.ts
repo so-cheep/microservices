@@ -1,4 +1,4 @@
-import type { MessageMetadata } from '@cheep/transport/shared'
+import type { MessageMetadata } from '@cheep/transport'
 import type { Observable } from 'rxjs'
 
 export type EventPublishFunction<TPayload extends unknown> = (

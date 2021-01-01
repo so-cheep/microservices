@@ -192,38 +192,6 @@
         }
       }
     },
-    "transport-shared": {
-      "root": "libs/transport/shared",
-      "sourceRoot": "libs/transport/shared/src",
-      "projectType": "library",
-      "targets": {
-        "lint": {
-          "executor": "@nrwl/linter:eslint",
-          "options": {
-            "lintFilePatterns": ["libs/transport/shared/**/*.ts"]
-          }
-        },
-        "test": {
-          "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/libs/transport/shared"],
-          "options": {
-            "jestConfig": "libs/transport/shared/jest.config.js",
-            "passWithNoTests": true
-          }
-        },
-        "build": {
-          "executor": "@nrwl/node:package",
-          "outputs": ["{options.outputPath}"],
-          "options": {
-            "outputPath": "dist/libs/transport/shared",
-            "tsConfig": "libs/transport/shared/tsconfig.lib.json",
-            "packageJson": "libs/transport/shared/package.json",
-            "main": "libs/transport/shared/src/index.ts",
-            "assets": ["libs/transport/shared/*.md"]
-          }
-        }
-      }
-    },
     "microservices": {
       "root": "libs/microservices",
       "sourceRoot": "libs/microservices/src",

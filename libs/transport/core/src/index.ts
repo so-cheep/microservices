@@ -1,5 +1,3 @@
-export {
-  Transport as ITransport,
-  TransportItem as ITransportItem,
-} from '@cheep/transport/shared'
 export * from './lib/memory.transport'
+export * from './lib/rpcTimeout.error'
+export * from './lib/transport'

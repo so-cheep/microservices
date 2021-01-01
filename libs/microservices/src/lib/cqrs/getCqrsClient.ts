@@ -1,15 +1,15 @@
-import { Transport } from '@cheep/transport/shared'
+import { Transport } from '@cheep/transport'
+import { InvalidRpcPathError } from '../errors/invalidRpcPath.error'
 import { constructRouteKey } from '../utils/constructRouteKey'
 import { decodeRpc } from '../utils/decodeRpc'
 import { encodeRpc } from '../utils/encodeRpc'
 import {
+  ClientApi,
+  CqrsApi,
+  HandlerMap,
   RpcMetadata,
   RpcOptions,
-  HandlerMap,
-  CqrsApi,
-  ClientApi,
 } from './types'
-import { InvalidRpcPathError } from '../errors/invalidRpcPath.error'
 
 export function getCqrsClient<
   Api extends CqrsApi<string, HandlerMap, HandlerMap>
