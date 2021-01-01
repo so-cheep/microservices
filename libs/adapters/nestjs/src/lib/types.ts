@@ -11,6 +11,13 @@ export interface CheepMicroservicesRootConfig {
   transport: Transport
 }
 
+export type GenericMicroserviceApi = MicroserviceApi<
+  string,
+  QueryMap,
+  CommandMap,
+  EventMap
+>
+
 export interface CheepMicroservicesModuleConfig<
   TModuleApi extends CheepNestApi<
     string,
@@ -18,12 +25,7 @@ export interface CheepMicroservicesModuleConfig<
     unknown[],
     EventMap
   >,
-  TRemoteApi extends MicroserviceApi<
-    string,
-    QueryMap,
-    CommandMap,
-    EventMap
-  >,
+  TRemoteApi extends GenericMicroserviceApi,
   TQueryHandlers extends unknown[] = TModuleApi['_queryHandlers'],
   TCommandHandlers extends unknown[] = TModuleApi['_commandHandlers']
 > {
