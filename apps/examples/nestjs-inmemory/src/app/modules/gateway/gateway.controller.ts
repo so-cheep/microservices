@@ -25,7 +25,7 @@ export class GatewayService implements OnApplicationBootstrap {
     return this.client.Query.User.getAll()
   }
 
-  @Get('create')
+  @Get('user/create')
   async createUser() {
     const id = await this.client.Command.User.create({
       user: {
@@ -37,6 +37,27 @@ export class GatewayService implements OnApplicationBootstrap {
     return this.client.Query.User.getById({ id })
   }
 
+  @Get('groups')
+  async getGroups() {
+    return this.client.Query.Group.getAll()
+  }
+
+  @Get('group/create')
+  async createGroup() {
+    const id = await this.client.Command.Group.create({
+      group: {
+        name: faker.commerce.department(),
+        color: faker.random.arrayElement(['red', 'blue']),
+      },
+    })
+
+    return this.client.Query.Group.getById({ id })
+  }
+
+  /**
+   * This is to show that *private* members of remote apis may still be called,
+   * but without type safety
+   */
   @Get('test')
   async test() {
     return await this.client.Command.User['thisIsPrivate']()

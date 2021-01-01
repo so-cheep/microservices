@@ -2,6 +2,7 @@ import { CheepMicroservicesModule } from '@cheep/nestjs'
 import { MemoryTransport } from '@cheep/transport'
 import { Module } from '@nestjs/common'
 import { GatewayModule } from './modules/gateway/gateway.module'
+import { GroupModule } from './modules/groups/group.module'
 import { UserModule } from './modules/user/user.module'
 
 @Module({
@@ -10,6 +11,7 @@ import { UserModule } from './modules/user/user.module'
       transport: new MemoryTransport({ moduleName: 'Root' }),
     }),
     UserModule,
+    GroupModule,
     GatewayModule,
   ],
 })

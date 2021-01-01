@@ -16,6 +16,6 @@ export class UserCommandService {
   }
 
   private async thisIsPrivate(x: boolean): Promise<User> {
-    return { id: 123, name: '', email: x ? '' : '' }
+    return { id: 123, name: 'EXPLODE!', email: x ? '' : '' }
   }
 }
