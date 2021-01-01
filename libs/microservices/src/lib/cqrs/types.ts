@@ -39,15 +39,6 @@ export interface RpcOptions {
   timeout: number
 }
 
-interface Handlers<
-  TNamespace extends string,
-  TQueryHandler,
-  TCommandHandler
-> {
-  [CqrsType.Query]: Record<TNamespace, TQueryHandler>
-
-  [CqrsType.Command]: Record<TNamespace, TCommandHandler>
-}
 export interface CqrsApi<
   TNamespace extends string,
   TQueryHandler extends QueryMap,
@@ -60,9 +51,25 @@ export interface CqrsApi<
 }
 
 export type ClientApi<
-  Api extends CqrsApi<string, HandlerMap, HandlerMap>
-> = Handlers<
-  Api['namespace'],
-  Api[CqrsType.Query],
-  Api[CqrsType.Command]
->
+  TApi extends CqrsApi<string, HandlerMap, HandlerMap>
+> = {
+  [CqrsType.Query]: {
+    [key in TApi['namespace']]: TApi extends CqrsApi<
+      key,
+      infer Query,
+      CommandMap
+    >
+      ? Query
+      : never
+  }
+
+  [CqrsType.Command]: {
+    [key in TApi['namespace']]: TApi extends CqrsApi<
+      key,
+      QueryMap,
+      infer Command
+    >
+      ? Command
+      : never
+  }
+}
