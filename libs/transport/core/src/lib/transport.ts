@@ -34,6 +34,11 @@ export interface Transport<
   listenPatterns(patterns: string[]): void
 
   /**
+   * Make sure all entities are initialized
+   */
+  init(): Promise<void>
+
+  /**
    * rabbitmq         - start connection
    * socket.io-server - start server listening process
    * socket.io-client - connect to the server

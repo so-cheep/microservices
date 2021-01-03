@@ -27,6 +27,8 @@ export class MemoryTransport<
     this.message$ = this.internal$.asObservable()
   }
 
+  async init() {}
+
   publish<TMeta extends TMetadata = never>(
     props: PublishProps<TMeta>,
   ): Promise<PublishResult<TMeta>> {

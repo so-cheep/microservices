@@ -7,6 +7,7 @@ import {
   TransportItem,
 } from '@cheep/transport'
 import * as AWS from 'aws-sdk'
+import { MessageAttributeValue } from 'aws-sdk/clients/sqs'
 import { Observable, Subject } from 'rxjs'
 import { filter } from 'rxjs/operators'
 
@@ -19,43 +20,38 @@ interface Options {
 
   // Only for testing
   forceTempQueues?: boolean
+
+  queueWaitTimeInSeconds?: number
+  queueMaxNumberOfMessages?: number
+
+  responseQueueWaitTimeInSeconds?: number
+  responseQueueMaxNumberOfMessages?: number
+
+  getMessageGroupId?: (route: string) => string
 }
 
 /**
  * Reference: https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/FIFO-queues.html
  *
  */
-export class SnsSqsTransport<
-  TMetadata extends MessageMetadata,
-  TMessage
-> implements Transport<TMetadata, TMessage> {
+export class SnsSqsTransport<TMetadata extends MessageMetadata>
+  implements Transport<TMetadata> {
   moduleName: string
 
   message$: Observable<
-    TransportItem<
-      TMetadata & { originModule: string },
-      TMessage,
-      unknown
-    >
+    TransportItem<TMetadata & { originModule: string }>
   >
 
   private internal$ = new Subject<
-    TransportItem<
-      TMetadata & { originModule: string },
-      TMessage,
-      unknown
-    >
+    TransportItem<TMetadata & { originModule: string }>
   >()
 
   private internalResponse$ = new Subject<
-    TransportItem<
-      TMetadata & { originModule: string },
-      TMessage,
-      unknown
-    >
+    TransportItem<TMetadata & { originModule: string }>
   >()
 
   private rpcResponseQueueName: string
+  private getMessageGroupId: (route: string) => string
 
   private topicArn: string
   private queueArn: string
@@ -83,12 +79,23 @@ export class SnsSqsTransport<
     this.message$ = this.internal$
   }
 
-  async setup() {
+  async init() {
     const {
       publishExchangeName,
       forceTempQueues,
       moduleName,
+      getMessageGroupId,
     } = this.options
+
+    this.getMessageGroupId =
+      getMessageGroupId ??
+      (x => {
+        if (!x) {
+          return undefined
+        }
+
+        return x.split('.')[0] ?? undefined
+      })
 
     this.topicArn = await ensureTopicExists({
       sns: this.sns,
@@ -126,8 +133,8 @@ export class SnsSqsTransport<
   }
 
   async publish<TResult, TMeta extends TMetadata = TMetadata>(
-    props: PublishProps<TMeta, TMessage>,
-  ): Promise<PublishResult<TResult, TMeta> | null> {
+    props: PublishProps<TMeta>,
+  ): Promise<PublishResult<TMeta> | null> {
     if (!this.sns) {
       return
     }
@@ -136,65 +143,44 @@ export class SnsSqsTransport<
 
     const { route, message, metadata, rpc } = props
 
-    const correlationId = rpc ? newId() : undefined
+    const correlationId = rpc?.enabled ? newId() : undefined
 
     const result = rpc?.enabled
-      ? new Promise<PublishResult<TResult, TMeta>>(
-          (resolve, reject) => {
-            const sub = this.internalResponse$
-              .pipe(filter(x => x.correlationId === correlationId))
-              .subscribe(x => {
-                sub.unsubscribe()
-                clearTimeout(timer)
-
-                if (x.isError) {
-                  const err: any = x.message
-                  reject(new Error(err.message))
-                } else {
-                  resolve({
-                    result: <any>x.message,
-                    metadata: <any>x.metadata,
-                  })
-                }
-
-                x.complete()
-              })
-
-            const timer = setTimeout(() => {
+      ? new Promise<PublishResult<TResult>>((resolve, reject) => {
+          const sub = this.internalResponse$
+            .pipe(filter(x => x.correlationId === correlationId))
+            .subscribe(x => {
               sub.unsubscribe()
               clearTimeout(timer)
 
-              reject(new RpcTimeoutError(<any>props))
-            }, rpc.timeout)
-          },
-        )
+              if (x.metadata.isError) {
+                const err: any = x.message
+                reject(new Error(err.message))
+              } else {
+                resolve({
+                  result: x.message,
+                  metadata: <any>x.metadata,
+                })
+              }
+            })
+
+          const timer = setTimeout(() => {
+            sub.unsubscribe()
+            clearTimeout(timer)
+
+            reject(new RpcTimeoutError(<any>props))
+          }, rpc.timeout)
+        })
       : Promise.resolve(null)
 
-    const messageAttributes = Object.fromEntries(
-      Object.entries(metadata).map(([key, value]) => [
-        key,
-        {
-          DataType: 'String',
-          StringValue: value,
-        },
-      ]),
-    )
-
-    await this.sns
-      .publish({
-        TopicArn: this.topicArn,
-        Message: JSON.stringify(message),
-        MessageDeduplicationId: newId(),
-        MessageGroupId: 'Command',
-        MessageAttributes: {
-          ...messageAttributes,
-          route: {
-            DataType: 'String',
-            StringValue: route,
-          },
-        },
-      })
-      .promise()
+    await this.sendMessageToSns({
+      route,
+      message,
+      metadata,
+      messageGroupId: this.getMessageGroupId(route),
+      correlationId,
+      replyToQueueUrl: this.responseQueueUrl,
+    })
 
     return result
   }
@@ -209,115 +195,34 @@ export class SnsSqsTransport<
     })
   }
 
-  async start() {
-    const { newId } = this.options
+  start() {
+    const {
+      newId,
+      queueWaitTimeInSeconds = 0.1,
+      queueMaxNumberOfMessages = 5,
+      responseQueueWaitTimeInSeconds = 10,
+      responseQueueMaxNumberOfMessages = 1,
+    } = this.options
 
     this.isPollingStarted = true
 
-    const uniqueInstanceId = newId()
+    this.fetchAndProcessData(
+      this.queueUrl,
+      newId(),
+      newId,
+      queueWaitTimeInSeconds,
+      queueMaxNumberOfMessages,
+    )
 
-    do {
-      try {
-        const result = await this.sqs
-          .receiveMessage({
-            QueueUrl: this.queueUrl,
-            WaitTimeSeconds: 0.05,
-            MaxNumberOfMessages: 5,
-            ReceiveRequestAttemptId: uniqueInstanceId,
-          })
-          .promise()
-
-        console.log('messages', result)
-        if (result.Messages) {
-          for (let x of result.Messages) {
-            console.log('MESSAGE RECEIVED!', x)
-
-            const body = JSON.parse(x.Body)
-
-            const fullMetadata = Object.fromEntries(
-              Object.entries(
-                body.MessageAttributes,
-              ).map(([key, { Value }]: any) => [key, Value]),
-            )
-
-            const { route, correlationId, ...metadata } = fullMetadata
-            const message: any = body.message
-
-            this.internal$.next({
-              route,
-              message,
-              metadata,
-              correlationId,
-              complete: async success => {
-                if (!success) {
-                  await this.sqs
-                    .sendMessage({
-                      QueueUrl: this.deadLetterQueueUrl,
-                      MessageAttributes: x.MessageAttributes,
-                      MessageBody: JSON.stringify(x),
-                    })
-                    .promise()
-                }
-
-                await deleteMessage({
-                  sqs: this.sqs,
-                  queueUrl: this.queueUrl,
-                  messageHandle: x.ReceiptHandle,
-                })
-              },
-              sendReply: async (result, resultMetadata) => {},
-              sendErrorReply: async err => {},
-            })
-          }
-        }
-      } catch (err) {
-        console.warn('err on subscribe', err)
-      }
-
-      if (this.responseQueueUrl) {
-        try {
-          const result = await this.sqs
-            .receiveMessage({
-              QueueUrl: this.responseQueueUrl,
-              WaitTimeSeconds: 0.05,
-              MaxNumberOfMessages: 5,
-              ReceiveRequestAttemptId: uniqueInstanceId,
-            })
-            .promise()
-
-          if (result.Messages) {
-            result.Messages.forEach(x => {
-              const data = JSON.parse(x.Body)
-
-              const route = ''
-              const message: any = {}
-              const metadata: any = {}
-              const correlationId = ''
-
-              this.internalResponse$.next({
-                route,
-                message,
-                metadata,
-                correlationId,
-                complete: async _ => {
-                  await deleteMessage({
-                    sqs: this.sqs,
-                    queueUrl: this.queueUrl,
-                    messageHandle: x.ReceiptHandle,
-                  })
-                },
-                sendReply: async () => {},
-                sendErrorReply: async () => {},
-              })
-            })
-          }
-        } catch (err) {
-          console.warn('err on subscribe', err)
-        }
-      }
-    } while (this.isPollingStarted)
-
-    console.log('finished loop')
+    if (this.responseQueueUrl) {
+      this.fetchAndProcessResponseData(
+        this.responseQueueUrl,
+        newId(),
+        newId,
+        responseQueueWaitTimeInSeconds,
+        responseQueueMaxNumberOfMessages,
+      )
+    }
   }
 
   stop() {
@@ -326,6 +231,322 @@ export class SnsSqsTransport<
 
   dispose() {
     this.stop()
+  }
+
+  private async sendMessageToSns(props: {
+    route: string
+    message: string
+    metadata: TMetadata
+    messageGroupId: string
+    correlationId?: string
+    replyToQueueUrl?: string
+  }) {
+    const { newId } = this.options
+
+    const {
+      route,
+      message,
+      metadata,
+      correlationId,
+      messageGroupId,
+      replyToQueueUrl,
+    } = props
+
+    const messageAttributes = Object.fromEntries(
+      Object.entries(metadata).map(([key, value]) => [
+        key,
+        {
+          DataType: 'String',
+          StringValue: value,
+        },
+      ]),
+    )
+
+    await this.sns
+      .publish({
+        TopicArn: this.topicArn,
+        Message: message,
+        MessageDeduplicationId: newId(),
+        MessageGroupId: messageGroupId,
+        MessageAttributes: {
+          ...messageAttributes,
+          route: {
+            DataType: 'String',
+            StringValue: route,
+          },
+          ...(correlationId
+            ? {
+                correlationId: {
+                  DataType: 'String',
+                  StringValue: correlationId,
+                },
+              }
+            : null),
+          ...(replyToQueueUrl
+            ? {
+                replyToQueue: {
+                  DataType: 'String',
+                  StringValue: replyToQueueUrl,
+                },
+              }
+            : null),
+        },
+      })
+      .promise()
+  }
+
+  private async sendMessageToSqs(props: {
+    queueUrl: string
+    message: string
+    metadata: TMetadata
+    messageGroupId: string
+    correlationId: string
+  }) {
+    const { newId } = this.options
+
+    const {
+      queueUrl,
+      message,
+      metadata,
+      correlationId,
+      messageGroupId,
+    } = props
+
+    const messageAttributes = Object.fromEntries(
+      Object.entries(metadata).map(([key, value]) => [
+        key,
+        <MessageAttributeValue>{
+          DataType: 'String',
+          StringValue: value,
+        },
+      ]),
+    )
+
+    await this.sqs
+      .sendMessage({
+        QueueUrl: queueUrl,
+        MessageBody: message,
+        MessageAttributes: {
+          ...messageAttributes,
+          correlationId: {
+            DataType: 'String',
+            StringValue: correlationId,
+          },
+        },
+        MessageGroupId: messageGroupId,
+        MessageDeduplicationId: newId(),
+      })
+      .promise()
+  }
+
+  private async fetchAndProcessData(
+    queueUrl: string,
+    requestAttemptId: string,
+    newId: () => string,
+    queueWaitTimeInSeconds: number,
+    queueMaxNumberOfMessages: number,
+  ) {
+    let keepOldAttemptId: boolean
+
+    try {
+      const messages = await this.fetchSqsMessages({
+        queueUrl,
+        requestAttemptId,
+        waitTimeInSeconds: queueWaitTimeInSeconds,
+        maxNumberOfMessages: queueMaxNumberOfMessages,
+        isSnsMessage: true,
+      })
+
+      messages.forEach(x => {
+        this.internal$.next({
+          route: x.route,
+          message: x.message,
+          metadata: x.metadata,
+          correlationId: x.correlationId,
+          complete: async success => {
+            if (!success) {
+              await this.sqs
+                .sendMessage({
+                  QueueUrl: this.deadLetterQueueUrl,
+                  MessageAttributes: x.sqs.MessageAttributes,
+                  MessageBody: x.sqs.Body,
+                })
+                .promise()
+            }
+
+            await deleteMessage({
+              sqs: this.sqs,
+              queueUrl: this.queueUrl,
+              messageHandle: x.sqs.ReceiptHandle,
+            })
+          },
+          sendReply: async (result, resultMetadata) => {
+            this.sendMessageToSqs({
+              queueUrl: x.replyToQueue,
+              correlationId: x.correlationId,
+              message: result,
+              metadata: {
+                ...x.metadata,
+                ...resultMetadata,
+              },
+              messageGroupId: newId(),
+            })
+          },
+          sendErrorReply: async err => {
+            this.sendMessageToSqs({
+              queueUrl: x.replyToQueue,
+              correlationId: x.correlationId,
+              message: JSON.stringify({
+                name: err.name,
+                message: err.message,
+                stack: err.stack,
+              }),
+              metadata: {
+                ...x.metadata,
+                isError: true,
+              },
+              messageGroupId: newId(),
+            })
+          },
+        })
+      })
+    } catch (err) {
+      console.warn('err on subscribe', this.queueUrl, err)
+
+      keepOldAttemptId = true
+    }
+
+    if (this.isPollingStarted) {
+      await this.fetchAndProcessData(
+        queueUrl,
+        keepOldAttemptId ? requestAttemptId : newId(),
+        newId,
+        queueWaitTimeInSeconds,
+        queueMaxNumberOfMessages,
+      )
+    }
+  }
+
+  private async fetchAndProcessResponseData(
+    queueUrl: string,
+    requestAttemptId: string,
+    newId: () => string,
+    responseQueueWaitTimeInSeconds: number,
+    responseQueueMaxNumberOfMessages: number,
+  ) {
+    let keepOldAttemptId: boolean
+
+    try {
+      const responseMessages = await this.fetchSqsMessages({
+        queueUrl,
+        requestAttemptId,
+        waitTimeInSeconds: responseQueueWaitTimeInSeconds,
+        maxNumberOfMessages: responseQueueMaxNumberOfMessages,
+        isSnsMessage: false,
+      })
+
+      responseMessages.forEach(async x => {
+        try {
+          this.internalResponse$.next({
+            route: x.route,
+            message: x.message,
+            metadata: x.metadata,
+            correlationId: x.correlationId,
+            complete: async _ => {},
+            sendReply: async () => {},
+            sendErrorReply: async () => {},
+          })
+
+          await deleteMessage({
+            sqs: this.sqs,
+            queueUrl,
+            messageHandle: x.sqs.ReceiptHandle,
+          })
+        } catch (err) {
+          console.log('response err', err)
+        }
+      })
+    } catch (err) {
+      console.warn('err on subscribe', err)
+
+      keepOldAttemptId = true
+    }
+
+    if (this.isPollingStarted) {
+      this.fetchAndProcessResponseData(
+        queueUrl,
+        keepOldAttemptId ? requestAttemptId : newId(),
+        newId,
+        responseQueueWaitTimeInSeconds,
+        responseQueueMaxNumberOfMessages,
+      )
+    }
+  }
+
+  private async fetchSqsMessages(props: {
+    queueUrl: string
+    requestAttemptId: string
+    waitTimeInSeconds: number
+    maxNumberOfMessages: number
+    isSnsMessage: boolean
+  }) {
+    const {
+      queueUrl,
+      requestAttemptId,
+      waitTimeInSeconds,
+      maxNumberOfMessages,
+      isSnsMessage,
+    } = props
+
+    const result = await this.sqs
+      .receiveMessage({
+        QueueUrl: queueUrl,
+        WaitTimeSeconds: waitTimeInSeconds,
+        MaxNumberOfMessages: maxNumberOfMessages,
+        ReceiveRequestAttemptId: requestAttemptId,
+        MessageAttributeNames: isSnsMessage ? undefined : ['All'],
+      })
+      .promise()
+
+    return (result.Messages || []).map(x => {
+      // if (!isSnsMessage) {
+      //   console.log(isSnsMessage, x)
+      // }
+
+      const body = isSnsMessage ? JSON.parse(x.Body) : x.Body
+      const message = isSnsMessage ? body.Message : body
+
+      const fullMetadata = Object.fromEntries(
+        !isSnsMessage
+          ? Object.entries(
+              x.MessageAttributes,
+            ).map(([key, { StringValue }]: any) => [key, StringValue])
+          : Object.entries(
+              body.MessageAttributes,
+            ).map(([key, { Value }]: any) => [key, Value]),
+      )
+
+      const {
+        route,
+        correlationId,
+        replyToQueue,
+        ...metadata
+      } = fullMetadata
+
+      return {
+        route,
+        message,
+        metadata,
+        correlationId,
+        replyToQueue,
+
+        sqs: {
+          ReceiptHandle: x.ReceiptHandle,
+          MessageAttributes: x.MessageAttributes,
+          Body: x.Body,
+        },
+      }
+    })
   }
 }
 
