@@ -36,8 +36,8 @@ export class CheepEvents<
     return this.eventHandler.on
   }
 
-  get event$(): EventHandlerType<THandleableApi>['event$'] {
-    return this.eventHandler.event$
+  get observe(): EventHandlerType<THandleableApi>['observe'] {
+    return this.eventHandler.observe
   }
 
   get publish(): EventPublisher<TPublishableApi> {
