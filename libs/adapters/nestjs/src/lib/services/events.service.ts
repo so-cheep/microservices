@@ -28,9 +28,9 @@ export class CheepEvents<
   private eventHandler: EventHandler<THandleableApi>
   private eventPublisher: EventPublisher<TPublishableApi>
 
-  get handleClass(): EventHandlerType<THandleableApi>['handleClass'] {
-    return this.eventHandler.handleClass
-  }
+  // get handleClass(): EventHandlerType<THandleableApi>['handleClass'] {
+  //   return this.eventHandler.handleClass
+  // }
 
   get on(): EventHandlerType<THandleableApi>['on'] {
     return this.eventHandler.on
