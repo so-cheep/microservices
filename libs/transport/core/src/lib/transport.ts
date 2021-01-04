@@ -31,7 +31,7 @@ export interface Transport<
    * - socket.io-server - do nothing
    * - socket.io-client - adds event to listen (?)
    */
-  listenPatterns(patterns: string[]): void
+  listenPatterns(patterns: string[]): Promise<void>
 
   /**
    * Make sure all entities are initialized
@@ -57,7 +57,7 @@ export interface Transport<
    * socket.io-server - stop and clear resources
    * socket.io-client - stop and clear resources
    */
-  dispose(): void
+  dispose(): Promise<void>
 }
 
 export interface TransportItem<TMetadata extends MessageMetadata> {

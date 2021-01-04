@@ -1,6 +1,7 @@
 import {
   getCqrsClient,
   getEventPublisher,
+  handleCqrsApi,
   handleEvents,
 } from '@cheep/microservices'
 import { MemoryTransport } from '@cheep/transport'
@@ -25,6 +26,9 @@ pusherApi.Command.Pusher.getUserSockets({ socketId: 's1' }).then(
     })
   },
 )
+
+// Handle user commands
+handleCqrsApi(transport, {})
 
 /**
  * EVENTS

@@ -1,5 +1,6 @@
 import { Transport } from '@cheep/transport'
-import { SnsSqsTransport } from '../snsSqs.transport'
+import { Subject } from 'rxjs'
+import { filter } from 'rxjs/operators'
 
 type UserCommand =
   | {
@@ -25,31 +26,33 @@ const delay = (time: number) =>
 
 jest.setTimeout(20000) // need for aws setup
 
-beforeEach(async () => {
-  // const config = new AWS.Config({
-  //   region: 'us-east-1',
-  // })
+// beforeAll(async () => {
+//   // const config = new AWS.Config({
+//   //   region: 'us-east-1',
+//   // })
+//   try {
+//     transport = new SnsSqsTransport({
+//       moduleName: 'TESTING4',
+//       publishExchangeName: 'TEST_HUB',
+//       region: 'us-east-1',
+//       newId: () => Date.now().toString() + ++i,
+//       queueWaitTimeInSeconds: 0.1,
+//       queueMaxNumberOfMessages: 1,
+//       responseQueueWaitTimeInSeconds: 0.1,
+//       responseQueueMaxNumberOfMessages: 1,
+//     })
 
-  transport = new SnsSqsTransport({
-    moduleName: 'TESTING4',
-    publishExchangeName: 'TEST_HUB',
-    region: 'us-east-1',
-    newId: () => Date.now().toString() + ++i,
-    queueWaitTimeInSeconds: 0.1,
-    queueMaxNumberOfMessages: 1,
-    responseQueueWaitTimeInSeconds: 0.1,
-    responseQueueMaxNumberOfMessages: 1,
-  })
+//     await transport.init()
 
-  await transport.init()
+//     await transport.listenPatterns(['Command.User.Login'])
+//   } catch (err) {
+//     console.log('init error', err)
+//   }
+// })
 
-  await transport.listenPatterns(['Command.User.Login'])
-})
-
-afterEach(async () => {
-  transport.dispose()
-  await delay(200)
-})
+// afterAll(async () => {
+//   await transport.dispose()
+// })
 
 describe('transport', () => {
   it('should publish and receive the message', async done => {
@@ -98,5 +101,57 @@ describe('transport', () => {
 
     expect(result.result).toBe('PONG')
     expect(result.metadata.sessionId).toBe(sessionId)
+  })
+
+  it.only('time check', async () => {
+    // Map - Setup
+
+    const [___, startedAt2] = process.hrtime()
+    const map = new Map<string, (x: any) => void>()
+
+    new Array(100).fill(0).forEach((_, i) => {
+      map.set(i.toString(), x => {})
+    })
+
+    const [____, endedAt2] = process.hrtime()
+    console.log('Map Setup', endedAt2 - startedAt2)
+
+    // Map - Call
+    {
+      const [___, startedAt2] = process.hrtime()
+
+      for (let i = 0; i++; i < 1000000) {
+        map.get(i.toString())(i)
+      }
+
+      const [____, endedAt2] = process.hrtime()
+      console.log('Map Call', endedAt2 - startedAt2)
+    }
+
+    // RX - Setup
+
+    const [_, startedAt] = process.hrtime()
+
+    const message$ = new Subject<{ route: string }>()
+    new Array(100).fill(0).forEach((_, i) => {
+      message$
+        .pipe(filter(x => x.route === i.toString()))
+        .subscribe(x => {})
+    })
+
+    const [__, endedAt] = process.hrtime()
+    console.log('RX Setup', endedAt - startedAt)
+
+    // RX - Call
+    {
+      const [_, startedAt] = process.hrtime()
+
+      for (let i = 0; i++; i < 1000000) {
+        message$.next({ route: i.toString() })
+      }
+
+      const [__, endedAt] = process.hrtime()
+      console.log('RX Call', endedAt - startedAt)
+    }
   })
 })

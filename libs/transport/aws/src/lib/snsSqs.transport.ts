@@ -18,9 +18,6 @@ interface Options {
   publishExchangeName: string
   newId: () => string
 
-  // Only for testing
-  forceTempQueues?: boolean
-
   queueWaitTimeInSeconds?: number
   queueMaxNumberOfMessages?: number
 
@@ -58,12 +55,12 @@ export class SnsSqsTransport<TMetadata extends MessageMetadata>
   private queueUrl: string
   private deadLetterQueueArn: string
   private deadLetterQueueUrl: string
-  private responseQueueArn: string
   private responseQueueUrl: string
 
   private sns: AWS.SNS
   private sqs: AWS.SQS
   private isPollingStarted: boolean
+  private listeningPatterns: Set<string>
 
   constructor(private options: Options) {
     const { moduleName, newId, region } = options
@@ -71,10 +68,10 @@ export class SnsSqsTransport<TMetadata extends MessageMetadata>
     this.sns = new AWS.SNS({ region })
     this.sqs = new AWS.SQS({ region })
 
-    // this.sns = new AWS.SNS({ apiVersion: '2010-03-31', region })
+    this.listeningPatterns = new Set()
 
     this.moduleName = moduleName
-    this.rpcResponseQueueName = `Response-${moduleName}` // -${newId()}
+    this.rpcResponseQueueName = `Response-${moduleName}-${newId()}`
 
     this.message$ = this.internal$
   }
@@ -82,7 +79,6 @@ export class SnsSqsTransport<TMetadata extends MessageMetadata>
   async init() {
     const {
       publishExchangeName,
-      forceTempQueues,
       moduleName,
       getMessageGroupId,
     } = this.options
@@ -108,6 +104,7 @@ export class SnsSqsTransport<TMetadata extends MessageMetadata>
       queueName: `DL-${this.moduleName}`,
       deadLetterQueueArn: null,
       moduleName,
+      isFifo: true,
     })
 
     const queue = await ensureQueueExists({
@@ -115,21 +112,68 @@ export class SnsSqsTransport<TMetadata extends MessageMetadata>
       queueName: this.moduleName,
       deadLetterQueueArn: deadLetterQueue.queueArn,
       moduleName,
+      isFifo: true,
     })
 
     const responseQueue = await ensureQueueExists({
       sqs: this.sqs,
       queueName: this.rpcResponseQueueName,
-      deadLetterQueueArn: deadLetterQueue.queueArn,
+      deadLetterQueueArn: null,
       moduleName,
+      isFifo: false,
     })
 
     this.queueArn = queue.queueArn
     this.queueUrl = queue.queueUrl
-    this.responseQueueArn = responseQueue.queueArn
     this.responseQueueUrl = responseQueue.queueUrl
     this.deadLetterQueueArn = deadLetterQueue.queueArn
     this.deadLetterQueueUrl = deadLetterQueue.queueUrl
+  }
+
+  async listenPatterns(patterns: string[]) {
+    await ensureSubscriptionExists({
+      sns: this.sns,
+      topicArn: this.topicArn,
+      queueArn: this.queueArn,
+      deadLetterArn: this.deadLetterQueueArn,
+      patterns,
+    })
+
+    patterns.forEach(x => this.listeningPatterns.add(x))
+  }
+
+  start() {
+    const {
+      newId,
+      queueWaitTimeInSeconds = 0.1,
+      queueMaxNumberOfMessages = 5,
+      responseQueueWaitTimeInSeconds = 10,
+      responseQueueMaxNumberOfMessages = 1,
+    } = this.options
+
+    this.isPollingStarted = true
+
+    this.fetchAndProcessData(
+      this.queueUrl,
+      newId(),
+      newId,
+      queueWaitTimeInSeconds,
+      queueMaxNumberOfMessages,
+    )
+
+    if (this.responseQueueUrl) {
+      this.fetchAndProcessResponseData(
+        this.responseQueueUrl,
+        newId(),
+        newId,
+        responseQueueWaitTimeInSeconds,
+        responseQueueMaxNumberOfMessages,
+      )
+    }
+  }
+
+  stop() {
+    this.isPollingStarted = false
   }
 
   async publish<TResult, TMeta extends TMetadata = TMetadata>(
@@ -185,52 +229,13 @@ export class SnsSqsTransport<TMetadata extends MessageMetadata>
     return result
   }
 
-  async listenPatterns(patterns: string[]) {
-    await ensureSubscriptionExists({
-      sns: this.sns,
-      topicArn: this.topicArn,
-      queueArn: this.queueArn,
-      deadLetterArn: this.deadLetterQueueArn,
-      patterns,
-    })
-  }
-
-  start() {
-    const {
-      newId,
-      queueWaitTimeInSeconds = 0.1,
-      queueMaxNumberOfMessages = 5,
-      responseQueueWaitTimeInSeconds = 10,
-      responseQueueMaxNumberOfMessages = 1,
-    } = this.options
-
-    this.isPollingStarted = true
-
-    this.fetchAndProcessData(
-      this.queueUrl,
-      newId(),
-      newId,
-      queueWaitTimeInSeconds,
-      queueMaxNumberOfMessages,
-    )
-
-    if (this.responseQueueUrl) {
-      this.fetchAndProcessResponseData(
-        this.responseQueueUrl,
-        newId(),
-        newId,
-        responseQueueWaitTimeInSeconds,
-        responseQueueMaxNumberOfMessages,
-      )
-    }
-  }
-
-  stop() {
-    this.isPollingStarted = false
-  }
-
-  dispose() {
+  async dispose() {
     this.stop()
+
+    await deleteQueue({
+      sqs: this.sqs,
+      queueUrl: this.responseQueueUrl,
+    })
   }
 
   private async sendMessageToSns(props: {
@@ -302,8 +307,6 @@ export class SnsSqsTransport<TMetadata extends MessageMetadata>
     messageGroupId: string
     correlationId: string
   }) {
-    const { newId } = this.options
-
     const {
       queueUrl,
       message,
@@ -333,8 +336,6 @@ export class SnsSqsTransport<TMetadata extends MessageMetadata>
             StringValue: correlationId,
           },
         },
-        MessageGroupId: messageGroupId,
-        MessageDeduplicationId: newId(),
       })
       .promise()
   }
@@ -357,7 +358,18 @@ export class SnsSqsTransport<TMetadata extends MessageMetadata>
         isSnsMessage: true,
       })
 
-      messages.forEach(x => {
+      messages.forEach(async x => {
+        if (
+          shouldRouteAutoComplete(x.route, this.listeningPatterns)
+        ) {
+          await deleteMessage({
+            sqs: this.sqs,
+            queueUrl: this.queueUrl,
+            messageHandle: x.sqs.ReceiptHandle,
+          })
+          return
+        }
+
         this.internal$.next({
           route: x.route,
           message: x.message,
@@ -463,7 +475,7 @@ export class SnsSqsTransport<TMetadata extends MessageMetadata>
             messageHandle: x.sqs.ReceiptHandle,
           })
         } catch (err) {
-          console.log('response err', err)
+          console.warn('response err', err)
         }
       })
     } catch (err) {
@@ -509,10 +521,6 @@ export class SnsSqsTransport<TMetadata extends MessageMetadata>
       .promise()
 
     return (result.Messages || []).map(x => {
-      // if (!isSnsMessage) {
-      //   console.log(isSnsMessage, x)
-      // }
-
       const body = isSnsMessage ? JSON.parse(x.Body) : x.Body
       const message = isSnsMessage ? body.Message : body
 
@@ -595,10 +603,17 @@ async function ensureQueueExists(props: {
   queueName: string
   deadLetterQueueArn: string | null
   moduleName: string
+  isFifo: boolean
 }) {
-  const { sqs, queueName, deadLetterQueueArn, moduleName } = props
+  const {
+    sqs,
+    queueName,
+    deadLetterQueueArn,
+    moduleName,
+    isFifo,
+  } = props
 
-  const fullQueueName = `${queueName}.fifo`
+  const fullQueueName = isFifo ? `${queueName}.fifo` : queueName
 
   const queues = await sqs
     .listQueues({
@@ -623,14 +638,17 @@ async function ensureQueueExists(props: {
           module: moduleName,
         },
         Attributes: {
-          FifoQueue: 'true',
           ...(redrivePolicy
             ? { RedrivePolicy: redrivePolicy }
             : null),
 
-          // MessageDeduplicationId: newId(),
-          DeduplicationScope: 'messageGroup', // 'messageGroup' | 'queue'
-          FifoThroughputLimit: 'perQueue', // 'perQueue' | 'perMessageGroupId'
+          ...(isFifo
+            ? {
+                FifoQueue: 'true',
+                FifoThroughputLimit: 'perQueue', // 'perQueue' | 'perMessageGroupId'
+                DeduplicationScope: 'messageGroup', // 'messageGroup' | 'queue'
+              }
+            : null),
         },
       })
       .promise()
@@ -700,7 +718,6 @@ async function ensureSubscriptionExists(props: {
         .promise()
     }
   } else {
-    console.log('creating subscription')
     const result = await sns
       .subscribe({
         Protocol: 'sqs',
@@ -737,4 +754,24 @@ async function deleteMessage(props: {
       ReceiptHandle: messageHandle,
     })
     .promise()
+}
+
+async function deleteQueue(props: {
+  sqs: AWS.SQS
+  queueUrl: string
+}) {
+  const { sqs, queueUrl } = props
+
+  await sqs
+    .deleteQueue({
+      QueueUrl: queueUrl,
+    })
+    .promise()
+}
+
+function shouldRouteAutoComplete(
+  route: string,
+  listeningPatterns: Set<string>,
+) {
+  return !listeningPatterns.has(route)
 }
