@@ -103,18 +103,18 @@ export function handleEvents<
 
       handlerMap.set(event(), handler)
     },
-    handleClass: (eventPick, handler) => {
-      // eventPick is a constructor
-      const keys = Array.isArray(eventPick)
-        ? eventPick.map(getClassEventRoute)
-        : [getClassEventRoute(eventPick)]
-      keys.forEach(key =>
-        handlerMap.set(
-          constructRouteKey([EventRouteKey, ...key]),
-          handler,
-        ),
-      )
-    },
+    // handleClass: (eventPick, handler) => {
+    //   // eventPick is a constructor
+    //   const keys = Array.isArray(eventPick)
+    //     ? eventPick.map(getClassEventRoute)
+    //     : [getClassEventRoute(eventPick)]
+    //   keys.forEach(key =>
+    //     handlerMap.set(
+    //       constructRouteKey([EventRouteKey, ...key]),
+    //       handler,
+    //     ),
+    //   )
+    // },
   }
 }
 
