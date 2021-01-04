@@ -27,4 +27,5 @@ export type {
   EventBase,
   AllEventsMap,
   EventWithMetadata,
+  EventFromPath,
 } from './lib/events/types'

@@ -76,7 +76,7 @@ export interface EventHandler<
 > {
   on: FunctionalEventHandlerFactory<TEventApi>
   handleClass: InheritanceEventHandlerFactory
-  event$: Observable<AllEventsMap<TEventApi>>
+  observe: FilteredEventObservable<TEventApi>
 }
 
 type EventMapReturn<TPayload, TPath> = {
@@ -135,3 +135,21 @@ type InheritanceEventHandlerFactory = <
   event: TEvent | TEvent[],
   handler: (payload: TPayload) => void | Promise<void>,
 ) => void
+
+type FilteredEventObservable<
+  TEventApi extends EventApi<string, EventMap>
+> = <
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  TEventSelection extends EventMapReturn<unknown, string[]>,
+  TPayload = TEventSelection extends EventMapReturn<infer R, string[]>
+    ? R
+    : never,
+  TPath extends string[] = TEventSelection extends EventMapReturn<
+    unknown,
+    infer R
+  >
+    ? R
+    : never
+>(
+  event?: (event: EventSelector<TEventApi>) => TEventSelection[],
+) => Observable<EventWithMetadata<TPayload, TPath>>

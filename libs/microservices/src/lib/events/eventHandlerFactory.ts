@@ -1,15 +1,9 @@
 import { Transport } from '@cheep/transport'
-import { Observable } from 'rxjs'
 import { filter, map, mergeMap, share } from 'rxjs/operators'
 import { constructRouteKey } from '../utils/constructRouteKey'
 import { decodeRpc } from '../utils/decodeRpc'
 import { EventRouteKey } from './constants'
-import {
-  AllEventsMap,
-  EventApi,
-  EventHandler,
-  EventMap,
-} from './types'
+import { EventApi, EventHandler, EventMap } from './types'
 import { getClassEventRoute } from './utils/getClassEventRoute'
 
 /**
@@ -72,6 +66,7 @@ export function handleEvents<
       payload: decodeRpc(item.message).shift(),
       // split by `.` then remove the first, which is the EventRouteKey (Event)
       type: item.route.split('.').slice(1),
+      route: item.route,
     })),
     share(),
   )
@@ -81,9 +76,24 @@ export function handleEvents<
   )
 
   return {
-    event$: (event$ as unknown) as Observable<
-      AllEventsMap<TEventApi>
-    >,
+    observe: eventPick => {
+      // this allows the callback pick of events using the proxy.
+      // BUT the proxy has a liar's type, so we need to call the returned proxy to get the path
+      const events = eventPick
+        ? ((eventPick(
+            generateEventHandlerProxy([EventRouteKey]),
+          ) as unknown) as (() => string)[])
+        : [(): null => null]
+
+      const keys = events.map(e => e()).filter(x => !!x)
+
+      return event$.pipe(
+        // protect for case where user provides no event pick filter by checking key length for 0, which should pass
+        filter(e => keys.length === 0 || keys.includes(e.route)),
+        share(),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ) as any
+    },
     on: (eventPick, handler) => {
       // this allows the callback pick of events using the proxy.
       // BUT the proxy has a liar's type, so we need to call the returned proxy to get the path
