@@ -74,9 +74,13 @@ type ValuesOf<T> = T[keyof T]
 export interface EventHandler<
   TEventApi extends EventApi<string, EventMap>
 > {
+  /** provide a reliable handler for a single event */
   on: FunctionalEventHandlerFactory<TEventApi>
-  handleClass: InheritanceEventHandlerFactory
+  /** get an observable of events (with optional, type-safe filtering) */
   observe: FilteredEventObservable<TEventApi>
+
+  /** @depreciated */
+  // handleClass: InheritanceEventHandlerFactory
 }
 
 type EventMapReturn<TPayload, TPath> = {
