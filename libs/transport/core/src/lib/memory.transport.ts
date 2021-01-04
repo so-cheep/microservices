@@ -1,9 +1,11 @@
 import { Observable, Subject } from 'rxjs'
 import { RpcTimeoutError } from './rpcTimeout.error'
 import {
+  FireAndForgetHandler,
   MessageMetadata,
   PublishProps,
   PublishResult,
+  RouteHandler,
   Transport,
   TransportItem,
 } from './transport'
@@ -16,6 +18,9 @@ export class MemoryTransport<
   message$: Observable<
     TransportItem<TMetadata & { originModule: string }>
   >
+
+  private routeHandlers = new Map<string, RouteHandler>()
+  private onEveryMessageAction: FireAndForgetHandler<TMetadata>
 
   private internal$ = new Subject<
     TransportItem<TMetadata & { originModule: string }>
@@ -67,12 +72,29 @@ export class MemoryTransport<
         },
       }
 
+      const handler = this.routeHandlers.get(item.route)
+      if (handler) {
+        handler(item)
+      }
+
+      if (this.onEveryMessageAction) {
+        this.onEveryMessageAction({
+          route: item.route,
+          message: item.message,
+          metadata: item.metadata,
+        })
+      }
+
       this.internal$.next(<any>item)
     })
   }
 
-  listenPatterns(): void {
-    return
+  on(route: string, action: RouteHandler<TMetadata>) {
+    this.routeHandlers.set(route, action)
+  }
+
+  onEvery(action: FireAndForgetHandler<TMetadata>) {
+    this.onEveryMessageAction = action
   }
 
   start(): void {
@@ -83,7 +105,7 @@ export class MemoryTransport<
     return
   }
 
-  dispose(): void {
+  async dispose() {
     this.internal$.complete()
   }
 }

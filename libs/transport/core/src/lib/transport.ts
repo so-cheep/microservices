@@ -31,7 +31,7 @@ export interface Transport<
    * - socket.io-server - do nothing
    * - socket.io-client - adds event to listen (?)
    */
-  listenPatterns(patterns: string[]): Promise<void>
+  // listenPatterns(patterns: string[]): Promise<void>
 
   /**
    * Make sure all entities are initialized
@@ -58,6 +58,10 @@ export interface Transport<
    * socket.io-client - stop and clear resources
    */
   dispose(): Promise<void>
+
+  on(route: string, action: RouteHandler<TMetadata>)
+
+  onEvery(action: FireAndForgetHandler<TMetadata>)
 }
 
 export interface TransportItem<TMetadata extends MessageMetadata> {
@@ -80,7 +84,23 @@ export interface TransportItem<TMetadata extends MessageMetadata> {
   sendErrorReply(err: Error): Promise<void>
 }
 
+export interface TransportCompactItem<
+  TMetadata extends MessageMetadata
+> {
+  route: string
+  message: string
+  metadata: TMetadata
+}
+
 export type MessageMetadata = Record<string, unknown>
+
+export type RouteHandler<
+  TMetadata extends MessageMetadata = MessageMetadata
+> = (item: TransportItem<TMetadata>) => Promise<void>
+
+export type FireAndForgetHandler<
+  TMetadata extends MessageMetadata = MessageMetadata
+> = (item: TransportCompactItem<TMetadata>) => void
 
 export interface PublishProps<TMetadata extends MessageMetadata> {
   route: string

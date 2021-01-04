@@ -120,7 +120,7 @@ describe('transport', () => {
     {
       const [___, startedAt2] = process.hrtime()
 
-      for (let i = 0; i++; i < 1000000) {
+      for (let i = 0; i++; i < 100000000) {
         map.get(i.toString())(i)
       }
 
@@ -146,7 +146,7 @@ describe('transport', () => {
     {
       const [_, startedAt] = process.hrtime()
 
-      for (let i = 0; i++; i < 1000000) {
+      for (let i = 0; i++; i < 100000000) {
         message$.next({ route: i.toString() })
       }
 
