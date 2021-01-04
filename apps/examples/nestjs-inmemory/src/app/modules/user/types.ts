@@ -17,9 +17,16 @@ export type UserApi = CheepNestApi<
   'User',
   [UserQueryService],
   [UserCommandService],
-  {
-    user: {
-      created: (user: User) => void
+  UserEvents
+>
+
+export interface UserEvents {
+  created: (user: User) => void
+  deleted: (user: User) => void
+  Nested: {
+    single: (x: number) => void
+    Deeper: {
+      double: (x: boolean) => void
     }
   }
->
+}

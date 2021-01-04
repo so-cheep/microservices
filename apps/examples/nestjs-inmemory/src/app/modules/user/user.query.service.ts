@@ -13,7 +13,7 @@ export class UserQueryService implements OnApplicationBootstrap {
   onApplicationBootstrap() {
     // update query model from events!
     this.events.on(
-      e => e.User.user.created,
+      e => e.User.created,
       user => {
         this.users.push(user)
       },

@@ -11,7 +11,7 @@ export class UserCommandService {
       ...props.user,
       id: faker.random.number(),
     }
-    this.events.publish.User.user.created(newUser)
+    this.events.publish.User.created(newUser)
     return newUser.id
   }
 

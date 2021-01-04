@@ -6,6 +6,8 @@ import {
 } from '@nestjs/common'
 import { ConsumedApis } from './types'
 import * as faker from 'faker'
+import { merge } from 'rxjs'
+import { map } from 'rxjs/operators'
 
 @Controller()
 export class GatewayService implements OnApplicationBootstrap {
@@ -15,9 +17,43 @@ export class GatewayService implements OnApplicationBootstrap {
   ) {}
 
   onApplicationBootstrap() {
-    this.events.event$.subscribe(e =>
-      console.log('EVENT', e.type, e.payload),
-    )
+    this.events
+      .observe()
+      .subscribe(e => console.log('EVENT', e.type, e.payload))
+
+    const user$ = this.events
+      .observe(e => [e.User.created, e.User.deleted])
+      .pipe(
+        map(e => {
+          return [
+            e.type,
+            {
+              ...e.payload,
+              entityId: e.payload.id,
+              action: e.type[1],
+              type: e.type,
+            },
+          ]
+        }),
+      )
+
+    const group$ = this.events
+      .observe(e => [e.Group.created])
+      .pipe(
+        map(e => [
+          e.type,
+          {
+            ...e.payload,
+            entityId: e.payload.id,
+            action: e.type[1],
+            type: e.type,
+          },
+        ]),
+      )
+
+    merge(user$, group$).subscribe(([type, payload]) => {
+      console.log('FILTERED', type, payload)
+    })
   }
 
   @Get('users')
