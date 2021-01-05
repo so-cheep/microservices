@@ -1,32 +1,13 @@
-import { MessageMetadata } from '@cheep/transport'
+import {
+  ExecuteProps,
+  FireAndForgetHandler,
+  MessageMetadata,
+  PublishProps,
+  RouteHandler,
+  RpcTimeoutError,
+  Transport,
+} from '@cheep/transport'
 import * as AWS from 'aws-sdk'
-import { Observable, Subject } from 'rxjs'
-
-interface Options {
-  moduleName: string
-  region: string
-
-  publishExchangeName: string
-  newId: () => string
-
-  responseQueueWaitTimeInSeconds?: number
-  responseQueueMaxNumberOfMessages?: number
-
-  getMessageGroupId?: (route: string) => string
-
-  // for lambda
-  manualConfiguration?: {
-    topicArn: string
-    queueUrl: string
-    responseQueueUrl: string
-    deadLetterQueueUrl: string
-  }
-  initialMessages: AWS.SQS.Message[]
-}
-
-interface TransportConfig {
-  deadLetterQueueUrl: string
-}
 
 interface TransportMessage {
   route: string
@@ -102,10 +83,235 @@ function normalizeSqsMessage(
   }
 }
 
-let sqs: AWS.SQS
+let sqsCache: AWS.SQS
 
 function getSqs() {
-  return sqs || (sqs = new AWS.SQS())
+  return sqsCache || (sqsCache = new AWS.SQS())
+}
+
+let snsCache: AWS.SNS
+
+function getSns() {
+  return snsCache || (snsCache = new AWS.SNS())
+}
+
+export type ListenResponseCallback = (
+  items: TransportMessage[],
+) => boolean
+
+export async function processMessages(
+  deadLetterQueueUrl: string,
+  sqsMessages: AWS.SQS.Message[],
+  action: (x: TransportMessage) => Promise<void>,
+) {
+  const messages = sqsMessages.map(normalizeSnsMessage)
+
+  const successMessages: TransportMessage[] = []
+  const errorMessages: [TransportMessage, Error][] = []
+
+  for (const message of messages) {
+    try {
+      await action(message)
+
+      successMessages.push(message)
+    } catch (err) {
+      console.error('LAMBDA_TRANSPORT_PROCESSING_ERROR', err)
+      errorMessages.push([message, err])
+    }
+  }
+
+  /**
+   * Don't ack any messages if all of them passed successfully
+   * Lambda will ack them for us
+   */
+  if (errorMessages.length) {
+    // move error messages to the DLQ and let this process finish successfully
+    const sqs = getSqs()
+
+    await sendMessagesToDLQ({
+      sqs,
+      queueUrl: deadLetterQueueUrl,
+      messages: errorMessages,
+    })
+  }
+}
+
+export function listenResponseQueue(props: {
+  responseQueueUrl: string
+  newId: () => string
+  shouldContinue: () => boolean
+  cb: (messages: TransportMessage[]) => void
+}) {
+  const { responseQueueUrl, newId, shouldContinue, cb } = props
+
+  listenQueue({
+    queueUrl: responseQueueUrl,
+    maxNumberOfMessages: 1,
+    waitTimeInSeconds: 1,
+    isSnsMessage: false,
+    requestAttemptId: newId(),
+    newId,
+    shouldContinue,
+    cb,
+  })
+}
+
+async function sendMessageToSns<TMetadata>(props: {
+  sns: AWS.SNS
+  topicArn: string
+  route: string
+  message: string
+  metadata: TMetadata
+  messageGroupId: string
+  deduplicationId: string
+  correlationId?: string
+  replyToQueueUrl?: string
+}) {
+  const {
+    sns,
+    topicArn,
+    route,
+    message,
+    metadata,
+    correlationId,
+    deduplicationId,
+    messageGroupId,
+    replyToQueueUrl,
+  } = props
+
+  const messageAttributes = Object.fromEntries(
+    Object.entries(metadata).map(([key, value]) => [
+      key,
+      {
+        DataType: 'String',
+        StringValue: value,
+      },
+    ]),
+  )
+
+  await sns
+    .publish({
+      TopicArn: topicArn,
+      Message: message,
+      MessageDeduplicationId: deduplicationId,
+      MessageGroupId: messageGroupId,
+      MessageAttributes: {
+        ...messageAttributes,
+        route: {
+          DataType: 'String',
+          StringValue: route,
+        },
+        ...(correlationId
+          ? {
+              correlationId: {
+                DataType: 'String',
+                StringValue: correlationId,
+              },
+            }
+          : null),
+        ...(replyToQueueUrl
+          ? {
+              replyToQueue: {
+                DataType: 'String',
+                StringValue: replyToQueueUrl,
+              },
+            }
+          : null),
+      },
+    })
+    .promise()
+}
+
+async function sendMessageToSqs<TMetadata>(props: {
+  sqs: AWS.SQS
+  queueUrl: string
+  message: string
+  metadata: TMetadata
+  correlationId: string
+}) {
+  const { sqs, queueUrl, message, metadata, correlationId } = props
+
+  const messageAttributes = Object.fromEntries(
+    Object.entries(metadata).map(([key, value]) => [
+      key,
+      {
+        DataType: 'String',
+        StringValue: value,
+      },
+    ]),
+  )
+
+  await sqs
+    .sendMessage({
+      QueueUrl: queueUrl,
+      MessageBody: message,
+      MessageAttributes: {
+        ...messageAttributes,
+        correlationId: {
+          DataType: 'String',
+          StringValue: correlationId,
+        },
+      },
+    })
+    .promise()
+}
+
+async function listenQueue(props: {
+  queueUrl: string
+  requestAttemptId: string
+  waitTimeInSeconds: number
+  maxNumberOfMessages: number
+  isSnsMessage: boolean
+  newId: () => string
+  shouldContinue: () => boolean
+  cb: (messages: TransportMessage[]) => void
+}) {
+  const {
+    queueUrl,
+    requestAttemptId,
+    waitTimeInSeconds,
+    maxNumberOfMessages,
+    isSnsMessage,
+    newId,
+    shouldContinue,
+    cb,
+  } = props
+
+  const fn = async (attemptId: string) => {
+    let keepSameAttemptId: boolean
+
+    try {
+      const result = await this.sqs
+        .receiveMessage({
+          QueueUrl: queueUrl,
+          WaitTimeSeconds: waitTimeInSeconds,
+          MaxNumberOfMessages: maxNumberOfMessages,
+          ReceiveRequestAttemptId: attemptId,
+          MessageAttributeNames: isSnsMessage ? undefined : ['All'],
+        })
+        .promise()
+
+      const messages: TransportMessage[] = (
+        result.Messages || []
+      ).map(isSnsMessage ? normalizeSnsMessage : normalizeSqsMessage)
+
+      if (messages.length) {
+        try {
+          cb(messages)
+        } catch {}
+      }
+    } catch (err) {
+      // We need to keep same attemptId if there is a network error
+      // to receive same set of items
+      keepSameAttemptId = true
+    }
+
+    if (shouldContinue()) {
+      fn(keepSameAttemptId ? attemptId : newId())
+    }
+  }
+
+  fn(requestAttemptId)
 }
 
 async function batchDeleteMessages(props: {
@@ -129,7 +335,7 @@ async function batchDeleteMessages(props: {
 async function sendMessagesToDLQ(props: {
   sqs: AWS.SQS
   queueUrl: string
-  messages: TransportMessage[]
+  messages: [TransportMessage, Error][]
 }) {
   const { sqs, queueUrl, messages } = props
 
@@ -138,110 +344,220 @@ async function sendMessagesToDLQ(props: {
       QueueUrl: queueUrl,
       Entries: messages.map((x, i) => ({
         Id: i.toString(),
-        MessageBody: x.message,
+        MessageBody: x[0].message,
+        // TODO: store x[1] Error as well somewhere in attributes
+        // TODO: store metadata in attributes
         // MessageAttributes: x.Attributes
       })),
     })
     .promise()
 }
 
-export async function lambdaTransport(
-  config: TransportConfig,
-  sqsMessages: AWS.SQS.Message[],
-  action: (x: TransportMessage) => Promise<void>,
-) {
-  const messages = sqsMessages.map(normalizeSnsMessage)
+export class LambdaTransport<TMetadata extends MessageMetadata>
+  implements Transport<TMetadata> {
+  moduleName?: string
 
-  const successMessages: TransportMessage[] = []
-  const errorMessages: TransportMessage[] = []
+  private routeHandlers = new Map<string, RouteHandler>()
+  private onEveryAction?: FireAndForgetHandler
+  private listenCallbacks: ListenResponseCallback[] = []
 
-  for (const message of messages) {
-    try {
-      await action(message)
+  constructor(
+    private options: {
+      initialMessages: AWS.SQS.Message[]
+      topicArn: string
+      responseQueueUrl: string
+      deadLetterQueueUrl: string
+      utils: {
+        jsonEncode: (s: unknown) => string
+        jsonDecode: (s: string) => unknown
+        newId: () => string
+        getMessageGroup: (route: string) => string
+      }
 
-      successMessages.push(message)
-    } catch (err) {
-      console.error('LAMBDA_TRANSPORT_PROCESSING_ERROR', err)
-      errorMessages.push(message)
-    }
+      defaultRpcTimeout?: number
+    },
+  ) {}
+
+  async init() {}
+
+  async start() {
+    this.processMessages(this.options.initialMessages)
   }
 
-  /**
-   * Don't ack any messages if all of them passed successfully
-   * Lambda will ack them for us
-   */
-  if (errorMessages.length) {
-    // move error messages to the DLQ and let this process finish successfully
-    const sqs = getSqs()
+  async stop() {}
 
-    await sendMessagesToDLQ({
-      sqs,
-      queueUrl: config.deadLetterQueueUrl,
-      messages: errorMessages,
+  async publish<TMeta extends TMetadata = TMetadata>(
+    props: PublishProps<TMeta>,
+  ) {
+    const { topicArn, utils } = this.options
+    const { route, message, metadata = {} } = props
+
+    const sns = getSns()
+
+    await sendMessageToSns({
+      sns,
+      topicArn,
+      route,
+      message: utils.jsonEncode(message),
+      metadata,
+      deduplicationId: utils.newId(),
+      messageGroupId: utils.getMessageGroup(route),
     })
   }
-}
 
-export function listenResponseQueue(props: {
-  responseQueueUrl: string
-}): Observable<TransportMessage> {
-  const message$ = new Subject<TransportMessage>()
+  async execute<TMeta extends TMetadata = TMetadata>(
+    props: ExecuteProps<TMeta>,
+  ): Promise<unknown> {
+    const {
+      topicArn,
+      utils,
+      responseQueueUrl,
+      defaultRpcTimeout = 1000,
+    } = this.options
+    const { route, message, metadata = {}, rpcTimeout } = props
 
-  return message$
-}
+    const sns = getSns()
 
-async function listenQueue(props: {
-  queueUrl: string
-  requestAttemptId: string
-  waitTimeInSeconds: number
-  maxNumberOfMessages: number
-  isSnsMessage: boolean
-  shouldContinue: () => boolean
-}) {
-  const {
-    queueUrl,
-    requestAttemptId,
-    waitTimeInSeconds,
-    maxNumberOfMessages,
-    isSnsMessage,
-    shouldContinue,
-  } = props
+    let correlationId = utils.newId()
 
-  const message$ = new Subject()
+    await sendMessageToSns({
+      sns,
+      topicArn,
+      route,
+      message: utils.jsonEncode(message),
+      metadata,
+      deduplicationId: utils.newId(),
+      replyToQueueUrl: responseQueueUrl,
+      correlationId,
+      messageGroupId: utils.getMessageGroup(route),
+    })
 
-  const fn = async () => {
-    try {
-      const result = await this.sqs
-        .receiveMessage({
-          QueueUrl: queueUrl,
-          WaitTimeSeconds: waitTimeInSeconds,
-          MaxNumberOfMessages: maxNumberOfMessages,
-          ReceiveRequestAttemptId: requestAttemptId,
-          MessageAttributeNames: isSnsMessage ? undefined : ['All'],
-        })
-        .promise()
+    const rpcCallTimeout = rpcTimeout ?? defaultRpcTimeout
 
-      const messages: TransportMessage[] = (
-        result.Messages || []
-      ).map(isSnsMessage ? normalizeSnsMessage : normalizeSqsMessage)
+    return new Promise((resolve, reject) => {
+      try {
+        const cb = items => {
+          const item = items.find(
+            x => x.correlationId === correlationId,
+          )
 
-      messages.forEach(x => message$.next(x))
-    } catch (err) {}
+          if (!item) {
+            return false
+          }
 
-    if (shouldContinue()) {
-      fn()
-    }
+          clearTimeout(timer)
+
+          const result = utils.jsonDecode(item.message)
+
+          resolve(result)
+
+          return true
+        }
+
+        const unsubscribe = this.startListenResponses(cb)
+
+        const timer = setTimeout(() => {
+          unsubscribe()
+          clearTimeout(timer)
+
+          reject(new RpcTimeoutError(props))
+        }, rpcCallTimeout)
+      } catch (err) {
+        reject(err)
+      }
+    })
   }
 
-  fn()
+  async on(route: string, action: RouteHandler<TMetadata>) {
+    this.routeHandlers.set(route, action)
+  }
 
-  return message$
-}
+  onEvery(action: FireAndForgetHandler<TMetadata>) {
+    this.onEveryAction = action
+  }
 
-export async function example() {
-  await lambdaTransport({ deadLetterQueueUrl: '' }, [], async x => {
-    console.log('processed', x.message)
-  })
+  async dispose() {
+    this.routeHandlers.clear()
+    this.listenCallbacks = []
+  }
+
+  private processMessages(initialMessages: AWS.SQS.Message[]) {
+    const { deadLetterQueueUrl, utils } = this.options
+
+    processMessages(deadLetterQueueUrl, initialMessages, async x => {
+      const message = utils.jsonDecode(x.message)
+
+      if (this.onEveryAction) {
+        new Promise((resolve, reject) => {
+          try {
+            this.onEveryAction({
+              route: x.route,
+              message,
+              metadata: x.metadata,
+            })
+
+            resolve(true)
+          } catch (err) {
+            reject(err)
+          }
+        }).catch(err => {})
+      }
+
+      const routeHandler = this.routeHandlers.get(x.route)
+      if (routeHandler) {
+        const result = await routeHandler({
+          route: x.route,
+          message,
+          metadata: x.metadata,
+        })
+
+        if (x.replyToQueue) {
+          /**
+           * Send reply only when something is returned
+           */
+
+          const sqs = getSqs()
+
+          await sendMessageToSqs({
+            sqs,
+            queueUrl: x.replyToQueue,
+            metadata: x.metadata,
+            correlationId: x.correlationId,
+            message: utils.jsonEncode(result ?? ''),
+          })
+        }
+      }
+    })
+  }
+
+  private startListenResponses(cb: ListenResponseCallback) {
+    this.listenCallbacks.push(cb)
+
+    if (this.listenCallbacks.length === 1) {
+      const { responseQueueUrl, utils } = this.options
+
+      listenResponseQueue({
+        responseQueueUrl,
+        newId: utils.newId,
+        shouldContinue: () => this.listenCallbacks.length > 0,
+        cb: items => {
+          const finishedCallbackIndexes = this.listenCallbacks
+            .map((cb, i) => (cb(items) ? i : null))
+            .filter(x => x !== null)
+
+          this.listenCallbacks = this.listenCallbacks.filter(
+            (_, i) => !finishedCallbackIndexes.includes(i),
+          )
+        },
+      })
+    }
+
+    return () => {
+      this.listenCallbacks = this.listenCallbacks.filter(
+        x => x !== cb,
+      )
+    }
+  }
 }
 
 // /**
