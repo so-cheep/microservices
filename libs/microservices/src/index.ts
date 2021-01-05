@@ -9,6 +9,7 @@ export {
 export { CqrsType } from './lib/cqrs/constants'
 export type {
   Handler,
+  HandlerMap,
   QueryMap,
   CommandMap,
   CqrsApi,
