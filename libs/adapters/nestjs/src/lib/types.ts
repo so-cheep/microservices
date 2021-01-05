@@ -6,6 +6,7 @@ import type {
   QueryMap,
 } from '@cheep/microservices'
 import type { Transport } from '@cheep/transport'
+import { HandlerMap } from 'libs/microservices/src/lib/cqrs/types'
 
 export interface CheepMicroservicesRootConfig {
   transport: Transport
@@ -57,7 +58,7 @@ export type CheepNestApi<
 >
 
 type HandlerKeysOf<T> = {
-  [K in keyof T]: T[K] extends Handler ? K : never
+  [K in keyof T]: T[K] extends Handler | HandlerMap ? K : never
 }[keyof T]
 
 type HandlersIn<T> = Pick<T, HandlerKeysOf<T>>
