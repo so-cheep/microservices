@@ -4,9 +4,9 @@ import type {
   Handler,
   MicroserviceApi,
   QueryMap,
+  HandlerMap,
 } from '@cheep/microservices'
 import type { Transport } from '@cheep/transport'
-import { HandlerMap } from 'libs/microservices/src/lib/cqrs/types'
 
 export interface CheepMicroservicesRootConfig {
   transport: Transport
