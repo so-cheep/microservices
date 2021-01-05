@@ -49,6 +49,8 @@ export interface Transport<
 
   on(route: string, action: RouteHandler<TMetadata>): void
 
+  off(route: string): void
+
   onEvery(action: FireAndForgetHandler<TMetadata>)
 }
 

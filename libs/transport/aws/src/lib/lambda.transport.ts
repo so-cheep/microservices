@@ -357,7 +357,7 @@ export class LambdaTransport<TMetadata extends MessageMetadata>
   implements Transport<TMetadata> {
   moduleName?: string
 
-  private routeHandlers = new Map<string, RouteHandler>()
+  private routeHandlers = new Map<string, RouteHandler[]>()
   private onEveryAction?: FireAndForgetHandler
   private listenCallbacks: ListenResponseCallback[] = []
 
@@ -469,7 +469,35 @@ export class LambdaTransport<TMetadata extends MessageMetadata>
   }
 
   on(route: string, action: RouteHandler<TMetadata>) {
-    this.routeHandlers.set(route, action)
+    const handlers = this.routeHandlers.get(route)
+    if (handlers) {
+      this.routeHandlers.set(route, handlers.concat([action]))
+    } else {
+      this.routeHandlers.set(route, [action])
+    }
+
+    return () => {
+      let handlers = this.routeHandlers.get(route)
+      if (!handlers) {
+        return
+      }
+
+      if (handlers.length) {
+        handlers = handlers.filter(x => x !== action)
+      }
+
+      if (handlers.length) {
+        this.routeHandlers.set(route, handlers)
+      } else {
+        this.routeHandlers.delete(route)
+      }
+    }
+  }
+
+  off(route: string) {
+    if (this.routeHandlers.has(route)) {
+      this.routeHandlers.delete(route)
+    }
   }
 
   onEvery(action: FireAndForgetHandler<TMetadata>) {
@@ -500,22 +528,26 @@ export class LambdaTransport<TMetadata extends MessageMetadata>
           } catch (err) {
             reject(err)
           }
-        }).catch(err => {})
+        }).catch(err => {
+          console.warn('onEveryAction.Error', err)
+        })
       }
 
-      const routeHandler = this.routeHandlers.get(x.route)
-      if (routeHandler) {
+      const routeHandlers = this.routeHandlers.get(x.route)
+      if (routeHandlers?.length) {
+        const [routeHandler, ...additionalHandlers] = routeHandlers
+
+        // Always call first handler
         const result = await routeHandler({
           route: x.route,
           message,
           metadata: x.metadata,
         })
 
+        /**
+         * Send reply if it was called with Execute
+         */
         if (x.replyToQueue) {
-          /**
-           * Send reply only when something is returned
-           */
-
           const sqs = getSqs()
 
           await sendMessageToSqs({
@@ -525,6 +557,26 @@ export class LambdaTransport<TMetadata extends MessageMetadata>
             correlationId: x.correlationId,
             message: utils.jsonEncode(result ?? ''),
           })
+        }
+        // Process additional handlers
+        else if (additionalHandlers.length) {
+          const tasks = additionalHandlers.map(handler =>
+            handler({
+              route: x.route,
+              message,
+              metadata: x.metadata,
+            }),
+          )
+
+          Promise.allSettled(tasks)
+            .then(items =>
+              items
+                .filter(x => x.status === 'rejected')
+                .map(x => x.status === 'rejected' && x.reason),
+            )
+            .then(errs => {
+              console.warn('Multiple.RouteHandlers.Error', errs)
+            })
         }
       }
     })
