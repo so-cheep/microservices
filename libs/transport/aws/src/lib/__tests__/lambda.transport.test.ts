@@ -25,7 +25,7 @@ describe('lambda.transport', () => {
     await transport.init()
 
     // Step 3 - Register handlers (async for registering the route)
-    await transport.on('Command.User.Login', async x => {
+    transport.on('Command.User.Login', async x => {
       const { username, password } = x.message as any
 
       if (username !== password) {

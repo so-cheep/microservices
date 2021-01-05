@@ -2,13 +2,6 @@ export interface Transport<
   TMetadata extends MessageMetadata = MessageMetadata
 > {
   /**
-   * rabbitmq         - name for the queue & response queue (rpc)
-   * socket.io-server - not used
-   * socket.io-client - not used
-   */
-  moduleName?: string
-
-  /**
    * - rabbitmq         - publish new message to the queue
    * - socket.io-server - send message to the client, based on the socketId in metadata
    * - socket.io-client - send message to the server
@@ -54,7 +47,7 @@ export interface Transport<
    */
   dispose(): Promise<void>
 
-  on(route: string, action: RouteHandler<TMetadata>): Promise<void>
+  on(route: string, action: RouteHandler<TMetadata>): void
 
   onEvery(action: FireAndForgetHandler<TMetadata>)
 }

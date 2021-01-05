@@ -468,7 +468,7 @@ export class LambdaTransport<TMetadata extends MessageMetadata>
     })
   }
 
-  async on(route: string, action: RouteHandler<TMetadata>) {
+  on(route: string, action: RouteHandler<TMetadata>) {
     this.routeHandlers.set(route, action)
   }
 
