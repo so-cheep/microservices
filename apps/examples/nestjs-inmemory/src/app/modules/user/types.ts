@@ -1,6 +1,6 @@
 import { CheepNestApi } from '@cheep/nestjs'
-import type { UserCommandService } from './user.command.service'
-import type { UserQueryService } from './user.query.service'
+import type { UserCommands } from './user.commands'
+import type { UserQueries } from './user.query.service'
 
 export interface User {
   id: number

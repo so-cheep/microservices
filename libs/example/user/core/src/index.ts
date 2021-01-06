@@ -1,22 +1,52 @@
-import { getClient, handleEventsWithAck } from '@cheep/microservices'
+import {
+  getCqrsClient,
+  getEventPublisher,
+  handleCqrsApi,
+  handleEvents,
+} from '@cheep/microservices'
 import { MemoryTransport } from '@cheep/transport'
 import { PusherApi } from '@nx-cqrs/example/pusher/api'
-import { UserApi } from '@nx-cqrs/example/user/api'
 
-export * from './lib/user.command'
-
-const transport = new MemoryTransport<any, string>({
+const transport = new MemoryTransport<any>({
   moduleName: 'User',
 })
 
-const pusherApi = getClient<PusherApi>(transport)
-const pusherEvents = handleEventsWithAck<PusherApi | UserApi>(
-  transport,
+/**
+ * CQRS
+ */
+const pusherApi = getCqrsClient<PusherApi>(transport)
+
+// Command
+pusherApi.Command.Pusher.getUserSockets({ socketId: 's1' }).then(
+  x => {
+    // Query
+    const data = pusherApi.Query.Pusher.joinChannels({
+      socketId: x[0],
+      channels: ['GROUP1'],
+    })
+  },
 )
 
-pusherEvents.handleFunction(
-  x => x.User.userCreated,
+// Handle user commands
+handleCqrsApi(transport, {})
+
+/**
+ * EVENTS
+ */
+// Subscribe
+const pusherEvents = handleEvents<PusherApi>(transport, ['Pusher'])
+
+pusherEvents.on(
+  x => x.Pusher.socketConnected,
   async x => {
     await pusherApi.Command.Pusher.getUserSockets({ socketId: '1' })
   },
 )
+
+// Publish
+const publisher = getEventPublisher<PusherApi>(transport)
+publisher.Pusher.socketConnected({
+  socketId: 's1',
+  userId: 'u1',
+  activeConnectionsCount: 1,
+})

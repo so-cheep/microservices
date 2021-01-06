@@ -1,6 +1,6 @@
-import { IHandlerMap } from '@cheep/microservices'
+import { HandlerMap } from '@cheep/microservices'
 
-export interface UserQuery extends IHandlerMap {
+export interface UserQuery extends HandlerMap {
   user(id: string): Promise<User>
   users(): Promise<User[]>
 }

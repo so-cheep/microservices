@@ -1,5 +1,5 @@
-import { IHandlerMap } from '@cheep/microservices'
+import { HandlerMap } from '@cheep/microservices'
 
-export interface PusherQuery extends IHandlerMap {
-  getUserSockets(props: { socketId: string }): Promise<void>
+export interface PusherQuery extends HandlerMap {
+  getUserSockets(props: { socketId: string }): Promise<string[]>
 }

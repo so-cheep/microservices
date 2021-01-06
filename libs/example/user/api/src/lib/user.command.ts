@@ -1,6 +1,6 @@
-import { IHandlerMap } from '@cheep/microservices'
+import { HandlerMap } from '@cheep/microservices'
 
-export interface UserCommand extends IHandlerMap {
+export interface UserCommand extends HandlerMap {
   login(props: {
     username: string
     password: string
