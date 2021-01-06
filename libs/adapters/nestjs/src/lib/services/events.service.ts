@@ -55,7 +55,7 @@ export class CheepEvents<
     )
     this.eventHandler = handleEvents<THandleableApi>(
       this.transport,
-      this.moduleOptions.listenEventsFrom,
+      this.moduleOptions.listenEventsFrom ?? [],
     )
   }
 }
