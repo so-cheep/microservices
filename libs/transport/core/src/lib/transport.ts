@@ -63,9 +63,7 @@ export interface TransportCompactMessage {
   metadata: MessageMetadata
 }
 
-export type ListenResponseCallback = (
-  items: TransportMessage[],
-) => boolean
+export type ListenResponseCallback = (item: TransportMessage) => void
 
 export type MessageMetadata = Record<string, unknown>
 
@@ -89,9 +87,4 @@ export interface ExecuteProps<TMetadata extends MessageMetadata> {
   metadata?: TMetadata
 
   rpcTimeout?: number
-}
-
-export interface PublishResult<TMetadata> {
-  result: string
-  metadata: TMetadata
 }

@@ -1,8 +1,9 @@
 import {
-  ListenMessagesProps,
   SendMessageProps,
   SendReplyMessageProps,
   TransportBase,
+  TransportOptions,
+  TransportUtils,
 } from '@cheep/transport'
 import type { SNS, SQS } from 'aws-sdk'
 import { listenResponseQueue } from './app/listenResponseQueue'
@@ -12,17 +13,13 @@ import { sendMessageToSqs } from './app/sendMessageToSqs'
 
 export class LambdaTransport extends TransportBase {
   constructor(
-    protected options: {
+    protected options: TransportOptions & {
       initialMessages: AWS.SQS.Message[]
       topicArn: string
       responseQueueUrl: string
       deadLetterQueueUrl: string
-      defaultRpcTimeout?: number
     },
-    protected utils: {
-      jsonEncode: (s: unknown) => string
-      jsonDecode: (s: string) => unknown
-      newId: () => string
+    protected utils: TransportUtils & {
       getMessageGroup: (route: string) => string
       getSns: () => SNS
       getSqs: () => SQS
@@ -31,24 +28,53 @@ export class LambdaTransport extends TransportBase {
     super(options, utils)
   }
 
-  async init() {}
+  async init() {
+    /**
+     * Process initialMessages only
+     *
+     * No need to listen additional messages
+     */
 
-  async start() {
     const { deadLetterQueueUrl, initialMessages } = this.options
 
     processTriggeredLambdaMessages(
       deadLetterQueueUrl,
       initialMessages,
       () => this.utils.getSqs(),
-      async x => {
-        this.processMessage({
-          msg: x,
-        })
-      },
+      async x => this.processMessage(x),
     )
   }
 
+  async start() {}
+
   async stop() {}
+
+  protected newRpcCallRegistered(activeCount: number) {
+    /**
+     * Start listening response messages only when
+     * there will be RPC call
+     *
+     * And finish listening as soon as there will not be any active calls (lambda optimization)
+     */
+
+    if (activeCount === 1) {
+      const { responseQueueUrl } = this.options
+
+      let pendingItemsCount = activeCount
+
+      listenResponseQueue({
+        sqs: this.utils.getSqs(),
+        responseQueueUrl,
+        newId: this.utils.newId,
+        shouldContinue: () => pendingItemsCount > 0,
+        cb: items => {
+          for (let item of items) {
+            pendingItemsCount = this.processResponseMessage(item)
+          }
+        },
+      })
+    }
+  }
 
   protected async sendMessage(props: SendMessageProps) {
     const { topicArn, responseQueueUrl } = this.options
@@ -93,28 +119,6 @@ export class LambdaTransport extends TransportBase {
       correlationId,
       message,
       metadata,
-    })
-  }
-
-  protected async listenMessages({ cb }: ListenMessagesProps) {}
-
-  protected async listenResponseMessages({
-    cb,
-  }: ListenMessagesProps) {
-    const { responseQueueUrl } = this.options
-
-    const sqs = this.utils.getSqs()
-
-    let pendingItemsCount = 1
-
-    listenResponseQueue({
-      sqs,
-      responseQueueUrl,
-      newId: this.utils.newId,
-      shouldContinue: () => pendingItemsCount > 0,
-      cb: items => {
-        pendingItemsCount = cb(items)
-      },
     })
   }
 }

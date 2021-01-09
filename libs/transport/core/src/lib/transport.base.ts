@@ -24,7 +24,7 @@ export abstract class TransportBase implements Transport {
   private routeHandlers = new Map<string, RouteHandler[]>()
   private prefixHandlers = new Map<string, FireAndForgetHandler>()
   private registeredPrefixes: string[] = []
-  private listenCallbacks: ListenResponseCallback[] = []
+  private listenCallbacks = new Map<string, ListenResponseCallback>()
 
   constructor(
     protected options: TransportOptions,
@@ -33,16 +33,9 @@ export abstract class TransportBase implements Transport {
 
   abstract init(): Promise<void>
 
-  async start() {
-    this.listenMessages({
-      cb: items => {
-        items.forEach(x => this.processMessage({ msg: x }))
-        return 1
-      },
-    })
-  }
+  abstract start(): Promise<void>
 
-  async stop() {}
+  abstract stop(): Promise<void>
 
   protected abstract sendMessage(
     props: SendMessageProps,
@@ -52,11 +45,7 @@ export abstract class TransportBase implements Transport {
     props: SendReplyMessageProps,
   ): Promise<void>
 
-  protected abstract listenMessages(props: ListenMessagesProps): void
-
-  protected abstract listenResponseMessages(
-    props: ListenMessagesProps,
-  ): void
+  protected newRpcCallRegistered(activeRpcCallsCount: number) {}
 
   on(route: string, action: RouteHandler) {
     const handlers = this.routeHandlers.get(route)
@@ -109,6 +98,33 @@ export abstract class TransportBase implements Transport {
 
     let correlationId = this.utils.newId()
 
+    const rpcCallTimeout = rpcTimeout ?? defaultRpcTimeout
+
+    const resultTask = new Promise((resolve, reject) => {
+      try {
+        // register response callback based on the correlationId
+        this.listenCallbacks.set(correlationId, item => {
+          clearTimeout(timer)
+
+          const result = this.utils.jsonDecode(item.message)
+
+          resolve(result)
+        })
+
+        // RPC Timeout logic
+        const timer = setTimeout(() => {
+          this.listenCallbacks.delete(correlationId)
+          clearTimeout(timer)
+
+          reject(new RpcTimeoutError(props))
+        }, rpcCallTimeout)
+
+        this.newRpcCallRegistered(this.listenCallbacks.size)
+      } catch (err) {
+        reject(err)
+      }
+    })
+
     await this.sendMessage({
       route,
       message: this.utils.jsonEncode(message),
@@ -117,40 +133,7 @@ export abstract class TransportBase implements Transport {
       isRpc: true,
     })
 
-    const rpcCallTimeout = rpcTimeout ?? defaultRpcTimeout
-
-    return new Promise((resolve, reject) => {
-      try {
-        const cb = items => {
-          const item = items.find(
-            x => x.correlationId === correlationId,
-          )
-
-          if (!item) {
-            return false
-          }
-
-          clearTimeout(timer)
-
-          const result = this.utils.jsonDecode(item.message)
-
-          resolve(result)
-
-          return true
-        }
-
-        const unsubscribe = this.startListenResponses(cb)
-
-        const timer = setTimeout(() => {
-          unsubscribe()
-          clearTimeout(timer)
-
-          reject(new RpcTimeoutError(props))
-        }, rpcCallTimeout)
-      } catch (err) {
-        reject(err)
-      }
-    })
+    return await resultTask
   }
 
   onEvery(prefixes: string[], action: FireAndForgetHandler) {
@@ -163,13 +146,11 @@ export abstract class TransportBase implements Transport {
   async dispose() {
     this.routeHandlers.clear()
     this.prefixHandlers.clear()
+    this.listenCallbacks.clear()
     this.registeredPrefixes = []
-    this.listenCallbacks = []
   }
 
-  protected async processMessage(props: { msg: TransportMessage }) {
-    const { msg } = props
-
+  protected async processMessage(msg: TransportMessage) {
     const message = this.utils.jsonDecode(msg.message)
 
     const registeredPrefixes = this.registeredPrefixes.filter(
@@ -242,30 +223,30 @@ export abstract class TransportBase implements Transport {
     }
   }
 
-  private startListenResponses(cb: ListenResponseCallback) {
-    this.listenCallbacks.push(cb)
-
-    if (this.listenCallbacks.length === 1) {
-      this.listenResponseMessages({
-        cb: items => {
-          const finishedCallbackIndexes = this.listenCallbacks
-            .map((cb, i) => (cb(items) ? i : null))
-            .filter(x => x !== null)
-
-          this.listenCallbacks = this.listenCallbacks.filter(
-            (_, i) => !finishedCallbackIndexes.includes(i),
-          )
-
-          return this.listenCallbacks.length
-        },
-      })
+  protected processResponseMessage(msg: TransportMessage) {
+    const key = msg.correlationId
+    if (!key) {
+      return
     }
 
-    return () => {
-      this.listenCallbacks = this.listenCallbacks.filter(
-        x => x !== cb,
-      )
+    const callback = this.listenCallbacks.get(key)
+    if (!callback) {
+      return
     }
+
+    this.listenCallbacks.delete(key)
+
+    callback(msg)
+
+    return this.listenCallbacks.size
+  }
+
+  protected getRegisteredRoutes(): string[] {
+    return [...this.routeHandlers.keys()]
+  }
+
+  protected getRegisteredPrefixes(): string[] {
+    return [...this.prefixHandlers.keys()]
   }
 }
 
@@ -285,5 +266,9 @@ export interface SendReplyMessageProps {
 }
 
 export interface ListenMessagesProps {
-  cb: (items: TransportMessage[]) => number
+  cb: (items: TransportMessage[]) => void
+}
+
+export interface ListenResponseMessagesProps {
+  cb: (items: TransportMessage[]) => void
 }
