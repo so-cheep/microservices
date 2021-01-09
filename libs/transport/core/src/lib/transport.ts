@@ -1,18 +1,12 @@
-export interface Transport<
-  TMetadata extends MessageMetadata = MessageMetadata
-> {
+export interface Transport {
   /**
    * - rabbitmq         - publish new message to the queue
    * - socket.io-server - send message to the client, based on the socketId in metadata
    * - socket.io-client - send message to the server
    */
-  publish<TMeta extends TMetadata = TMetadata>(
-    props: PublishProps<TMeta>,
-  ): Promise<void>
+  publish(props: PublishProps<MessageMetadata>): Promise<void>
 
-  execute<TMeta extends TMetadata = TMetadata>(
-    props: ExecuteProps<TMeta>,
-  ): Promise<unknown>
+  execute(props: ExecuteProps<MessageMetadata>): Promise<unknown>
 
   /**
    * - rabbitmq         - create binding (exchange -> queue)
@@ -47,56 +41,41 @@ export interface Transport<
    */
   dispose(): Promise<void>
 
-  on(route: string, action: RouteHandler<TMetadata>): void
+  on(route: string, action: RouteHandler): void
 
   off(route: string): void
 
-  onEvery(action: FireAndForgetHandler<TMetadata>)
+  onEvery(prefixes: string[], action: FireAndForgetHandler)
 }
 
-export interface TransportItem<
-  TMetadata extends MessageMetadata,
-  TMessage = string
-> {
+export interface TransportMessage {
   route: string
-  message: TMessage
-  isError?: boolean
+  message: string
+  metadata: MessageMetadata
 
-  metadata: TMetadata
-
-  correlationId?: string
-
-  /**
-   * completes the message processing logic
-   * @param isSuccess
-   *  true - remove item from the queue
-   *  false - move item to the dead letter queue
-   */
-  complete(isSuccess?: boolean): void
-  sendReply(result: string, metadata?: TMetadata): Promise<void>
-  sendErrorReply(err: Error): Promise<void>
+  correlationId: string
+  replyTo: string
 }
 
-export interface TransportCompactItem<
-  TMetadata extends MessageMetadata,
-  TMessage = string
-> {
+export interface TransportCompactMessage {
   route: string
-  message: TMessage
-  metadata: TMetadata
+  message: unknown
+  metadata: MessageMetadata
 }
+
+export type ListenResponseCallback = (
+  items: TransportMessage[],
+) => boolean
 
 export type MessageMetadata = Record<string, unknown>
 
-export type RouteHandler<
-  TMetadata extends MessageMetadata = MessageMetadata
-> = (
-  item: TransportCompactItem<TMetadata, unknown>,
+export type RouteHandler = (
+  item: TransportCompactMessage,
 ) => Promise<unknown | void>
 
-export type FireAndForgetHandler<
-  TMetadata extends MessageMetadata = MessageMetadata
-> = (item: TransportCompactItem<TMetadata, unknown>) => void
+export type FireAndForgetHandler = (
+  item: TransportCompactMessage,
+) => void
 
 export interface PublishProps<TMetadata extends MessageMetadata> {
   route: string

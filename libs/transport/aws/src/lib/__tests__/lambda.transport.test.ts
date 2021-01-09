@@ -1,4 +1,5 @@
 import { Transport } from '@cheep/transport'
+import * as AWS from 'aws-sdk'
 import { LambdaTransport } from '../lambda.transport'
 
 jest.setTimeout(20000) // need for aws setup
@@ -6,20 +7,24 @@ jest.setTimeout(20000) // need for aws setup
 describe('lambda.transport', () => {
   it('should work on all steps', async done => {
     // Step 1 - Create transport
-    const transport: Transport = new LambdaTransport({
-      topicArn: '',
-      responseQueueUrl: '',
-      deadLetterQueueUrl: '',
-      initialMessages: [],
-      utils: {
+    const transport: Transport = new LambdaTransport(
+      {
+        topicArn: '',
+        responseQueueUrl: '',
+        deadLetterQueueUrl: '',
+        initialMessages: [],
+
+        defaultRpcTimeout: 1000,
+      },
+      {
         newId: () => '',
+        getSns: () => new AWS.SNS(),
+        getSqs: () => new AWS.SQS(),
         getMessageGroup: route => '',
         jsonEncode: JSON.stringify,
         jsonDecode: JSON.parse,
       },
-
-      defaultRpcTimeout: 1000,
-    })
+    )
 
     // Step 2 - Initialize and wait
     await transport.init()
