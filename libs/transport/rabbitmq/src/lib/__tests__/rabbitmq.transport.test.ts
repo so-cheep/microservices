@@ -32,6 +32,18 @@ beforeAll(async () => {
     throw new RemoteError('OOPS', '__CallStack__', 'RemoteError')
   })
 
+  transport.on('Return.Undefined', () => {
+    return undefined
+  })
+
+  transport.on('Return.Null', () => {
+    return null
+  })
+
+  transport.on('Return.Void', <any>(() => {
+    return
+  }))
+
   await transport.start()
 })
 
@@ -92,5 +104,32 @@ describe('rabbitmq.transport', () => {
       expect(err.message).toEqual('OOPS')
       expect(err.className).toEqual('RemoteError')
     }
+  })
+
+  it('should receve undefined', async () => {
+    const result = await transport.execute({
+      route: 'Return.Undefined',
+      message: {},
+    })
+
+    expect(result).toBeUndefined()
+  })
+
+  it('should receve null', async () => {
+    const result = await transport.execute({
+      route: 'Return.Null',
+      message: {},
+    })
+
+    expect(result).toBeNull()
+  })
+
+  it('should receve void (undefined)', async () => {
+    const result = await transport.execute({
+      route: 'Return.Void',
+      message: {},
+    })
+
+    expect(result).toBeUndefined()
   })
 })

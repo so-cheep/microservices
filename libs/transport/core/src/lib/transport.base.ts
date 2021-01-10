@@ -122,9 +122,11 @@ export abstract class TransportBase implements Transport {
             return
           }
 
-          const result = this.utils.jsonDecode(item.message)
+          const decodedMessage: { result: unknown } = <any>(
+            this.utils.jsonDecode(item.message)
+          )
 
-          resolve(result)
+          resolve(decodedMessage.result)
         })
 
         // RPC Timeout logic
@@ -233,7 +235,7 @@ export abstract class TransportBase implements Transport {
           replyTo: msg.replyTo,
           correlationId: msg.correlationId,
           metadata: msg.metadata,
-          message: this.utils.jsonEncode(result ?? ''),
+          message: this.utils.jsonEncode({ result }),
         })
       }
       // Process additional handlers
