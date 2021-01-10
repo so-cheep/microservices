@@ -1,3 +1,4 @@
+import { stringifyError } from './domain/stringifyError'
 import {
   SendErrorReplyMessageProps,
   SendMessageProps,
@@ -82,8 +83,15 @@ export class MemoryTransport extends TransportBase {
   protected async sendErrorReplyMessage(
     props: SendErrorReplyMessageProps,
   ) {
-    const { error } = props
+    const { replyTo, metadata, correlationId, error } = props
 
-    throw error
+    this.processResponseMessage({
+      route: replyTo,
+      message: '',
+      metadata,
+      correlationId,
+      replyTo: undefined,
+      errorData: stringifyError(error),
+    })
   }
 }

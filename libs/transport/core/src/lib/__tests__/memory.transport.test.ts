@@ -1,4 +1,5 @@
 import { MemoryTransport } from '../memory.transport'
+import { RemoteError } from '../remote.error'
 import { Transport } from '../transport'
 
 let transport: Transport
@@ -6,7 +7,7 @@ let i = 0
 
 // jest.setTimeout(30000) // need for aws setup
 
-beforeAll(async () => {
+beforeEach(async () => {
   transport = new MemoryTransport(
     {
       defaultRpcTimeout: 1000,
@@ -22,7 +23,7 @@ beforeAll(async () => {
   await transport.init()
 })
 
-afterAll(async () => {
+afterEach(async () => {
   await transport.dispose()
 })
 
@@ -69,5 +70,28 @@ describe('memory.transport', () => {
         sessionId: 's1',
       },
     })
+  })
+
+  it('should receve remote error', async () => {
+    transport.on('User.Create', () => {
+      throw new RemoteError('OOPS', '__CallStack__', 'RemoteError')
+    })
+
+    await transport.start()
+
+    return transport
+      .execute({
+        route: 'User.Create',
+        message: {
+          userId: 'u1',
+        },
+        metadata: {
+          sessionId: 's1',
+        },
+      })
+      .catch(err => {
+        expect(err.message).toEqual('OOPS')
+        expect(err.className).toEqual('RemoteError')
+      })
   })
 })
