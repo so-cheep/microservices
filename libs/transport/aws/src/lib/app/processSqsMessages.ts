@@ -35,11 +35,11 @@ export async function processSqsMessages(
   }
 
   // Delete all messages after processing
-  if (sqsMessages.length) {
+  if (messages.length) {
     await batchDeleteMessages({
       sqs: getSqs(),
       queueUrl,
-      receiptHandles: sqsMessages.map(x => x.ReceiptHandle),
+      receiptHandles: messages.map(x => x.receiptHandle),
     })
   }
 }

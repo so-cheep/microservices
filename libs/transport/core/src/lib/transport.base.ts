@@ -200,7 +200,7 @@ export abstract class TransportBase implements Transport {
     if (routeHandlers?.length) {
       const [routeHandler, ...additionalHandlers] = routeHandlers
 
-      const isRpc = msg.replyTo
+      const isRpc = !!msg.replyTo
       let result: unknown
 
       try {
@@ -212,7 +212,7 @@ export abstract class TransportBase implements Transport {
         })
       } catch (err) {
         if (isRpc) {
-          this.sendErrorReplyMessage({
+          await this.sendErrorReplyMessage({
             replyTo: msg.replyTo,
             correlationId: msg.correlationId,
             metadata: msg.metadata,
@@ -223,13 +223,15 @@ export abstract class TransportBase implements Transport {
         } else {
           console.log('routeHandler.error', err)
         }
+
+        throw err
       }
 
       /**
        * Send reply if it was called with Execute
        */
       if (isRpc) {
-        this.sendReplyMessage({
+        await this.sendReplyMessage({
           replyTo: msg.replyTo,
           correlationId: msg.correlationId,
           metadata: msg.metadata,
