@@ -1,8 +1,8 @@
 import {
+  normalizeError,
   SendErrorReplyMessageProps,
   SendMessageProps,
   SendReplyMessageProps,
-  stringifyError,
   TransportBase,
   TransportOptions,
   TransportUtils,
@@ -10,28 +10,18 @@ import {
 import * as amqp from 'amqp-connection-manager'
 import { ConfirmChannel } from 'amqplib'
 
-interface Options {
-  moduleName: string
-  amqpConnectionString: string
-  publishExchangeName: string
-
-  // Only for testing
-  forceTempQueues?: boolean
-}
-
 export class RabbitMQTransport extends TransportBase {
-  private isStarted: boolean
   private channel: amqp.ChannelWrapper
-
   private queueName: string
   private responseQueueName: string
+  private bindingSetup: any
 
   constructor(
     protected options: TransportOptions & {
       moduleName: string
       amqpConnectionString: string
       publishExchangeName: string
-      forceTempQueues?: boolean
+      isTestMode?: boolean
     },
     protected utils: TransportUtils,
   ) {
@@ -43,11 +33,13 @@ export class RabbitMQTransport extends TransportBase {
       moduleName,
       amqpConnectionString,
       publishExchangeName,
-      forceTempQueues,
+      isTestMode,
     } = this.options
 
     this.queueName = moduleName
     this.responseQueueName = `${moduleName}Response-${this.utils.newId()}`
+
+    const deadLetterQueueName = `${moduleName}-DLQ`
 
     const connection = amqp.connect([amqpConnectionString])
 
@@ -57,19 +49,25 @@ export class RabbitMQTransport extends TransportBase {
           // Hub Exchange
           x.assertExchange(publishExchangeName, 'topic', {
             durable: true,
-            autoDelete: forceTempQueues,
+            autoDelete: isTestMode ? false : false,
           }),
 
           // Queues
           x.assertQueue(this.queueName, {
             durable: true,
-            exclusive: forceTempQueues ? true : undefined,
+            exclusive: isTestMode ? false : undefined,
           }),
 
           // Response queue
           x.assertQueue(this.responseQueueName, {
             durable: true,
-            exclusive: true,
+            exclusive: isTestMode ? false : true,
+          }),
+
+          // Dead letter queue
+          x.assertQueue(deadLetterQueueName, {
+            durable: true,
+            exclusive: isTestMode ? false : undefined,
           }),
         ])
 
@@ -95,11 +93,20 @@ export class RabbitMQTransport extends TransportBase {
               metadata,
               replyTo,
             })
-
-            x.ack(msg)
           } catch (err) {
-            x.nack(msg)
+            await this.channel.sendToQueue(
+              deadLetterQueueName,
+              msg.content,
+              {
+                correlationId,
+                headers: metadata,
+                replyTo,
+                CC: route,
+              },
+            )
           }
+
+          x.ack(msg)
         })
 
         x.consume(this.responseQueueName, msg => {
@@ -130,20 +137,20 @@ export class RabbitMQTransport extends TransportBase {
         })
       },
     })
+
+    await this.channel.waitForConnect()
   }
 
   async start() {
-    this.isStarted = true
-
     const routes = this.getRegisteredRoutes()
     const prefixes = this.getRegisteredPrefixes()
 
     const patterns = prefixes.map(x => `${x}#`).concat(routes)
 
-    const setup = (x: ConfirmChannel) =>
+    this.bindingSetup = (x: ConfirmChannel) =>
       Promise.all(
         patterns.map(pattern =>
-          x.bindExchange(
+          x.bindQueue(
             this.queueName,
             this.options.publishExchangeName,
             pattern,
@@ -151,15 +158,17 @@ export class RabbitMQTransport extends TransportBase {
         ),
       )
 
-    this.channel.addSetup(setup)
+    await this.channel.addSetup(this.bindingSetup)
   }
 
   async stop() {
-    this.isStarted = false
+    await this.channel.removeSetup(this.bindingSetup)
   }
 
   async dispose() {
     await super.dispose()
+
+    await this.channel.close()
   }
 
   protected async sendMessage(props: SendMessageProps) {
@@ -186,7 +195,7 @@ export class RabbitMQTransport extends TransportBase {
   ): Promise<void> {
     const { replyTo, correlationId, message, metadata } = props
 
-    this.channel.sendToQueue(replyTo, Buffer.from(message), {
+    await this.channel.sendToQueue(replyTo, Buffer.from(message), {
       correlationId,
       headers: metadata,
     })
@@ -197,9 +206,9 @@ export class RabbitMQTransport extends TransportBase {
   ) {
     const { replyTo, correlationId, error, metadata } = props
 
-    this.channel.sendToQueue(
+    await this.channel.sendToQueue(
       replyTo,
-      Buffer.from(stringifyError(error)),
+      Buffer.from(JSON.stringify(normalizeError(error))),
       {
         type: 'error',
         correlationId,

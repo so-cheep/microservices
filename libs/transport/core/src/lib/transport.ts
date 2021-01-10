@@ -1,4 +1,4 @@
-import { StringifiedError } from './domain/stringifyError'
+import { NormalizedError } from './domain/normalizeError'
 
 export interface Transport {
   /**
@@ -50,7 +50,7 @@ export interface TransportMessage {
   correlationId: string
   replyTo?: string
 
-  errorData?: StringifiedError
+  errorData?: NormalizedError
 }
 
 export interface TransportCompactMessage {

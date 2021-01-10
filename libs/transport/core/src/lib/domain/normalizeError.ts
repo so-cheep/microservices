@@ -1,4 +1,4 @@
-export function stringifyError(err: Error): StringifiedError {
+export function normalizeError(err: Error): NormalizedError {
   return {
     errorMessage: err.message,
     errorCallStack: err.stack,
@@ -6,7 +6,7 @@ export function stringifyError(err: Error): StringifiedError {
   }
 }
 
-export interface StringifiedError {
+export interface NormalizedError {
   errorMessage: string
   errorCallStack: string
   errorClassName: string

@@ -1,5 +1,6 @@
-export * from './lib/domain/stringifyError'
+export * from './lib/domain/normalizeError'
 export * from './lib/memory.transport'
+export * from './lib/remote.error'
 export * from './lib/rpcTimeout.error'
 export * from './lib/transport'
 export * from './lib/transport.base'

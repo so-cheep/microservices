@@ -1,4 +1,4 @@
-import { stringifyError } from './domain/stringifyError'
+import { normalizeError } from './domain/normalizeError'
 import {
   SendErrorReplyMessageProps,
   SendMessageProps,
@@ -93,7 +93,7 @@ export class MemoryTransport extends TransportBase {
       metadata,
       correlationId,
       replyTo: undefined,
-      errorData: stringifyError(error),
+      errorData: normalizeError(error),
     })
   }
 }
