@@ -1,6 +1,8 @@
 import {
+  SendErrorReplyMessageProps,
   SendMessageProps,
   SendReplyMessageProps,
+  stringifyError,
   TransportBase,
   TransportOptions,
   TransportUtils,
@@ -119,6 +121,28 @@ export class LambdaTransport extends TransportBase {
       correlationId,
       message,
       metadata,
+    })
+  }
+
+  protected async sendErrorReplyMessage(
+    props: SendErrorReplyMessageProps,
+  ): Promise<void> {
+    const {
+      replyTo: queueUrl,
+      correlationId,
+      error,
+      metadata,
+    } = props
+
+    const sqs = this.utils.getSqs()
+
+    await sendMessageToSqs({
+      sqs,
+      queueUrl,
+      correlationId,
+      message: '',
+      metadata,
+      errorData: stringifyError(error),
     })
   }
 }

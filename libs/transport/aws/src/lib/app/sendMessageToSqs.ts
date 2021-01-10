@@ -1,3 +1,4 @@
+import { StringifiedError } from '@cheep/transport'
 import type { SQS } from 'aws-sdk'
 
 export async function sendMessageToSqs<TMetadata>(props: {
@@ -6,29 +7,39 @@ export async function sendMessageToSqs<TMetadata>(props: {
   message: string
   metadata: TMetadata
   correlationId: string
+  errorData?: StringifiedError
 }) {
-  const { sqs, queueUrl, message, metadata, correlationId } = props
-
-  const messageAttributes = Object.fromEntries(
-    Object.entries(metadata).map(([key, value]) => [
-      key,
-      {
-        DataType: 'String',
-        StringValue: value,
-      },
-    ]),
-  )
+  const {
+    sqs,
+    queueUrl,
+    message,
+    metadata,
+    correlationId,
+    errorData,
+  } = props
 
   await sqs
     .sendMessage({
       QueueUrl: queueUrl,
       MessageBody: message,
       MessageAttributes: {
-        ...messageAttributes,
+        metadata: {
+          DataType: 'String',
+          StringValue: JSON.stringify(metadata),
+        },
         correlationId: {
           DataType: 'String',
           StringValue: correlationId,
         },
+
+        ...(errorData
+          ? {
+              errorData: {
+                DataType: 'String',
+                StringValue: JSON.stringify(errorData),
+              },
+            }
+          : null),
       },
     })
     .promise()

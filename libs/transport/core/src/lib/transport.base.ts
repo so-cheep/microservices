@@ -1,3 +1,4 @@
+import { RemoteError } from './remote.error'
 import { RpcTimeoutError } from './rpcTimeout.error'
 import {
   ExecuteProps,
@@ -43,6 +44,10 @@ export abstract class TransportBase implements Transport {
 
   protected abstract sendReplyMessage(
     props: SendReplyMessageProps,
+  ): Promise<void>
+
+  protected abstract sendErrorReplyMessage(
+    props: SendErrorReplyMessageProps,
   ): Promise<void>
 
   protected newRpcCallRegistered(activeRpcCallsCount: number) {}
@@ -106,6 +111,17 @@ export abstract class TransportBase implements Transport {
         this.listenCallbacks.set(correlationId, item => {
           clearTimeout(timer)
 
+          if (item.errorData) {
+            reject(
+              new RemoteError(
+                item.errorData.errorMessage,
+                item.errorData.errorCallStack,
+                item.errorData.errorClassName,
+              ),
+            )
+            return
+          }
+
           const result = this.utils.jsonDecode(item.message)
 
           resolve(result)
@@ -156,6 +172,8 @@ export abstract class TransportBase implements Transport {
     const registeredPrefixes = this.registeredPrefixes.filter(
       prefix => msg.route.startsWith(prefix),
     )
+
+    // prefix handlers
     if (registeredPrefixes.length) {
       const handlers = registeredPrefixes.map(prefix => {
         const handler = this.prefixHandlers.get(prefix)
@@ -173,7 +191,7 @@ export abstract class TransportBase implements Transport {
             reject(err)
           }
         }).catch(err => {
-          console.warn('onEveryAction.Error', err)
+          console.warn('onEveryAction.Error', prefix, err)
         })
       })
     }
@@ -182,17 +200,35 @@ export abstract class TransportBase implements Transport {
     if (routeHandlers?.length) {
       const [routeHandler, ...additionalHandlers] = routeHandlers
 
-      // Always call first handler
-      const result = await routeHandler({
-        route: msg.route,
-        message,
-        metadata: msg.metadata,
-      })
+      const isRpc = msg.replyTo
+      let result: unknown
+
+      try {
+        // Always call first handler
+        result = await routeHandler({
+          route: msg.route,
+          message,
+          metadata: msg.metadata,
+        })
+      } catch (err) {
+        if (isRpc) {
+          this.sendErrorReplyMessage({
+            replyTo: msg.replyTo,
+            correlationId: msg.correlationId,
+            metadata: msg.metadata,
+            error: err,
+          })
+
+          return
+        } else {
+          console.log('routeHandler.error', err)
+        }
+      }
 
       /**
        * Send reply if it was called with Execute
        */
-      if (msg.replyTo) {
+      if (isRpc) {
         this.sendReplyMessage({
           replyTo: msg.replyTo,
           correlationId: msg.correlationId,
@@ -263,6 +299,13 @@ export interface SendReplyMessageProps {
   correlationId: string
   metadata: MessageMetadata
   message: string
+}
+
+export interface SendErrorReplyMessageProps {
+  replyTo: string
+  correlationId: string
+  metadata: MessageMetadata
+  error: Error
 }
 
 export interface ListenMessagesProps {

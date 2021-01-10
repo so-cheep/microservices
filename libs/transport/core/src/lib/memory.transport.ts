@@ -1,4 +1,5 @@
 import {
+  SendErrorReplyMessageProps,
   SendMessageProps,
   SendReplyMessageProps,
   TransportBase,
@@ -76,5 +77,13 @@ export class MemoryTransport extends TransportBase {
         replyTo: undefined,
       })
     }, messageDelayTime)
+  }
+
+  protected async sendErrorReplyMessage(
+    props: SendErrorReplyMessageProps,
+  ) {
+    const { error } = props
+
+    throw error
   }
 }

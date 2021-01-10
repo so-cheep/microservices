@@ -1,10 +1,13 @@
 import {
   MessageMetadata,
   PublishProps,
-  PublishResult,
   RpcTimeoutError,
+  SendMessageProps,
+  SendReplyMessageProps,
   Transport,
-  TransportItem,
+  TransportBase,
+  TransportOptions,
+  TransportUtils,
 } from '@cheep/transport'
 import * as amqp from 'amqp-connection-manager'
 import { ConfirmChannel } from 'amqplib'
@@ -15,13 +18,199 @@ interface Options {
   moduleName: string
   amqpConnectionString: string
   publishExchangeName: string
-  newId: () => string
 
   // Only for testing
   forceTempQueues?: boolean
 }
 
-export class RabbitMQTransport<TMetadata extends MessageMetadata>
+export class RabbitMQTransport extends TransportBase {
+  private isStarted: boolean
+  private channel: amqp.ChannelWrapper
+
+  private queueName: string
+  private responseQueueName: string
+
+  constructor(
+    protected options: TransportOptions & {
+      moduleName: string
+      amqpConnectionString: string
+      publishExchangeName: string
+      forceTempQueues?: boolean
+    },
+    protected utils: TransportUtils,
+  ) {
+    super(options, utils)
+  }
+
+  async init() {
+    const {
+      moduleName,
+      amqpConnectionString,
+      publishExchangeName,
+      forceTempQueues,
+    } = this.options
+
+    this.queueName = moduleName
+    this.responseQueueName = `${moduleName}Response-${this.utils.newId()}`
+
+    const connection = amqp.connect([amqpConnectionString])
+
+    this.channel = connection.createChannel({
+      setup: (c: ConfirmChannel) =>
+        Promise.all([
+          // Hub Exchange
+          c.assertExchange(publishExchangeName, 'topic', {
+            durable: true,
+          }),
+
+          // Queues
+          c.assertQueue(this.queueName, {
+            durable: true,
+            exclusive: forceTempQueues ? true : undefined,
+          }),
+
+          // Response queue
+          c.assertQueue(this.responseQueueName, {
+            durable: true,
+            exclusive: true,
+          }),
+        ]),
+    })
+  }
+
+  async start() {
+    this.isStarted = true
+
+    const routes = this.getRegisteredRoutes()
+    const prefixes = this.getRegisteredPrefixes()
+
+    const setup = (x: ConfirmChannel) => {
+      x.consume(this.queueName, msg => {
+        if (!msg) {
+          return
+        }
+
+        const message: string = msg.content
+          ? msg.content.toString()
+          : null
+
+        const route = msg.fields.routingKey
+        const replyTo = msg.properties.replyTo
+        const correlationId = msg.properties.correlationId
+
+        const metadata = <any>msg.properties.headers
+
+        this.processMessage({
+          route,
+          correlationId,
+          message,
+          metadata,
+          replyTo,
+        })
+        this.internal$.next({
+          message,
+          route: msg.fields.routingKey,
+          metadata,
+          correlationId,
+          complete: (isSuccess = true) => {
+            if (isSuccess) {
+              this.channel.ack(msg)
+            } else {
+              this.channel.nack(msg)
+            }
+          },
+
+          sendReply: replyTo
+            ? async (result, resultMetadata) =>
+                this.channel.sendToQueue(
+                  replyTo,
+                  Buffer.from(JSON.stringify(result ?? null)),
+                  {
+                    correlationId,
+                    headers: {
+                      ...metadata,
+                      ...resultMetadata,
+                    },
+                  },
+                )
+            : () => Promise.resolve(),
+
+          sendErrorReply: replyTo
+            ? async err =>
+                this.channel.sendToQueue(
+                  replyTo,
+                  Buffer.from(
+                    JSON.stringify({
+                      name: err.name,
+                      message: err.message,
+                      stack: err.stack,
+                    }),
+                  ),
+                  {
+                    type: 'error',
+                    correlationId,
+                    headers: metadata,
+                  },
+                )
+            : () => Promise.resolve(),
+        })
+      })
+
+      x.consume(this.rpcResponseQueueName, msg => {
+        if (!msg) {
+          return
+        }
+
+        const message: string = msg.content
+          ? msg.content.toString()
+          : null
+
+        const correlationId = msg.properties.correlationId
+        const isError = msg.properties.type === 'error'
+
+        x.ack(msg)
+
+        this.internalResponse$.next({
+          isError,
+          message,
+          route: msg.fields.routingKey,
+          metadata: <any>msg.properties.headers,
+          correlationId,
+          complete: () => null,
+          sendReply: () => Promise.resolve(),
+          sendErrorReply: () => Promise.resolve(),
+        })
+      })
+    }
+
+    this.channel.addSetup(setup)
+  }
+
+  async stop() {
+    this.isStarted = false
+  }
+
+  async dispose() {
+    await super.dispose()
+  }
+
+  protected async sendMessage(props: SendMessageProps) {
+    const { route, metadata, message, correlationId, isRpc } = props
+  }
+
+  protected async sendReplyMessage(
+    props: SendReplyMessageProps,
+  ): Promise<void> {
+    const { replyTo, correlationId, message, metadata } = props
+
+    this.channel.sendToQueue(replyTo, Buffer.from(message), {
+      correlationId,
+      headers: metadata,
+    })
+  }
+}
+
+export class RabbitMQTransport2<TMetadata extends MessageMetadata>
   implements Transport<TMetadata> {
   moduleName: string
 

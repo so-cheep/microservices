@@ -23,16 +23,6 @@ export async function sendMessageToSns<TMetadata>(props: {
     replyToQueueUrl,
   } = props
 
-  const messageAttributes = Object.fromEntries(
-    Object.entries(metadata).map(([key, value]) => [
-      key,
-      {
-        DataType: 'String',
-        StringValue: value,
-      },
-    ]),
-  )
-
   await sns
     .publish({
       TopicArn: topicArn,
@@ -40,10 +30,13 @@ export async function sendMessageToSns<TMetadata>(props: {
       MessageDeduplicationId: deduplicationId,
       MessageGroupId: messageGroupId,
       MessageAttributes: {
-        ...messageAttributes,
         route: {
           DataType: 'String',
           StringValue: route,
+        },
+        metadata: {
+          DataType: 'String',
+          StringValue: JSON.stringify(metadata),
         },
         ...(correlationId
           ? {
@@ -55,7 +48,7 @@ export async function sendMessageToSns<TMetadata>(props: {
           : null),
         ...(replyToQueueUrl
           ? {
-              replyToQueue: {
+              replyTo: {
                 DataType: 'String',
                 StringValue: replyToQueueUrl,
               },

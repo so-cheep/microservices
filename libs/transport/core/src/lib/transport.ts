@@ -1,3 +1,5 @@
+import { StringifiedError } from './domain/stringifyError'
+
 export interface Transport {
   /**
    * Make sure all entities are initialized
@@ -46,7 +48,9 @@ export interface TransportMessage {
   metadata: MessageMetadata
 
   correlationId: string
-  replyTo: string
+  replyTo?: string
+
+  errorData?: StringifiedError
 }
 
 export interface TransportCompactMessage {

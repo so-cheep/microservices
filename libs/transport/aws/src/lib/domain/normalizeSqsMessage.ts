@@ -7,26 +7,21 @@ export function normalizeSqsMessage(
   const body = sqsMessage.Body
   const message = body
 
-  const fullMetadata = Object.fromEntries(
+  const attributes = Object.fromEntries(
     Object.entries(
       sqsMessage.MessageAttributes,
     ).map(([key, { StringValue }]: any) => [key, StringValue]),
   )
 
-  const {
-    route,
-    correlationId,
-    replyToQueue,
-    ...metadata
-  } = fullMetadata
+  const { correlationId, metadata, errorData } = attributes
 
   return {
-    route,
+    route: '',
     message,
     metadata,
 
     correlationId,
-    replyTo: replyToQueue,
+    errorData,
 
     receiptHandle: sqsMessage.ReceiptHandle,
   }
