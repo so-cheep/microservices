@@ -220,8 +220,6 @@ export abstract class TransportBase implements Transport {
           })
 
           return
-        } else {
-          console.log('routeHandler.error', err)
         }
 
         throw err

@@ -29,27 +29,30 @@ export class MemoryTransport extends TransportBase {
 
     const { route, message, metadata, correlationId, isRpc } = props
 
-    if (!messageDelayTime) {
-      this.processMessage({
-        route,
-        message,
-        metadata,
-        correlationId,
-        replyTo: isRpc ? 'REPLY' : undefined,
-      })
+    const processAction = async () => {
+      try {
+        await this.processMessage({
+          route,
+          message,
+          metadata,
+          correlationId,
+          replyTo: isRpc ? 'REPLY' : undefined,
+        })
+      } catch (err) {
+        if (isRpc) {
+          throw err
+        } else {
+          console.error('err', err)
+        }
+      }
+    }
 
+    if (!messageDelayTime) {
+      await processAction()
       return
     }
 
-    setTimeout(() => {
-      this.processMessage({
-        route,
-        message,
-        metadata,
-        correlationId,
-        replyTo: isRpc ? 'REPLY' : undefined,
-      })
-    }, messageDelayTime)
+    setTimeout(() => processAction(), messageDelayTime)
   }
 
   protected async sendReplyMessage(props: SendReplyMessageProps) {
@@ -57,27 +60,26 @@ export class MemoryTransport extends TransportBase {
 
     const { replyTo, message, correlationId, metadata } = props
 
-    if (!messageDelayTime) {
-      this.processResponseMessage({
-        route: replyTo,
-        message,
-        metadata,
-        correlationId,
-        replyTo: undefined,
-      })
+    const processAction = async () => {
+      try {
+        this.processResponseMessage({
+          route: replyTo,
+          message,
+          metadata,
+          correlationId,
+          replyTo: undefined,
+        })
+      } catch (err) {
+        console.error('err', err)
+      }
+    }
 
+    if (!messageDelayTime) {
+      await processAction()
       return
     }
 
-    setTimeout(() => {
-      this.processResponseMessage({
-        route: replyTo,
-        message,
-        metadata,
-        correlationId,
-        replyTo: undefined,
-      })
-    }, messageDelayTime)
+    setTimeout(() => processAction(), messageDelayTime)
   }
 
   protected async sendErrorReplyMessage(
