@@ -1,87 +1,99 @@
-import { Observable, Subject } from 'rxjs'
-import { RpcTimeoutError } from './rpcTimeout.error'
+import { normalizeError } from './domain/normalizeError'
 import {
-  MessageMetadata,
-  PublishProps,
-  PublishResult,
-  Transport,
-  TransportItem,
-} from './transport'
+  SendErrorReplyMessageProps,
+  SendMessageProps,
+  SendReplyMessageProps,
+  TransportBase,
+  TransportOptions,
+  TransportUtils,
+} from './transport.base'
 
-export class MemoryTransport<
-  TMetadata extends MessageMetadata = MessageMetadata
-> implements Transport<TMetadata> {
-  moduleName?: string
-
-  message$: Observable<
-    TransportItem<TMetadata & { originModule: string }>
-  >
-
-  private internal$ = new Subject<
-    TransportItem<TMetadata & { originModule: string }>
-  >()
-
-  constructor(args: { moduleName: string }) {
-    this.moduleName = args.moduleName
-
-    this.message$ = this.internal$.asObservable()
+export class MemoryTransport extends TransportBase {
+  constructor(
+    protected options: TransportOptions & {
+      messageDelayTime?: number
+    },
+    protected utils: TransportUtils,
+  ) {
+    super(options, utils)
   }
 
-  publish<TMeta extends TMetadata = never>(
-    props: PublishProps<TMeta>,
-  ): Promise<PublishResult<TMeta>> {
-    const { message, metadata, route, rpc } = props
+  async init() {}
 
-    return new Promise<PublishResult<TMeta>>((resolve, reject) => {
-      const timeout = rpc?.enabled
-        ? setTimeout(() => {
-            reject(new RpcTimeoutError(<any>props))
-          }, rpc.timeout)
-        : undefined
+  async start() {}
 
-      const item: TransportItem<TMeta> = {
-        route,
-        message,
-        metadata,
+  async stop() {}
 
-        // currently ignoring completion, because it's in memory!
-        complete: () => {
-          if (timeout) {
-            clearTimeout(timeout)
-          }
-        },
+  protected async sendMessage(props: SendMessageProps) {
+    const { messageDelayTime = 0 } = this.options
 
-        sendReply: async (result: any, resultMetadata) =>
-          resolve({
-            result,
-            metadata: {
-              ...metadata,
-              ...resultMetadata,
-            },
-          }),
+    const { route, message, metadata, correlationId, isRpc } = props
 
-        sendErrorReply: async err => {
-          reject(err)
-        },
+    const processAction = async () => {
+      try {
+        await this.processMessage({
+          route,
+          message,
+          metadata,
+          correlationId,
+          replyTo: isRpc ? 'REPLY' : undefined,
+        })
+      } catch (err) {
+        if (isRpc) {
+          throw err
+        } else {
+          console.error('err', err)
+        }
       }
+    }
 
-      this.internal$.next(<any>item)
+    if (!messageDelayTime) {
+      await processAction()
+      return
+    }
+
+    setTimeout(() => processAction(), messageDelayTime)
+  }
+
+  protected async sendReplyMessage(props: SendReplyMessageProps) {
+    const { messageDelayTime = 0 } = this.options
+
+    const { replyTo, message, correlationId, metadata } = props
+
+    const processAction = async () => {
+      try {
+        this.processResponseMessage({
+          route: replyTo,
+          message,
+          metadata,
+          correlationId,
+          replyTo: undefined,
+        })
+      } catch (err) {
+        console.error('err', err)
+      }
+    }
+
+    if (!messageDelayTime) {
+      await processAction()
+      return
+    }
+
+    setTimeout(() => processAction(), messageDelayTime)
+  }
+
+  protected async sendErrorReplyMessage(
+    props: SendErrorReplyMessageProps,
+  ) {
+    const { replyTo, metadata, correlationId, error } = props
+
+    this.processResponseMessage({
+      route: replyTo,
+      message: '',
+      metadata,
+      correlationId,
+      replyTo: undefined,
+      errorData: normalizeError(error),
     })
-  }
-
-  listenPatterns(): void {
-    return
-  }
-
-  start(): void {
-    return
-  }
-
-  stop(): void {
-    return
-  }
-
-  dispose(): void {
-    this.internal$.complete()
   }
 }

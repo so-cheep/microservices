@@ -1,7 +1,7 @@
 import { CheepEvents } from '@cheep/nestjs'
 import { Injectable } from '@nestjs/common'
-import { User, UserApi } from './types'
 import * as faker from 'faker'
+import { User, UserApi } from './types'
 
 @Injectable()
 export class UserCommandService {

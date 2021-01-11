@@ -1,95 +1,86 @@
-import { Observable } from 'rxjs'
+import { NormalizedError } from './domain/normalizeError'
 
-export interface Transport<
-  TMetadata extends MessageMetadata = MessageMetadata
-> {
+export interface Transport {
   /**
-   * rabbitmq         - name for the queue & response queue (rpc)
-   * socket.io-server - not used
-   * socket.io-client - not used
+   * Make sure all entities are initialized
    */
-  moduleName?: string
+  init(): Promise<void>
 
-  /**
-   * received message stream
-   */
-  message$: Observable<
-    TransportItem<TMetadata & { originModule: string }>
-  >
+  on(route: string, action: RouteHandler): void
+
+  off(route: string): void
+
+  onEvery(prefixes: string[], action: FireAndForgetHandler): void
 
   /**
-   * - rabbitmq         - publish new message to the queue
-   * - socket.io-server - send message to the client, based on the socketId in metadata
-   * - socket.io-client - send message to the server
+   * At this point all handlers are registered and we can
+   * configure Exchange->Queue bindings
    */
-  publish<TMeta extends TMetadata = TMetadata>(
-    props: PublishProps<TMeta>,
-  ): Promise<{ result: string; metadata: TMeta }>
+  start(): Promise<void>
 
   /**
-   * - rabbitmq         - create binding (exchange -> queue)
-   * - socket.io-server - do nothing
-   * - socket.io-client - adds event to listen (?)
+   * Publish event, no result will be returned
    */
-  listenPatterns(patterns: string[]): void
+  publish(props: PublishProps<MessageMetadata>): Promise<void>
 
   /**
-   * rabbitmq         - start connection
-   * socket.io-server - start server listening process
-   * socket.io-client - connect to the server
+   * Execute RPC call, result will be returned always
+   *
+   * throws RPCTimeout error
    */
-  start(): void
+  execute(props: ExecuteProps<MessageMetadata>): Promise<unknown>
 
   /**
-   * rabbitmq         - stop connection
-   * socket.io-server - stop listening connections
-   * socket.io-client - disconnect from the server
+   * Stop connection to the queues
    */
-  stop(): void
+  stop(): Promise<void>
 
   /**
-   * rabbitmq         - stop and clear resources
-   * socket.io-server - stop and clear resources
-   * socket.io-client - stop and clear resources
+   * Make sure all resources are disposed
+   * Temp queues should be deleted
    */
-  dispose(): void
+  dispose(): Promise<void>
 }
 
-export interface TransportItem<TMetadata extends MessageMetadata> {
+export interface TransportMessage {
   route: string
   message: string
-  isError?: boolean
+  metadata: MessageMetadata
 
-  metadata: TMetadata
+  correlationId: string
+  replyTo?: string
 
-  correlationId?: string
-
-  /**
-   * completes the message processing logic
-   * @param isSuccess
-   *  true - remove item from the queue
-   *  false - move item to the dead letter queue
-   */
-  complete(isSuccess?: boolean): void
-  sendReply(result: string, metadata?: TMetadata): Promise<void>
-  sendErrorReply(err: Error): Promise<void>
+  errorData?: NormalizedError
 }
+
+export interface TransportCompactMessage {
+  route: string
+  message: unknown
+  metadata: MessageMetadata
+}
+
+export type ListenResponseCallback = (item: TransportMessage) => void
 
 export type MessageMetadata = Record<string, unknown>
 
+export type RouteHandler = (
+  item: TransportCompactMessage,
+) => Promise<unknown | void>
+
+export type FireAndForgetHandler = (
+  item: TransportCompactMessage,
+) => void
+
 export interface PublishProps<TMetadata extends MessageMetadata> {
   route: string
-  message: string
-
-  metadata: TMetadata
-
-  rpc?: {
-    enabled: boolean
-    timeout: number
-  }
+  message: unknown
+  metadata?: TMetadata
 }
 
-export interface PublishResult<TMetadata> {
-  result: string
-  metadata: TMetadata
+export interface ExecuteProps<TMetadata extends MessageMetadata> {
+  route: string
+  message: unknown
+  metadata?: TMetadata
+
+  rpcTimeout?: number
 }

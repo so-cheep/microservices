@@ -1,6 +1,6 @@
-import { IHandlerMap } from '@cheep/microservices'
+import { HandlerMap } from '@cheep/microservices'
 
-export interface PusherCommand<TMessage = any> extends IHandlerMap {
+export interface PusherCommand<TMessage = any> extends HandlerMap {
   sendToSocket(props: {
     socketId: string
     message: TMessage
