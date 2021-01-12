@@ -1,6 +1,6 @@
 import { CheepEvents } from '@cheep/nestjs'
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common'
-import { User, UserApi } from './types'
+import { User, UserApi } from './user.api'
 
 @Injectable()
 export class UserQueries implements OnApplicationBootstrap {

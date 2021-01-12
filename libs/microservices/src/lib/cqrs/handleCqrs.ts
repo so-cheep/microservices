@@ -2,7 +2,14 @@ import { Transport } from '@cheep/transport'
 import { constructRouteKey } from '../utils/constructRouteKey'
 import { makeSafeArgs } from '../utils/makeSafeArgs'
 import { CqrsType } from './constants'
-import { CqrsApi, Handler, HandlerArg, HandlerMap } from './types'
+import {
+  CommandMap,
+  CqrsApi,
+  Handler,
+  HandlerArg,
+  QueryMap,
+  ShallowHandlerMap,
+} from './types'
 
 /**
  *
@@ -16,7 +23,7 @@ import { CqrsApi, Handler, HandlerArg, HandlerMap } from './types'
  */
 
 export function handleCqrsSingle<
-  TApi extends CqrsApi<string, HandlerMap, HandlerMap>,
+  TApi extends CqrsApi<string, QueryMap, CommandMap>,
   TTransport extends Transport = Transport
 >(
   type: CqrsType,
@@ -28,7 +35,7 @@ export function handleCqrsSingle<
 }
 
 export function handleCqrsApi<
-  TApi extends CqrsApi<string, HandlerMap, HandlerMap>
+  TApi extends CqrsApi<string, QueryMap, CommandMap>
 >(transport: Transport, api: TApi) {
   buildRecursiveHandler(
     CqrsType.Query,
@@ -83,14 +90,14 @@ function buildRecursiveHandler(
       break
     // it is safe to check object here, we have caught array above
     case typeof handlers === 'object':
-      Object.entries(handlers as HandlerMap).flatMap(
+      Object.entries(handlers as ShallowHandlerMap).flatMap(
         ([key, handler]) =>
           // call handle recursively, adding the object key to the keyPrefix array to track depth
           buildRecursiveHandler(
             type,
             transport,
             moduleName,
-            handler,
+            handler as Handler,
             keyPrefix.concat([key]),
           ),
       )
