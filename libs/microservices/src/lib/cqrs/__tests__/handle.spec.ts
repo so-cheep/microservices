@@ -1,12 +1,11 @@
-import { TransportItem } from '@cheep/transport'
 import * as faker from 'faker'
-import { Subject } from 'rxjs'
+import { mocked } from 'ts-jest/utils'
 import { constructRouteKey } from '../../utils/constructRouteKey'
 import { encodeRpc } from '../../utils/encodeRpc'
 import { mockTransport } from '../../__mocks__/transport'
 import { CqrsType } from '../constants'
 import { handleCqrsSingle } from '../handleCqrs'
-import { CqrsApi, HandlerMap, RpcMetadata } from '../types'
+import { CqrsApi, HandlerMap } from '../types'
 interface User {
   name: string
 }
@@ -22,19 +21,14 @@ const userService: UserService = {
   // we have to put the jest mock INSIDE the getById definition so that we can use `getById` to build handler
   getById: (...args) => mockGet(...args),
 }
-const message$ = (mockTransport.message$ as unknown) as Subject<
-  TransportItem<RpcMetadata>
->
 
 beforeEach(() => {
   jest.clearAllMocks()
 })
 
 describe('handler tests', () => {
-  it('can handle object with functions', done => {
+  it('can handle object with functions', async () => {
     const mockUser = { name: faker.name.findName() }
-    const mockComplete = jest.fn()
-    const mockReturn = jest.fn()
     mockGet.mockResolvedValueOnce(mockUser)
     const id = 'some-id'
     const metadata = {
@@ -48,44 +42,37 @@ describe('handler tests', () => {
       'TestUser',
     )
 
-    message$.next({
-      complete: mockComplete,
-      sendReply: mockReturn,
-      sendErrorReply: jest.fn(),
-      message: encodeRpc(id),
+    const routeKey = constructRouteKey({
+      busType: CqrsType.Query,
+      moduleName: 'TestUser',
+      functionName: 'getById',
+    })
+
+    expect(mockTransport.on).toHaveBeenCalledTimes(1)
+    expect(mockTransport.on).toHaveBeenLastCalledWith(
+      routeKey,
+      expect.any(Function),
+    )
+
+    // let's call the handler now
+    const routeHandler = mocked(mockTransport.on).mock.calls[0][1]
+
+    const result = await routeHandler({
+      message: id,
       metadata: metadata,
-      route: constructRouteKey({
-        busType: CqrsType.Query,
-        moduleName: <Api['namespace']>'TestUser',
-        functionName: ([
-          'getById',
-        ] as (keyof UserService)[]) as string[],
-      }),
+      route: routeKey,
     })
 
     expect(mockGet).toHaveBeenCalledTimes(1)
     // function should be called with metadata as well!
     expect(mockGet).toHaveBeenLastCalledWith(id, metadata)
-    expect(mockComplete).toHaveBeenCalledTimes(1)
-    expect(mockComplete).toHaveBeenLastCalledWith(true)
-
-    // have to set immediate to get the return of the async fn
-    setImmediate(() => {
-      expect(mockReturn).toHaveBeenCalledTimes(1)
-      expect(mockReturn).toHaveBeenLastCalledWith(
-        // handler should encode return value for rpc!
-        encodeRpc(mockUser),
-        expect.objectContaining(metadata),
-      )
-      done()
-    })
+    expect(result).toMatchObject(mockUser)
   })
 
-  it('can handle nested object with functions', done => {
+  it('can handle nested object with functions', async () => {
     const api = { users: userService }
     const mockUser = { name: faker.name.findName() }
-    const mockComplete = jest.fn()
-    const mockReturn = jest.fn()
+
     mockGet.mockResolvedValueOnce(mockUser)
     const id = 'some-id'
     const metadata = {
@@ -100,36 +87,33 @@ describe('handler tests', () => {
       'TestUser',
     )
 
-    message$.next({
-      complete: mockComplete,
-      sendReply: mockReturn,
-      sendErrorReply: jest.fn(),
-      message: encodeRpc(id),
+    const routeKey = constructRouteKey({
+      busType: CqrsType.Query,
+      moduleName: <Api['namespace']>'TestUser',
+      functionName: ([
+        'users',
+        'getById',
+      ] as (keyof UserService)[]) as string[],
+    })
+
+    expect(mockTransport.on).toHaveBeenCalledTimes(1)
+    expect(mockTransport.on).toHaveBeenLastCalledWith(
+      routeKey,
+      expect.any(Function),
+    )
+
+    // let's call the handler now
+    const routeHandler = mocked(mockTransport.on).mock.calls[0][1]
+
+    const result = await routeHandler({
+      message: id,
       metadata: metadata,
-      route: constructRouteKey({
-        busType: CqrsType.Query,
-        moduleName: <Api['namespace']>'TestUser',
-        functionName: ([
-          'users',
-          'getById',
-        ] as (keyof UserService)[]) as string[],
-      }),
+      route: routeKey,
     })
 
     expect(mockGet).toHaveBeenCalledTimes(1)
     // function should be called with metadata as well!
     expect(mockGet).toHaveBeenLastCalledWith(id, metadata)
-    expect(mockComplete).toHaveBeenCalledTimes(1)
-    expect(mockComplete).toHaveBeenLastCalledWith(true)
-
-    // have to set immediate to get the return of the async fn
-    setImmediate(() => {
-      expect(mockReturn).toHaveBeenCalledTimes(1)
-      expect(mockReturn).toHaveBeenLastCalledWith(
-        encodeRpc(mockUser),
-        expect.objectContaining(metadata),
-      )
-      done()
-    })
+    expect(result).toMatchObject(mockUser)
   })
 })

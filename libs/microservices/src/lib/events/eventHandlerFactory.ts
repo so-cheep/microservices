@@ -1,21 +1,22 @@
-import { Transport } from '@cheep/transport'
-import { filter, map, mergeMap, share } from 'rxjs/operators'
+import { Transport, TransportCompactMessage } from '@cheep/transport'
+import { Observable, Subject } from 'rxjs'
+import { filter, map, share } from 'rxjs/operators'
 import { constructRouteKey } from '../utils/constructRouteKey'
-import { decodeRpc } from '../utils/decodeRpc'
+import { makeSafeArgs } from '../utils/makeSafeArgs'
 import { EventRouteKey } from './constants'
 import { EventApi, EventHandler, EventMap } from './types'
-import { getClassEventRoute } from './utils/getClassEventRoute'
 
 /**
  * Call this function to establish an event handler in a module.
  *
- * **Should be called once per module** because it creates a constraint of one acknowledged handler per event type
+ * _repeat calls in the same module will have __minor__ performance impact
  *
- * Returns an object with functional methods to handle events with acknowledgement,
+ * Returns an object with functional method to handle events with acknowledgement,
  * as well as an observable of events which can be used for lossy event handling
  *
  * @param transport the transport to use
- * @param listenModules the array of module names to subscribe events from, limited to the provided API names
+ * @param listenModules the array of module names to subscribe events from,
+ * which limits the contents of the event observable stream
  */
 export function handleEvents<
   TEventApi extends EventApi<string, EventMap>
@@ -24,55 +25,24 @@ export function handleEvents<
   transport: Transport,
   listenModules: TEventApi['namespace'][],
 ): EventHandler<TEventApi> {
-  const handlerMap = new Map<
-    string,
-    (...args: unknown[]) => void | Promise<void>
-  >()
-
-  transport.message$
-    .pipe(
-      mergeMap(
-        async (item): Promise<[typeof item, boolean]> => {
-          try {
-            if (handlerMap.has(item.route)) {
-              // route is handled
-              const handler = handlerMap.get(item.route)
-              const args = decodeRpc(item.message)
-
-              // call handler, adding metadata as last arg
-              await handler(...args, item.metadata)
-            }
-
-            return [item, true]
-          } catch (err) {
-            return [item, false]
-          }
-        },
-      ),
-    )
-    .subscribe(([item, result]) => {
-      try {
-        item.complete(result)
-      } catch {
-        //
-      }
-    })
-
-  const event$ = transport.message$.pipe(
+  // set up the observable first
+  const incoming$ = new Subject<TransportCompactMessage>()
+  transport.onEvery(
+    listenModules.map(module => `${EventRouteKey}.${module}`),
+    x => incoming$.next(x),
+  )
+  // transform the observable and share the transformation
+  const event$ = incoming$.pipe(
     filter(item => item.route.startsWith(EventRouteKey)),
     map(item => ({
       metadata: item.metadata,
       // the event function type requires a single arg, so this is safe
-      payload: decodeRpc(item.message).shift(),
+      payload: (item.message as unknown[]).shift(),
       // split by `.` then remove the first, which is the EventRouteKey (Event)
       type: item.route.split('.').slice(1),
       route: item.route,
     })),
     share(),
-  )
-
-  transport.listenPatterns(
-    listenModules.map(module => `${EventRouteKey}.${module}.`),
   )
 
   return {
@@ -101,23 +71,16 @@ export function handleEvents<
         generateEventHandlerProxy([EventRouteKey]),
       ) as unknown) as () => string
 
-      handlerMap.set(event(), handler)
+      transport.on(event(), async x => {
+        // lying to typescript here, so we can squeeze metadata in
+        const args = makeSafeArgs(x)
+        return handler(...(args as Parameters<typeof handler>))
+      })
     },
-    // handleClass: (eventPick, handler) => {
-    //   // eventPick is a constructor
-    //   const keys = Array.isArray(eventPick)
-    //     ? eventPick.map(getClassEventRoute)
-    //     : [getClassEventRoute(eventPick)]
-    //   keys.forEach(key =>
-    //     handlerMap.set(
-    //       constructRouteKey([EventRouteKey, ...key]),
-    //       handler,
-    //     ),
-    //   )
-    // },
   }
 }
 
+// recursive function to generate a proxy, which is ultimately limited by typescript
 function generateEventHandlerProxy(path: string[]) {
   return new Proxy(() => undefined, {
     get: (_, prop) => {

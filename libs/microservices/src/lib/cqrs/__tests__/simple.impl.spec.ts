@@ -1,13 +1,16 @@
 import {
   MemoryTransport,
+  RemoteError,
   RpcTimeoutError,
   Transport,
 } from '@cheep/transport'
 import * as faker from 'faker'
+import { decodeRpc } from '../../utils/decodeRpc'
+import { encodeRpc } from '../../utils/encodeRpc'
 import { getCqrsClient } from '../getCqrsClient'
 import { handleCqrsApi } from '../handleCqrs'
-import { ClientApi, CqrsApi, HandlerMap, RpcMetadata } from '../types'
-
+import { ClientApi, CqrsApi, HandlerMap } from '../types'
+import { v4 as uuid } from 'uuid'
 interface User {
   name: string
   id: number
@@ -68,15 +71,20 @@ const api: Api = {
   Query: queryHandler,
 }
 
-let transport: Transport<RpcMetadata>, apiClient: ClientApi<Api>
-beforeEach(() => {
-  transport = new MemoryTransport({ moduleName: api.namespace })
+let transport: Transport, apiClient: ClientApi<Api>
+beforeEach(async () => {
+  transport = new MemoryTransport(
+    { defaultRpcTimeout: 5000, messageDelayTime: 0 },
+    { jsonDecode: decodeRpc, jsonEncode: encodeRpc, newId: uuid },
+  )
+  await transport.init()
   handleCqrsApi(transport, api)
 
   apiClient = getCqrsClient<Api>(transport, {
     timeout: 5000,
   })
 
+  await transport.start()
   jest.clearAllMocks()
 })
 
@@ -116,13 +124,21 @@ describe('simple implementation tests', () => {
   it('passes errors from the handler to the caller', async () => {
     await expect(() =>
       apiClient.Query.Users.getById({ id: users.length + 1 }),
-    ).rejects.toThrow(UserNotFoundError)
+    ).rejects.toThrow(
+      expect.objectContaining<Partial<RemoteError>>({
+        className: 'UserNotFoundError',
+      }),
+    )
   })
 
   it('passes errors from the handler to the caller (non-mocked variation, to confirm)', async () => {
     await expect(() =>
       apiClient.Query.Users.notMockedWillThrow(),
-    ).rejects.toThrow(UserNotFoundError)
+    ).rejects.toThrow(
+      expect.objectContaining<Partial<RemoteError>>({
+        className: 'UserNotFoundError',
+      }),
+    )
   })
 
   it('throws a timeout error when calling unhandled', async () => {

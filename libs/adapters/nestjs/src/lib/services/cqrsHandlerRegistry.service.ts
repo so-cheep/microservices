@@ -3,7 +3,6 @@ import {
   handleCqrsApi,
   CqrsApi,
   QueryMap,
-  RpcMetadata,
   Handler,
 } from '@cheep/microservices'
 import {
@@ -39,7 +38,7 @@ export class CqrsHandlerRegistryService implements OnModuleInit {
       never
     >,
     @Inject(ModuleNameToken) private moduleName: string,
-    @Inject(TransportToken) private transport: Transport<RpcMetadata>,
+    @Inject(TransportToken) private transport: Transport,
     private moduleRef: ModuleRef,
   ) {}
 

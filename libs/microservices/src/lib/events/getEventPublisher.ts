@@ -1,10 +1,9 @@
 import { Transport } from '@cheep/transport'
 import { InvalidRpcPathError } from '../errors/invalidRpcPath.error'
 import { constructRouteKey } from '../utils/constructRouteKey'
-import { encodeRpc } from '../utils/encodeRpc'
+
 import { EventRouteKey } from './constants'
 import { EventApi, EventMap, EventPublisher } from './types'
-import { getInstanceEventRoute } from './utils/getInstanceEventRoute'
 
 export function getEventPublisher<
   TApi extends EventApi<string, EventMap>
@@ -21,36 +20,15 @@ function buildRecursiveProxy(transport: Transport, path: string[]) {
     apply(_, __, args: unknown[]) {
       // path should have EventRouteKey + Module Name + function name to do proxy route key
       if (path.length < 2) {
-        // might be a publish of array of class events!
-        if (args.every(getInstanceEventRoute)) {
-          // yep, it's class events
-          args.forEach(arg =>
-            publish(
-              transport,
-              [arg],
-              path.concat(getInstanceEventRoute(arg)),
-            ),
-          )
-        } else {
-          // nope, not class events, so its a bad path!
-          throw new InvalidRpcPathError(path)
-        }
+        throw new InvalidRpcPathError(path)
       } else {
         // normal proxy object call here
-        publish(transport, args, path)
+        transport.publish({
+          message: args,
+          metadata: {},
+          route: constructRouteKey(path),
+        })
       }
     },
-  })
-}
-
-function publish(
-  transport: Transport,
-  args: unknown[],
-  path: string[],
-) {
-  transport.publish({
-    message: encodeRpc(...args),
-    metadata: {} as never,
-    route: constructRouteKey(path),
   })
 }

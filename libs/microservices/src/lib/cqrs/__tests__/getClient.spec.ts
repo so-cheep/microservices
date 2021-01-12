@@ -7,7 +7,6 @@ import {
   CqrsApi,
 } from '../types'
 import { getCqrsClient } from '../getCqrsClient'
-import { encodeRpc } from '../../utils/encodeRpc'
 import { constructRouteKey } from '../../utils/constructRouteKey'
 import { mockTransport } from '../../__mocks__/transport'
 
@@ -45,12 +44,12 @@ describe('client functionality', () => {
   it('can proxy a 1 layer object', async () => {
     const options: RpcOptions = { timeout: 12345 }
     const base = getCqrsClient<SillyApi>(mockTransport, options)
-    const args = ['thing'] as [string]
-    await base.Query.Silly.get(...args)
+    const args = 'thing'
+    await base.Query.Silly.get(args)
 
-    expect(mockTransport.publish).toHaveBeenCalledTimes(1)
-    expect(mockTransport.publish).toHaveBeenLastCalledWith({
-      message: encodeRpc(...args),
+    expect(mockTransport.execute).toHaveBeenCalledTimes(1)
+    expect(mockTransport.execute).toHaveBeenLastCalledWith({
+      message: [args],
       metadata: expect.objectContaining<RpcMetadata>({
         // iso regex!
         callTime: expect.any(String),
@@ -60,7 +59,6 @@ describe('client functionality', () => {
         moduleName: 'Silly',
         functionName: 'get',
       }),
-      rpc: expect.objectContaining(options),
     })
   })
 
@@ -73,9 +71,9 @@ describe('client functionality', () => {
     const args = 'thing'
     await base.Query.Silly.recurse.get(args)
 
-    expect(mockTransport.publish).toHaveBeenCalledTimes(1)
-    expect(mockTransport.publish).toHaveBeenLastCalledWith({
-      message: encodeRpc(args),
+    expect(mockTransport.execute).toHaveBeenCalledTimes(1)
+    expect(mockTransport.execute).toHaveBeenLastCalledWith({
+      message: [args],
       metadata: expect.objectContaining<RpcMetadata>({
         // iso regex!
         callTime: expect.any(String),
@@ -85,7 +83,6 @@ describe('client functionality', () => {
         moduleName: 'Silly',
         functionName: ['recurse', 'get'],
       }),
-      rpc: expect.objectContaining(options),
     })
   })
   it('can proxy a many layered object', async () => {
@@ -100,9 +97,9 @@ describe('client functionality', () => {
       args,
     )
 
-    expect(mockTransport.publish).toHaveBeenCalledTimes(1)
-    expect(mockTransport.publish).toHaveBeenLastCalledWith({
-      message: encodeRpc(args),
+    expect(mockTransport.execute).toHaveBeenCalledTimes(1)
+    expect(mockTransport.execute).toHaveBeenLastCalledWith({
+      message: [args],
       metadata: expect.objectContaining<RpcMetadata>({
         // iso regex!
         callTime: expect.any(String),
@@ -112,7 +109,6 @@ describe('client functionality', () => {
         moduleName: 'Silly',
         functionName: [...Array(10).fill('recurse'), 'get'],
       }),
-      rpc: expect.objectContaining(options),
     })
   })
 })

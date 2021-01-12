@@ -130,16 +130,6 @@ type FunctionalEventHandlerFactory<
   handler: (payload: TPayload) => void | Promise<void>,
 ) => void
 
-type InheritanceEventHandlerFactory = <
-  TEvent extends { new (...args: unknown[]): unknown },
-  TPayload = TEvent extends { new (...args: unknown[]): infer R }
-    ? R
-    : never
->(
-  event: TEvent | TEvent[],
-  handler: (payload: TPayload) => void | Promise<void>,
-) => void
-
 type FilteredEventObservable<
   TEventApi extends EventApi<string, EventMap>
 > = <
