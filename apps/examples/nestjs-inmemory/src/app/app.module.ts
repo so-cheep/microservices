@@ -1,3 +1,4 @@
+import { MicroserviceTransportUtils } from '@cheep/microservices'
 import { CheepMicroservicesModule } from '@cheep/nestjs'
 import { MemoryTransport } from '@cheep/transport'
 import { Module } from '@nestjs/common'
@@ -8,7 +9,7 @@ import { UserModule } from './modules/user/user.module'
 @Module({
   imports: [
     CheepMicroservicesModule.forRoot({
-      transport: new MemoryTransport({ moduleName: 'Root' }),
+      transport: new MemoryTransport({}, MicroserviceTransportUtils),
     }),
     UserModule,
     GroupModule,

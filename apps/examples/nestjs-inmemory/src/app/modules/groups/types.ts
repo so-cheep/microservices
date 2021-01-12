@@ -1,6 +1,6 @@
 import { CheepNestApi } from '@cheep/nestjs'
-import type { GroupCommandService } from './group.command.service'
-import type { GroupQueryService } from './group.query.service'
+import type { GroupCommands } from './group.commands'
+import type { GroupQueries } from './group.queries'
 
 export interface Group {
   id: number
@@ -15,8 +15,8 @@ export interface UserGroup {
 
 export type GroupApi = CheepNestApi<
   'Group',
-  [GroupQueryService],
-  [GroupCommandService],
+  [GroupQueries],
+  [GroupCommands],
   {
     created: (user: Group) => void
   }

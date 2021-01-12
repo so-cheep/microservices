@@ -3,7 +3,7 @@ import { Injectable, OnApplicationBootstrap } from '@nestjs/common'
 import { Group, GroupApi } from './types'
 
 @Injectable()
-export class GroupQueryService implements OnApplicationBootstrap {
+export class GroupQueries implements OnApplicationBootstrap {
   private groups: Group[] = [{ id: 0, name: 'default', color: 'red' }]
 
   constructor(private events: CheepEvents<GroupApi>) {}

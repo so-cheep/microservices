@@ -20,6 +20,7 @@ import type { CheepMicroservicesModuleConfig } from '../types'
 import type { Transport } from '@cheep/transport'
 import { ModuleRef } from '@nestjs/core'
 import { HandlerRegistrationError } from '../errors/handlerRegistration.error'
+import { completeModuleHandlerRegistration } from '../util/moduleRegistry'
 
 const NestLifecycleFunctions = [
   'constructor',
@@ -56,6 +57,7 @@ export class CqrsHandlerRegistryService implements OnModuleInit {
     }
 
     handleCqrsApi(this.transport, api)
+    completeModuleHandlerRegistration(this.moduleName)
   }
 }
 

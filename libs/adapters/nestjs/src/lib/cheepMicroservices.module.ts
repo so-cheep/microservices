@@ -21,16 +21,15 @@ import {
 } from '@cheep/microservices'
 import { CheepEvents } from './services/events.service'
 import { CqrsHandlerRegistryService } from './services/cqrsHandlerRegistry.service'
-import { CheepCoreModule } from './modules/core/core.module'
+import { CheepTransportModule } from './modules/core/cheepTransport.module'
 import type { Transport } from '@cheep/transport'
 
-@Module({
-  imports: [CheepCoreModule],
-})
+@Module({})
 export class CheepMicroservicesModule {
   static forRoot(
     options: CheepMicroservicesRootConfig,
   ): DynamicModule {
+    options.transport.init()
     return {
       module: CheepMicroservicesModule,
       providers: [
@@ -39,7 +38,7 @@ export class CheepMicroservicesModule {
           useValue: options,
         },
       ],
-      imports: [CheepCoreModule.forRoot(options.transport)],
+      imports: [CheepTransportModule.forRoot(options.transport)],
     }
   }
 
@@ -63,7 +62,6 @@ export class CheepMicroservicesModule {
 
     return {
       module: CheepMicroservicesModule,
-      imports: [CheepCoreModule],
       providers: [
         CqrsHandlerRegistryService,
         CheepEvents,
@@ -82,8 +80,4 @@ export class CheepMicroservicesModule {
   }
 
   constructor(@Inject(TransportToken) private transport: Transport) {}
-
-  onApplicationBootstrap() {
-    this.transport.start()
-  }
 }

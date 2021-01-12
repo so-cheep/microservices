@@ -45,7 +45,7 @@ export class CheepEvents<
   }
 
   constructor(
-    @Inject(TransportToken) private transport: Transport<RpcMetadata>,
+    @Inject(TransportToken) private transport: Transport,
     @Inject(ModuleOptionsToken) private moduleOptions,
   ) {}
 

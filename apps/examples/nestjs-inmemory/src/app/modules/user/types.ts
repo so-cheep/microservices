@@ -15,8 +15,8 @@ export interface UserGroup {
 
 export type UserApi = CheepNestApi<
   'User',
-  [UserQueryService],
-  [UserCommandService],
+  [UserQueries],
+  [UserCommands],
   UserEvents
 >
 

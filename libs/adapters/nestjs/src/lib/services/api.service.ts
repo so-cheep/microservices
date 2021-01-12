@@ -26,9 +26,7 @@ export class CheepApi<
     return this.client.Command
   }
 
-  constructor(
-    @Inject(TransportToken) private transport: Transport<RpcMetadata>,
-  ) {}
+  constructor(@Inject(TransportToken) private transport: Transport) {}
 
   onModuleInit() {
     this.client = getCqrsClient(this.transport)

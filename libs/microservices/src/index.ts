@@ -15,6 +15,7 @@ export type {
   RpcMetadata,
   RpcOptions,
 } from './lib/cqrs/types'
+
 // Event Exports
 export { getEventPublisher, handleEvents } from './lib/events'
 export type {
@@ -26,4 +27,7 @@ export type {
   EventPublisher,
   EventWithMetadata,
 } from './lib/events/types'
+
+// general exports
 export type { MicroserviceApi } from './lib/types'
+export { MicroserviceTransportUtils } from './lib/utils/transportUtils'
