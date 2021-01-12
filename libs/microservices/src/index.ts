@@ -10,7 +10,7 @@ export type {
   CommandMap,
   CqrsApi,
   Handler,
-  HandlerMap,
+  ShallowHandlerMap,
   QueryMap,
   RpcMetadata,
   RpcOptions,

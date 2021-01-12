@@ -1,3 +1,3 @@
 export type ConsumedApis =
-  | import('../user/types').UserApi
+  | import('../user/user.api').UserApi
   | import('../groups/types').GroupApi

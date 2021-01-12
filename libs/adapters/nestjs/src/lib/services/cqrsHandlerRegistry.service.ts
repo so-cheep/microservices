@@ -4,6 +4,7 @@ import {
   CqrsApi,
   QueryMap,
   Handler,
+  ShallowHandlerMap,
 } from '@cheep/microservices'
 import {
   Inject,
@@ -46,11 +47,11 @@ export class CqrsHandlerRegistryService implements OnModuleInit {
   async onModuleInit() {
     const api: CqrsApi<string, QueryMap, CommandMap> = {
       namespace: this.moduleName,
-      Query: buildHandlerMap(
+      Query: await buildHandlerMap(
         this.moduleOptions.queryHandlers,
         this.moduleRef,
       ),
-      Command: buildHandlerMap(
+      Command: await buildHandlerMap(
         this.moduleOptions.commandHandlers,
         this.moduleRef,
       ),
@@ -61,28 +62,32 @@ export class CqrsHandlerRegistryService implements OnModuleInit {
   }
 }
 
-function buildHandlerMap(
+async function buildHandlerMap(
   handlerClasses: Type<unknown>[],
   moduleRef: ModuleRef,
-): Record<string, Handler> {
-  return handlerClasses.reduceRight((map, classDef) => {
-    return {
-      ...map,
-      ...Object.fromEntries(
-        Reflect.ownKeys(classDef.prototype)
-          .filter(
-            key =>
-              !NestLifecycleFunctions.includes(String(key)) &&
-              typeof Reflect.get(classDef.prototype, key) ===
-                'function',
-          )
-          .map(key => [
-            key,
-            getModuleRefProxy(moduleRef, classDef, key),
-          ]),
-      ),
-    }
-  }, {})
+): Promise<ShallowHandlerMap<Handler>> {
+  if (Array.isArray(handlerClasses)) {
+    return handlerClasses.reduceRight((map, classDef) => {
+      return {
+        ...map,
+        ...Object.fromEntries(
+          Reflect.ownKeys(classDef.prototype)
+            .filter(
+              key =>
+                !NestLifecycleFunctions.includes(String(key)) &&
+                typeof Reflect.get(classDef.prototype, key) ===
+                  'function',
+            )
+            .map(key => [
+              key,
+              getModuleRefProxy(moduleRef, classDef, key),
+            ]),
+        ),
+      }
+    }, {})
+  } else {
+    return await recurseNestHandlerMap(handlerClasses, moduleRef)
+  }
 }
 
 function getModuleRefProxy<TClass extends Type<unknown>>(
@@ -107,4 +112,38 @@ function getModuleRefProxy<TClass extends Type<unknown>>(
       throw new HandlerRegistrationError(token, String(prop), err)
     }
   }
+}
+
+async function recurseNestHandlerMap(
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  x: ShallowHandlerMap<object>,
+  moduleRef: ModuleRef,
+): Promise<ShallowHandlerMap<Handler>> {
+  const entries = Object.entries(x).map(async ([key, value]) => {
+    try {
+      const dep = await moduleRef.get(value as Type<unknown>, {
+        strict: false,
+      })
+      return [key, getFunctionValues(dep)]
+    } catch (err) {
+      return [key, recurseNestHandlerMap(x, moduleRef)]
+    }
+  })
+
+  return Object.fromEntries(await Promise.all(entries))
+}
+
+function getFunctionValues<T>(x: T): T {
+  const proto = Object.getPrototypeOf(x)
+  return Object.fromEntries(
+    Reflect.ownKeys(proto)
+      .filter(
+        key =>
+          !NestLifecycleFunctions.includes(String(key)) &&
+          typeof Reflect.get(proto, key) === 'function',
+      )
+      .map(key => {
+        return [key, Reflect.get(proto, key).bind(x)]
+      }),
+  ) as T
 }

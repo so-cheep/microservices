@@ -1,6 +1,6 @@
 import { CheepMicroservicesModule } from '@cheep/nestjs'
 import { Module } from '@nestjs/common'
-import { UserApi } from './types'
+import { UserApi } from './user.api'
 import { UserCommands } from './user.commands'
 import { UserQueries } from './user.query.service'
 
@@ -8,7 +8,7 @@ import { UserQueries } from './user.query.service'
   imports: [
     CheepMicroservicesModule.forModule<UserApi, never>({
       moduleName: 'User',
-      queryHandlers: [UserQueries],
+      queryHandlers: { Test: UserQueries },
       commandHandlers: [UserCommands],
       listenEventsFrom: [],
     }),

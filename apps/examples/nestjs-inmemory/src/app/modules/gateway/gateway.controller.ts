@@ -58,7 +58,7 @@ export class GatewayService implements OnApplicationBootstrap {
 
   @Get('users')
   async getUsers() {
-    return this.client.Query.User.getAll()
+    return this.client.Query.User.Test.getAll()
   }
 
   @Get('user/create')
@@ -70,7 +70,7 @@ export class GatewayService implements OnApplicationBootstrap {
       },
     })
 
-    return this.client.Query.User.getById({ id })
+    return this.client.Query.User.Test.getById({ id })
   }
 
   @Get('groups')

@@ -4,7 +4,7 @@ import type {
   Handler,
   MicroserviceApi,
   QueryMap,
-  HandlerMap,
+  ShallowHandlerMap,
 } from '@cheep/microservices'
 import type { Transport } from '@cheep/transport'
 
@@ -22,51 +22,72 @@ export type GenericMicroserviceApi = MicroserviceApi<
 export interface CheepMicroservicesModuleConfig<
   TModuleApi extends CheepNestApi<
     string,
-    unknown[],
-    unknown[],
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    any,
     EventMap
   >,
   TRemoteApi extends GenericMicroserviceApi,
-  TQueryHandlers extends unknown[] = TModuleApi['_queryHandlers'],
-  TCommandHandlers extends unknown[] = TModuleApi['_commandHandlers']
+  TQueryHandlers extends
+    | unknown[]
+    | ShallowHandlerMap = TModuleApi['_queryHandlers'],
+  TCommandHandlers extends
+    | unknown[]
+    | ShallowHandlerMap = TModuleApi['_commandHandlers']
 > {
   moduleName: TModuleApi['namespace'] extends never
     ? string
     : TModuleApi['namespace']
-  queryHandlers: Classify<TQueryHandlers> extends never
-    ? undefined | []
-    : Classify<TQueryHandlers>
-  commandHandlers: Classify<TCommandHandlers> extends never
-    ? undefined | []
-    : Classify<TCommandHandlers>
+  queryHandlers: TQueryHandlers extends unknown[]
+    ? Classify<TQueryHandlers> extends never
+      ? undefined | []
+      : Classify<TQueryHandlers>
+    : TQueryHandlers
+  commandHandlers: TCommandHandlers extends unknown[]
+    ? Classify<TCommandHandlers> extends never
+      ? undefined | []
+      : Classify<TCommandHandlers>
+    : TCommandHandlers
   listenEventsFrom?: TRemoteApi['namespace'][] | []
 }
 
 export type CheepNestApi<
   TNamespace extends string,
-  TQueryHandlers extends unknown[],
-  TCommandHandlers extends unknown[],
+  TQueryHandlers extends ShallowHandlerMap | unknown[],
+  TCommandHandlers extends ShallowHandlerMap | unknown[],
   TEvents extends EventMap
 > = {
   _queryHandlers: TQueryHandlers
   _commandHandlers: TCommandHandlers
 } & MicroserviceApi<
   TNamespace,
-  HandlersIn<UnionToIntersection<ArrayToUnion<TQueryHandlers>>>,
-  HandlersIn<UnionToIntersection<ArrayToUnion<TCommandHandlers>>>,
+  HandlersIn<TQueryHandlers>,
+  HandlersIn<TCommandHandlers>,
   TEvents
 >
 
 type HandlerKeysOf<T> = {
-  [K in keyof T]: T[K] extends Handler | HandlerMap ? K : never
+  [K in keyof T]: T[K] extends Handler | ShallowHandlerMap ? K : never
 }[keyof T]
 
-type HandlersIn<T> = Pick<T, HandlerKeysOf<T>>
+// conditional type to either unwrap and intersect array of handlers, or return handler map
+type HandlersIn<T> = T extends unknown[]
+  ? Pick<
+      ArrayToIntersection<T>,
+      HandlerKeysOf<ArrayToIntersection<T>>
+    >
+  : T extends ShallowHandlerMap
+  ? T
+  : never
 
 export type ClassOf<T> = { new (...args: unknown[]): T }
 
+//utility types
+type ArrayToIntersection<T extends unknown[]> = UnionToIntersection<
+  ArrayToUnion<T>
+>
 type ArrayToUnion<A extends Array<unknown>> = A[number]
-
 type UnionToIntersection<U> = (
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   U extends any
