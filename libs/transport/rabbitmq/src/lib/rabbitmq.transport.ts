@@ -159,10 +159,14 @@ export class RabbitMQTransport extends TransportBase {
       )
 
     await this.channel.addSetup(this.bindingSetup)
+
+    await super.start()
   }
 
   async stop() {
     await this.channel.removeSetup(this.bindingSetup)
+
+    await super.stop()
   }
 
   async dispose() {

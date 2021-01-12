@@ -20,10 +20,6 @@ export class MemoryTransport extends TransportBase {
 
   async init() {}
 
-  async start() {}
-
-  async stop() {}
-
   protected async sendMessage(props: SendMessageProps) {
     const { messageDelayTime = 0 } = this.options
 

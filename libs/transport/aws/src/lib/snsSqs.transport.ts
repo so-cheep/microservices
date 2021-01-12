@@ -1,8 +1,8 @@
 import {
+  normalizeError,
   SendErrorReplyMessageProps,
   SendMessageProps,
   SendReplyMessageProps,
-  stringifyError,
   TransportBase,
   TransportOptions,
   TransportUtils,
@@ -202,7 +202,7 @@ export class SnsSqsTransport extends TransportBase {
       correlationId,
       message: '',
       metadata,
-      errorData: stringifyError(error),
+      errorData: normalizeError(error),
     })
   }
 
