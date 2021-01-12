@@ -48,7 +48,7 @@
     "@nrwl/jest": "11.0.15",
     "@nrwl/node": "11.0.15",
     "@nrwl/tao": "11.0.15",
-    "@nrwl/workspace": "11.0.15",
+    "@nrwl/workspace": "^11.1.2",
     "@types/amqp-connection-manager": "^2.0.10",
     "@types/amqplib": "^0.5.17",
     "@types/faker": "^5.1.5",
@@ -56,6 +56,7 @@
     "@types/jsonwebtoken": "^8.5.0",
     "@types/node": "12.12.38",
     "@types/redis": "^2.8.28",
+    "@types/uuid": "^8.3.0",
     "@typescript-eslint/eslint-plugin": "4.3.0",
     "@typescript-eslint/parser": "4.3.0",
     "dotenv": "6.2.0",
@@ -68,6 +69,7 @@
     "ts-jest": "26.4.0",
     "ts-node": "~9.1.1",
     "tslint": "~6.1.0",
-    "typescript": "~4.0.3"
+    "typescript": "~4.0.3",
+    "uuid": "^8.3.2"
   }
 }
