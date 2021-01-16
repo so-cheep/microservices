@@ -154,6 +154,7 @@
             "outputPath": "dist/libs/transport/rabbitmq",
             "tsConfig": "libs/transport/rabbitmq/tsconfig.lib.json",
             "packageJson": "libs/transport/rabbitmq/package.json",
+            "buildableProjectDepsInPackageJsonType": "peerDependencies",
             "main": "libs/transport/rabbitmq/src/index.ts",
             "assets": ["libs/transport/rabbitmq/*.md"]
           }
