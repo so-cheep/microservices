@@ -186,6 +186,7 @@
             "outputPath": "dist/libs/transport/aws",
             "tsConfig": "libs/transport/aws/tsconfig.lib.json",
             "packageJson": "libs/transport/aws/package.json",
+            "buildableProjectDepsInPackageJsonType": "peerDependencies",
             "main": "libs/transport/aws/src/index.ts",
             "assets": ["libs/transport/aws/*.md"]
           }
