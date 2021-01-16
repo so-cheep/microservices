@@ -1,4 +1,4 @@
-import { StringifiedError } from '@cheep/transport'
+import { NormalizedError } from '@cheep/transport'
 import type { SQS } from 'aws-sdk'
 
 export async function sendMessageToSqs<TMetadata>(props: {
@@ -7,7 +7,7 @@ export async function sendMessageToSqs<TMetadata>(props: {
   message: string
   metadata: TMetadata
   correlationId: string
-  errorData?: StringifiedError
+  errorData?: NormalizedError
 }) {
   const {
     sqs,

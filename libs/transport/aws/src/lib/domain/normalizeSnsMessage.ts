@@ -1,4 +1,5 @@
 import type { SQS } from 'aws-sdk'
+import { decodeMetadataValue } from '../app/decodeMetadataValue'
 import { SqsTransportMessage } from '../types'
 
 export function normalizeSnsMessage(
@@ -16,12 +17,12 @@ export function normalizeSnsMessage(
   const { route, correlationId, replyTo, metadata } = attributes
 
   return {
-    route,
+    route: decodeMetadataValue(route),
     message,
-    metadata,
+    metadata: JSON.parse(decodeMetadataValue(metadata)),
 
     correlationId,
-    replyTo,
+    replyTo: decodeMetadataValue(replyTo),
 
     receiptHandle: sqsMessage.ReceiptHandle,
   }

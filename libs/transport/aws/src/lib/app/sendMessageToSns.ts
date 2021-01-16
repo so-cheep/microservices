@@ -1,4 +1,5 @@
 import type { SNS } from 'aws-sdk'
+import { encodeMetadataValue } from './encodeMetadataValue'
 
 export async function sendMessageToSns<TMetadata>(props: {
   sns: SNS
@@ -23,38 +24,38 @@ export async function sendMessageToSns<TMetadata>(props: {
     replyToQueueUrl,
   } = props
 
-  await sns
-    .publish({
-      TopicArn: topicArn,
-      Message: message,
-      MessageDeduplicationId: deduplicationId,
-      MessageGroupId: messageGroupId,
-      MessageAttributes: {
-        route: {
-          DataType: 'String',
-          StringValue: route,
-        },
-        metadata: {
-          DataType: 'String',
-          StringValue: JSON.stringify(metadata),
-        },
-        ...(correlationId
-          ? {
-              correlationId: {
-                DataType: 'String',
-                StringValue: correlationId,
-              },
-            }
-          : null),
-        ...(replyToQueueUrl
-          ? {
-              replyTo: {
-                DataType: 'String',
-                StringValue: replyToQueueUrl,
-              },
-            }
-          : null),
+  const data = {
+    TopicArn: topicArn,
+    Message: message,
+    MessageDeduplicationId: deduplicationId,
+    MessageGroupId: messageGroupId,
+    MessageAttributes: {
+      route: {
+        DataType: 'String',
+        StringValue: encodeMetadataValue(route),
       },
-    })
-    .promise()
+      metadata: {
+        DataType: 'String',
+        StringValue: encodeMetadataValue(JSON.stringify(metadata)),
+      },
+      ...(correlationId
+        ? {
+            correlationId: {
+              DataType: 'String',
+              StringValue: correlationId,
+            },
+          }
+        : null),
+      ...(replyToQueueUrl
+        ? {
+            replyTo: {
+              DataType: 'String',
+              StringValue: encodeMetadataValue(replyToQueueUrl),
+            },
+          }
+        : null),
+    },
+  }
+
+  await sns.publish(data).promise()
 }

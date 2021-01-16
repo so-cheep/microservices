@@ -33,27 +33,29 @@ export async function ensureQueueExists(props: {
         })
       : null
 
-    const queue = await sqs
-      .createQueue({
-        QueueName: fullQueueName,
-        tags: {
-          module: tagName,
-        },
-        Attributes: {
-          ...(redrivePolicy
-            ? { RedrivePolicy: redrivePolicy }
-            : null),
+    const data = {
+      QueueName: fullQueueName,
+      ...(tagName
+        ? {
+            tags: {
+              module: tagName,
+            },
+          }
+        : null),
+      Attributes: {
+        ...(redrivePolicy ? { RedrivePolicy: redrivePolicy } : null),
 
-          ...(isFifo
-            ? {
-                FifoQueue: 'true',
-                FifoThroughputLimit: 'perQueue', // 'perQueue' | 'perMessageGroupId'
-                DeduplicationScope: 'messageGroup', // 'messageGroup' | 'queue'
-              }
-            : null),
-        },
-      })
-      .promise()
+        ...(isFifo
+          ? {
+              FifoQueue: 'true',
+              FifoThroughputLimit: 'perQueue', // 'perQueue' | 'perMessageGroupId'
+              DeduplicationScope: 'messageGroup', // 'messageGroup' | 'queue'
+            }
+          : null),
+      },
+    }
+
+    const queue = await sqs.createQueue(data).promise()
 
     queueUrl = queue.QueueUrl
   }

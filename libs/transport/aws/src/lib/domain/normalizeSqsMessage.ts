@@ -21,7 +21,7 @@ export function normalizeSqsMessage(
     metadata,
 
     correlationId,
-    errorData,
+    errorData: errorData ? JSON.parse(errorData) : undefined,
 
     receiptHandle: sqsMessage.ReceiptHandle,
   }
