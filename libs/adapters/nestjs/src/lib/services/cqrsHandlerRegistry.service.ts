@@ -9,15 +9,16 @@ import {
 import {
   Inject,
   Injectable,
+  Logger,
   OnModuleInit,
   Type,
 } from '@nestjs/common'
-import {
-  ModuleNameToken,
-  ModuleOptionsToken,
-  TransportToken,
-} from '../constants'
-import type { CheepMicroservicesModuleConfig } from '../types'
+import { ModuleOptionsToken, TransportToken } from '../constants'
+import type {
+  CheepMicroservicesModuleConfig,
+  GenericMicroserviceApi,
+  GenericNestApi,
+} from '../types'
 import type { Transport } from '@cheep/transport'
 import { ModuleRef } from '@nestjs/core'
 import { HandlerRegistrationError } from '../errors/handlerRegistration.error'
@@ -30,40 +31,51 @@ const NestLifecycleFunctions = [
   'onModuleDestroy',
   'onApplicationShutdown',
 ]
-
 @Injectable()
 export class CqrsHandlerRegistryService implements OnModuleInit {
+  private logger: Logger
   constructor(
     @Inject(ModuleOptionsToken)
     private moduleOptions: CheepMicroservicesModuleConfig<
-      never,
-      never
+      GenericNestApi,
+      GenericMicroserviceApi
     >,
-    @Inject(ModuleNameToken) private moduleName: string,
     @Inject(TransportToken) private transport: Transport,
     private moduleRef: ModuleRef,
-  ) {}
+  ) {
+    this.logger = new Logger(
+      `${moduleOptions.moduleName}:CqrsHandlerRegistry`,
+    )
+  }
 
   async onModuleInit() {
     const api: CqrsApi<string, QueryMap, CommandMap> = {
-      namespace: this.moduleName,
-      Query: await buildHandlerMap(
-        this.moduleOptions.queryHandlers,
+      namespace: this.moduleOptions.moduleName,
+      Query: await recurseNestHandlerMap(
+        this.moduleOptions.queryHandlers as ShallowHandlerMap<Type>,
         this.moduleRef,
-      ),
-      Command: await buildHandlerMap(
-        this.moduleOptions.commandHandlers,
+      ).catch(() => {
+        throw Error(
+          'Query handlers could not be resolved, either the map is too deep (more than 4 objects) or one of your Query handlers is not provided in the module',
+        )
+      }),
+      Command: await recurseNestHandlerMap(
+        this.moduleOptions.commandHandlers as ShallowHandlerMap<Type>,
         this.moduleRef,
-      ),
+      ).catch(() => {
+        throw Error(
+          'Command handlers could not be resolved, either the map is too deep (more than 4 objects) or one of your Query handlers is not provided in the module',
+        )
+      }),
     }
 
     handleCqrsApi(this.transport, api)
-    completeModuleHandlerRegistration(this.moduleName)
+    completeModuleHandlerRegistration(this.moduleOptions.moduleName)
   }
 }
 
 async function buildHandlerMap(
-  handlerClasses: Type<unknown>[],
+  handlerClasses: ShallowHandlerMap<Type>,
   moduleRef: ModuleRef,
 ): Promise<ShallowHandlerMap<Handler>> {
   if (Array.isArray(handlerClasses)) {
@@ -116,34 +128,56 @@ function getModuleRefProxy<TClass extends Type<unknown>>(
 
 async function recurseNestHandlerMap(
   // eslint-disable-next-line @typescript-eslint/ban-types
-  x: ShallowHandlerMap<object>,
+  x: ShallowHandlerMap<object> | Type<unknown>,
   moduleRef: ModuleRef,
+  remainingDepth = 4,
 ): Promise<ShallowHandlerMap<Handler>> {
-  const entries = Object.entries(x).map(async ([key, value]) => {
-    try {
-      const dep = await moduleRef.get(value as Type<unknown>, {
-        strict: false,
-      })
-      return [key, getFunctionValues(dep)]
-    } catch (err) {
-      return [key, recurseNestHandlerMap(x, moduleRef)]
-    }
-  })
+  if (!x) return {}
+  if (remainingDepth === 0) {
+    throw new Error('Handler map depth exceeded!')
+  }
 
-  return Object.fromEntries(await Promise.all(entries))
+  try {
+    // attempt to treat x as a dependency injectable type, which throws on failure
+    const dep = await moduleRef.get(x as Type<unknown>, {
+      strict: false,
+    })
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    return getFunctionValues(dep as object) as ShallowHandlerMap<
+      Handler
+    >
+  } catch (err) {
+    // x was not a dependency injectable type, so now recurse into x
+    const entries = Object.entries(x).map(async ([key, value]) => {
+      return [
+        key,
+        await recurseNestHandlerMap(
+          value,
+          moduleRef,
+          remainingDepth - 1,
+        ),
+      ]
+    })
+
+    if (entries.length === 0) {
+      throw Error('Found empty handler branch!')
+    }
+    return Object.fromEntries(await Promise.all(entries))
+  }
 }
 
-function getFunctionValues<T>(x: T): T {
+// eslint-disable-next-line @typescript-eslint/ban-types
+function getFunctionValues<T extends object>(x: T): T {
   const proto = Object.getPrototypeOf(x)
   return Object.fromEntries(
     Reflect.ownKeys(proto)
       .filter(
         key =>
           !NestLifecycleFunctions.includes(String(key)) &&
-          typeof Reflect.get(proto, key) === 'function',
+          typeof Reflect.get(x, key) === 'function',
       )
       .map(key => {
-        return [key, Reflect.get(proto, key).bind(x)]
+        return [key, x[key].bind(x)]
       }),
   ) as T
 }

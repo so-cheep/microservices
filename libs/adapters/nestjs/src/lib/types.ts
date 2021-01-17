@@ -7,6 +7,7 @@ import type {
   ShallowHandlerMap,
 } from '@cheep/microservices'
 import type { Transport } from '@cheep/transport'
+import type { Type } from '@nestjs/common'
 
 export interface CheepMicroservicesRootConfig {
   transport: Transport
@@ -19,54 +20,85 @@ export type GenericMicroserviceApi = MicroserviceApi<
   EventMap
 >
 
-export interface CheepMicroservicesModuleConfig<
-  TModuleApi extends CheepNestApi<
-    string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    any,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    any,
-    EventMap
-  >,
+export type ShallowInjectableHandlerMap = ShallowHandlerMap<Type>
+
+export type GenericNestApi = CheepNestApi<string, any, any, EventMap>
+
+export type CheepMicroservicesModuleConfig<
+  TModuleApi extends GenericNestApi,
   TRemoteApi extends GenericMicroserviceApi,
-  TQueryHandlers extends
-    | unknown[]
-    | ShallowHandlerMap = TModuleApi['_queryHandlers'],
-  TCommandHandlers extends
-    | unknown[]
-    | ShallowHandlerMap = TModuleApi['_commandHandlers']
-> {
-  moduleName: TModuleApi['namespace'] extends never
+  TQueryHandlers extends ShallowHandlerMap = TModuleApi['queryHandlers'],
+  TCommandHandlers extends ShallowHandlerMap = TModuleApi['commandHandlers']
+> = {
+  moduleName: TModuleApi['namespace'] extends never | undefined
     ? string
     : TModuleApi['namespace']
-  queryHandlers: TQueryHandlers extends unknown[]
-    ? Classify<TQueryHandlers> extends never
-      ? undefined | []
-      : Classify<TQueryHandlers>
-    : TQueryHandlers
-  commandHandlers: TCommandHandlers extends unknown[]
-    ? Classify<TCommandHandlers> extends never
-      ? undefined | []
-      : Classify<TCommandHandlers>
-    : TCommandHandlers
-  listenEventsFrom?: TRemoteApi['namespace'][] | []
+  /**
+   * This should match the type of QueryHandlers passed to the module's CheepNestApi type.
+   * Be sure that any NestJS providers referenced here are also in the providers array for your module
+   *
+   * **If this value is simply one handler**, we will not throw an error if you fail to provide it,
+   * as that is indistinguishable from a module with no handlers at runtime
+   */
+  queryHandlers: TModuleApi['queryHandlers'] extends never
+    ? null
+    : ClassifyRecord<TQueryHandlers> | ClassOf<TQueryHandlers>
+  /**
+   * This should match the type of CommandHandlers passed to the module's CheepNestApi type.
+   * Be sure that any NestJS providers referenced here are also in the providers array for your module
+   *
+   * **If this value is simply one handler**, we will not throw an error if you fail to provide it,
+   * as that is indistinguishable from a module with no handlers at runtime
+   */
+  commandHandlers: TModuleApi['commandHandlers'] extends never
+    ? null
+    : ClassifyRecord<TCommandHandlers> | ClassOf<TCommandHandlers>
+  /**
+   * The remote modules whose events will be available to this module.
+   */
+  listenEventsFrom: TRemoteApi['namespace'][] | []
 }
 
 export type CheepNestApi<
   TNamespace extends string,
-  TQueryHandlers extends ShallowHandlerMap | unknown[],
-  TCommandHandlers extends ShallowHandlerMap | unknown[],
+  TQueryHandlers extends ShallowHandlerMap,
+  TCommandHandlers extends ShallowHandlerMap,
   TEvents extends EventMap
 > = {
-  _queryHandlers: TQueryHandlers
-  _commandHandlers: TCommandHandlers
+  queryHandlers: TQueryHandlers
+  commandHandlers: TCommandHandlers
 } & MicroserviceApi<
   TNamespace,
-  HandlersIn<TQueryHandlers>,
-  HandlersIn<TCommandHandlers>,
+  TQueryHandlers,
+  TCommandHandlers,
   TEvents
 >
 
+export type ClassOf<T> = { new (...args: unknown[]): T }
+
+// eslint-disable-next-line @typescript-eslint/ban-types
+type ClassifyRecord<T extends Record<string, unknown> | object> = {
+  [K in keyof T]: T[K] extends Record<string, Handler>
+    ? ClassOf<T[K]>
+    : // eslint-disable-next-line @typescript-eslint/ban-types
+    T[K] extends Record<string, unknown> | object
+    ? ClassifyRecord<T[K]> | ClassOf<T[K]>
+    : never
+}
+
+//#region  simple classify test
+
+type Test = { A: { B: { C: Handler } } }
+
+type Classifyed = ClassifyRecord<Test>
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+type check = Classifyed extends { A: { B: ClassOf<{ C: Handler }> } }
+  ? 'pass'
+  : 'fail'
+//#endregion
+
+//#region  OLD TYPES THAT MIGHT BE USEFUL IN THE FUTURE
 type HandlerKeysOf<T> = {
   [K in keyof T]: T[K] extends Handler | ShallowHandlerMap ? K : never
 }[keyof T]
@@ -81,9 +113,6 @@ type HandlersIn<T> = T extends unknown[]
   ? T
   : never
 
-export type ClassOf<T> = { new (...args: unknown[]): T }
-
-//utility types
 type ArrayToIntersection<T extends unknown[]> = UnionToIntersection<
   ArrayToUnion<T>
 >
@@ -96,7 +125,7 @@ type UnionToIntersection<U> = (
 ) extends (k: infer I) => void
   ? I
   : never
-
-type Classify<T extends Array<unknown>> = {
-  [K in keyof T]: ClassOf<T[K]>
-}
+// type ClassifyArray<T extends Array<unknown>> = {
+//   [K in keyof T]: ClassOf<T[K]>
+// }
+//#endregion

@@ -3,7 +3,8 @@ import { Module, DynamicModule, Inject } from '@nestjs/common'
 import type {
   CheepMicroservicesModuleConfig,
   CheepMicroservicesRootConfig,
-  CheepNestApi,
+  GenericMicroserviceApi,
+  GenericNestApi,
 } from './types'
 import {
   ModuleNameToken,
@@ -13,12 +14,6 @@ import {
 } from './constants'
 import { registerModuleName } from './util/moduleRegistry'
 import { CheepApi } from './services/api.service'
-import {
-  CommandMap,
-  EventMap,
-  MicroserviceApi,
-  QueryMap,
-} from '@cheep/microservices'
 import { CheepEvents } from './services/events.service'
 import { CqrsHandlerRegistryService } from './services/cqrsHandlerRegistry.service'
 import { CheepTransportModule } from './modules/core/cheepTransport.module'
@@ -43,18 +38,8 @@ export class CheepMicroservicesModule {
   }
 
   static forModule<
-    TModuleApi extends CheepNestApi<
-      string,
-      unknown[],
-      unknown[],
-      EventMap
-    >,
-    TRemoteApi extends MicroserviceApi<
-      string,
-      QueryMap,
-      CommandMap,
-      EventMap
-    >
+    TModuleApi extends GenericNestApi,
+    TRemoteApi extends GenericMicroserviceApi
   >(
     options: CheepMicroservicesModuleConfig<TModuleApi, TRemoteApi>,
   ): DynamicModule {
