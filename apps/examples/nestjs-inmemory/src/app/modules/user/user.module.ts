@@ -9,7 +9,7 @@ import { UserQueries } from './user.query.service'
     CheepMicroservicesModule.forModule<UserApi, never>({
       moduleName: 'User',
       queryHandlers: { Test: UserQueries },
-      commandHandlers: [UserCommands],
+      commandHandlers: UserCommands,
       listenEventsFrom: [],
     }),
   ],

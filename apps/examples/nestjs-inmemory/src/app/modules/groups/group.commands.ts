@@ -1,6 +1,6 @@
 import { CheepEvents } from '@cheep/nestjs'
 import { Injectable } from '@nestjs/common'
-import { Group, GroupApi } from './types'
+import { Group, GroupApi } from './groups.api'
 import * as faker from 'faker'
 
 @Injectable()

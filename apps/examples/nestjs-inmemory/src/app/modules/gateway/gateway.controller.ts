@@ -4,7 +4,7 @@ import {
   Get,
   OnApplicationBootstrap,
 } from '@nestjs/common'
-import { ConsumedApis } from './types'
+import { ConsumedApis } from './gateway.api'
 import * as faker from 'faker'
 import { merge } from 'rxjs'
 import { map } from 'rxjs/operators'
@@ -20,40 +20,6 @@ export class GatewayService implements OnApplicationBootstrap {
     this.events
       .observe()
       .subscribe(e => console.log('EVENT', e.type, e.payload))
-
-    const user$ = this.events
-      .observe(e => [e.User.created, e.User.deleted])
-      .pipe(
-        map(e => {
-          return [
-            e.type,
-            {
-              ...e.payload,
-              entityId: e.payload.id,
-              action: e.type[1],
-              type: e.type,
-            },
-          ]
-        }),
-      )
-
-    const group$ = this.events
-      .observe(e => [e.Group.created])
-      .pipe(
-        map(e => [
-          e.type,
-          {
-            ...e.payload,
-            entityId: e.payload.id,
-            action: e.type[1],
-            type: e.type,
-          },
-        ]),
-      )
-
-    merge(user$, group$).subscribe(([type, payload]) => {
-      console.log('FILTERED', type, payload)
-    })
   }
 
   @Get('users')
@@ -96,6 +62,6 @@ export class GatewayService implements OnApplicationBootstrap {
    */
   @Get('test')
   async test() {
-    return await this.client.Command.User['thisIsPrivate']()
+    return await this.client.Command.User['thisIsPrivate'](true)
   }
 }

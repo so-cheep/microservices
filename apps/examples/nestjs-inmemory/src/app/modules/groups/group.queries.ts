@@ -1,6 +1,6 @@
 import { CheepEvents } from '@cheep/nestjs'
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common'
-import { Group, GroupApi } from './types'
+import { Group, GroupApi } from './groups.api'
 
 @Injectable()
 export class GroupQueries implements OnApplicationBootstrap {
