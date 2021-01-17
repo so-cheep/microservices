@@ -50,6 +50,7 @@ export async function listenQueue(props: {
         } catch {}
       }
     } catch (err) {
+      console.log('receive itms error', err, queueUrl)
       // We need to keep same attemptId if there is a network error
       // to receive same set of items
       keepSameAttemptId = true

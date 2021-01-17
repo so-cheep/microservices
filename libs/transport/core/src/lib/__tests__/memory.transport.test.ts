@@ -94,4 +94,49 @@ describe('memory.transport', () => {
         expect(err.className).toEqual('RemoteError')
       })
   })
+
+  it('should receve undefined', async () => {
+    transport.on('Return.Undefined', () => {
+      return undefined
+    })
+
+    await transport.start()
+
+    const result = await transport.execute({
+      route: 'Return.Undefined',
+      message: {},
+    })
+
+    expect(result).toBeUndefined()
+  })
+
+  it('should receve null', async () => {
+    transport.on('Return.Null', () => {
+      return null
+    })
+
+    await transport.start()
+
+    const result = await transport.execute({
+      route: 'Return.Null',
+      message: {},
+    })
+
+    expect(result).toBeNull()
+  })
+
+  it('should receve void (undefined)', async () => {
+    transport.on('Return.Null', <any>(() => {
+      return
+    }))
+
+    await transport.start()
+
+    const result = await transport.execute({
+      route: 'Return.Null',
+      message: {},
+    })
+
+    expect(result).toBeUndefined()
+  })
 })

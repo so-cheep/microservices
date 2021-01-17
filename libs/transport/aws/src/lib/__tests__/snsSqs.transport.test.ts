@@ -1,157 +1,150 @@
-import { Transport } from '@cheep/transport'
-import { Subject } from 'rxjs'
-import { filter } from 'rxjs/operators'
+import { RemoteError, Transport } from '@cheep/transport'
+import { SNS, SQS } from 'aws-sdk'
+import { SnsSqsTransport } from '../snsSqs.transport'
 
-type UserCommand =
-  | {
-      type: 'User.Login'
-      username: string
-      password: string
-    }
-  | {
-      type: 'User.Register'
-      firstName: string
-      lastName: string
-      email: string
-    }
-  | {
-      type: 'User.ErrorApi'
-    }
-
-let transport: Transport<any>
+let transport: Transport
 let i = 0
 
-const delay = (time: number) =>
-  new Promise(resolve => setTimeout(resolve, time))
+jest.setTimeout(30000) // need for aws setup
 
-jest.setTimeout(20000) // need for aws setup
+beforeAll(async () => {
+  transport = new SnsSqsTransport(
+    {
+      config: {
+        type: 'AUTO',
+        moduleName: 'Test',
+        publishTopicName: 'TestHubTopic',
+      },
+      queueMaxNumberOfMessages: 1,
+      queueWaitTimeInSeconds: 1,
+      responseQueueMaxNumberOfMessages: 1,
+      responseQueueWaitTimeInSeconds: 1,
+      defaultRpcTimeout: 5000,
+    },
+    {
+      jsonDecode: JSON.parse,
+      jsonEncode: JSON.stringify,
+      newId: () => Date.now().toString() + (++i).toString(),
+      getSns: () => new SNS({ region: 'us-east-1' }),
+      getSqs: () => new SQS({ region: 'us-east-1' }),
+      getMessageGroup: route =>
+        route.split('.').slice(0, 2).join('.'),
+    },
+  )
 
-// beforeAll(async () => {
-//   // const config = new AWS.Config({
-//   //   region: 'us-east-1',
-//   // })
-//   try {
-//     transport = new SnsSqsTransport({
-//       moduleName: 'TESTING4',
-//       publishExchangeName: 'TEST_HUB',
-//       region: 'us-east-1',
-//       newId: () => Date.now().toString() + ++i,
-//       queueWaitTimeInSeconds: 0.1,
-//       queueMaxNumberOfMessages: 1,
-//       responseQueueWaitTimeInSeconds: 0.1,
-//       responseQueueMaxNumberOfMessages: 1,
-//     })
+  await transport.init()
 
-//     await transport.init()
-
-//     await transport.listenPatterns(['Command.User.Login'])
-//   } catch (err) {
-//     console.log('init error', err)
-//   }
-// })
-
-// afterAll(async () => {
-//   await transport.dispose()
-// })
-
-describe('transport', () => {
-  it('should publish and receive the message', async done => {
-    const sessionId = '123'
-    const message = Date.now().toString()
-
-    // transport.message$.subscribe(x => {
-    //   expect(x.message).toBe(message)
-    //   done()
-
-    //   x.complete(true)
-    //   transport.stop()
-    // })
-
-    transport.start()
-
-    await transport.publish({
-      route: 'Command.User.Login',
-      message,
-      metadata: { sessionId },
-    })
+  transport.on('PING', async ({ metadata }) => {
+    return 'PONG'
   })
 
-  it('should ping pong', async () => {
-    const sessionId = '123'
+  transport.on('Command.User.Login', async ({ metadata }) => {
+    return 'SUCCESS'
+  })
 
-    // transport.message$.subscribe(x => {
-    //   if (x.message === 'PING') {
-    //     x.sendReply('PONG')
-    //   }
+  transport.on('User.Register', () => {
+    throw new RemoteError('OOPS', '__CallStack__', 'RemoteError')
+  })
 
-    //   x.complete(true)
-    // })
+  transport.on('Return.Undefined', () => {
+    return undefined
+  })
 
-    transport.start()
+  transport.on('Return.Null', () => {
+    return null
+  })
 
-    const result = await transport.publish({
+  transport.on('Return.Void', <any>(() => {
+    return
+  }))
+
+  await transport.start()
+})
+
+afterAll(async () => {
+  await transport.dispose()
+})
+
+describe('snsSqs.transport', () => {
+  it('should execute and receive response', async () => {
+    const result = await transport.execute({
       route: 'Command.User.Login',
-      message: 'PING',
-      metadata: { sessionId },
-      rpc: {
-        enabled: true,
-        timeout: 7000,
+      message: {
+        pingedAt: new Date(),
+      },
+      metadata: {
+        sessionId: 's1',
       },
     })
 
-    expect(result.result).toBe('PONG')
-    expect(result.metadata.sessionId).toBe(sessionId)
+    expect(result).toBe('SUCCESS')
+    // expect('SUCCESS').toBe('SUCCESS')
   })
 
-  it.only('time check', async () => {
-    // Map - Setup
+  xit('should receve published event', async done => {
+    transport.on('User.Created', async ({ message, metadata }) => {
+      const msg = message as any
 
-    const [___, startedAt2] = process.hrtime()
-    const map = new Map<string, (x: any) => void>()
+      expect(msg.userId).toBe('u1')
+      expect(metadata.sessionId).toBe('s1')
 
-    new Array(100).fill(0).forEach((_, i) => {
-      map.set(i.toString(), x => {})
+      done()
     })
 
-    const [____, endedAt2] = process.hrtime()
-    console.log('Map Setup', (endedAt2 - startedAt2) / 1000, 'μs')
+    await transport.start()
 
-    // Map - Call
-    {
-      const [___, startedAt2] = process.hrtime()
+    const result = await transport.publish({
+      route: 'User.Created',
+      message: {
+        userId: 'u1',
+      },
+      metadata: {
+        sessionId: 's1',
+      },
+    })
+  })
 
-      for (let i = 0; i++; i < 100000000) {
-        map.get(i.toString())(i)
-      }
-
-      const [____, endedAt2] = process.hrtime()
-      console.log('Map Call', (endedAt2 - startedAt2) / 1000, 'μs')
+  it('should receve remote error', async () => {
+    try {
+      await transport.execute({
+        route: 'User.Register',
+        message: {
+          userId: 'u1',
+        },
+        metadata: {
+          sessionId: 's1',
+        },
+      })
+    } catch (err) {
+      expect(err.message).toEqual('OOPS')
+      expect(err.className).toEqual('RemoteError')
     }
+  })
 
-    // RX - Setup
-
-    const [_, startedAt] = process.hrtime()
-
-    const message$ = new Subject<{ route: string }>()
-    new Array(100).fill(0).forEach((_, i) => {
-      message$
-        .pipe(filter(x => x.route === i.toString()))
-        .subscribe(x => {})
+  it('should receve undefined', async () => {
+    const result = await transport.execute({
+      route: 'Return.Undefined',
+      message: {},
     })
 
-    const [__, endedAt] = process.hrtime()
-    console.log('RX Setup', (endedAt - startedAt) / 1000, 'μs')
+    expect(result).toBeUndefined()
+  })
 
-    // RX - Call
-    {
-      const [_, startedAt] = process.hrtime()
+  it('should receve null', async () => {
+    const result = await transport.execute({
+      route: 'Return.Null',
+      message: {},
+    })
 
-      for (let i = 0; i++; i < 100000000) {
-        message$.next({ route: i.toString() })
-      }
+    expect(result).toBeNull()
+  })
 
-      const [__, endedAt] = process.hrtime()
-      console.log('RX Call', (endedAt - startedAt) / 1000, 'μs')
-    }
+  it('should receve void (undefined)', async () => {
+    const result = await transport.execute({
+      route: 'Return.Void',
+      message: {},
+    })
+
+    expect(result).toBeUndefined()
   })
 })

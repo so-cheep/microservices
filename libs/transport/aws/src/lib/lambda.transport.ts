@@ -1,8 +1,8 @@
 import {
+  normalizeError,
   SendErrorReplyMessageProps,
   SendMessageProps,
   SendReplyMessageProps,
-  stringifyError,
   TransportBase,
   TransportOptions,
   TransportUtils,
@@ -46,10 +46,6 @@ export class LambdaTransport extends TransportBase {
       async x => this.processMessage(x),
     )
   }
-
-  async start() {}
-
-  async stop() {}
 
   protected newRpcCallRegistered(activeCount: number) {
     /**
@@ -142,7 +138,7 @@ export class LambdaTransport extends TransportBase {
       correlationId,
       message: '',
       metadata,
-      errorData: stringifyError(error),
+      errorData: normalizeError(error),
     })
   }
 }

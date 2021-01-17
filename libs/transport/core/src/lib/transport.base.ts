@@ -9,6 +9,7 @@ import {
   RouteHandler,
   Transport,
   TransportMessage,
+  TransportState,
 } from './transport'
 
 export interface TransportOptions {
@@ -27,6 +28,11 @@ export abstract class TransportBase implements Transport {
   private registeredPrefixes: string[] = []
   private listenCallbacks = new Map<string, ListenResponseCallback>()
 
+  _state: TransportState
+  get state(): TransportState {
+    return this._state
+  }
+
   constructor(
     protected options: TransportOptions,
     protected utils: TransportUtils,
@@ -34,9 +40,13 @@ export abstract class TransportBase implements Transport {
 
   abstract init(): Promise<void>
 
-  abstract start(): Promise<void>
+  async start() {
+    this._state = TransportState.STARTED
+  }
 
-  abstract stop(): Promise<void>
+  async stop() {
+    this._state = TransportState.STOPPED
+  }
 
   protected abstract sendMessage(
     props: SendMessageProps,

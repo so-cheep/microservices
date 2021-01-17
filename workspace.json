@@ -122,6 +122,7 @@
             "outputPath": "dist/libs/transport/rabbitmq",
             "tsConfig": "libs/transport/rabbitmq/tsconfig.lib.json",
             "packageJson": "libs/transport/rabbitmq/package.json",
+            "buildableProjectDepsInPackageJsonType": "peerDependencies",
             "main": "libs/transport/rabbitmq/src/index.ts",
             "assets": ["libs/transport/rabbitmq/*.md"]
           }
@@ -154,6 +155,7 @@
             "outputPath": "dist/libs/transport/aws",
             "tsConfig": "libs/transport/aws/tsconfig.lib.json",
             "packageJson": "libs/transport/aws/package.json",
+            "buildableProjectDepsInPackageJsonType": "peerDependencies",
             "main": "libs/transport/aws/src/index.ts",
             "assets": ["libs/transport/aws/*.md"]
           }

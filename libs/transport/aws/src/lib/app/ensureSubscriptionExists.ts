@@ -5,9 +5,17 @@ export async function ensureSubscriptionExists(props: {
   topicArn: string
   queueArn: string
   deadLetterArn: string
-  patterns: string[]
+  routes: string[]
+  prefixes: string[]
 }) {
-  const { sns, topicArn, queueArn, deadLetterArn, patterns } = props
+  const {
+    sns,
+    topicArn,
+    queueArn,
+    deadLetterArn,
+    routes,
+    prefixes,
+  } = props
 
   const subscriptions = await sns
     .listSubscriptionsByTopic({ TopicArn: topicArn })
@@ -16,6 +24,8 @@ export async function ensureSubscriptionExists(props: {
   const subscription = subscriptions.Subscriptions.find(
     x => x.Endpoint === queueArn,
   )
+
+  const patterns = routes.concat(prefixes)
 
   let subscriptionArn = subscription?.SubscriptionArn
   if (subscription) {

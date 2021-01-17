@@ -1,8 +1,8 @@
 import {
+  normalizeError,
   SendErrorReplyMessageProps,
   SendMessageProps,
   SendReplyMessageProps,
-  stringifyError,
   TransportBase,
   TransportOptions,
   TransportUtils,
@@ -29,10 +29,20 @@ export class SnsSqsTransport extends TransportBase {
 
   constructor(
     protected options: TransportOptions & {
-      moduleName: string
-      publishExchangeName: string
-
-      deadLetterQueueUrl: string
+      config:
+        | {
+            type: 'AUTO'
+            moduleName: string
+            publishTopicName: string
+          }
+        | {
+            type: 'MANUAL'
+            topicArn: string
+            queueArn: string
+            queueUrl: string
+            deadLetterQueueArn: string
+            deadLetterQueueUrl: string
+          }
 
       queueWaitTimeInSeconds?: number
       queueMaxNumberOfMessages?: number
@@ -50,45 +60,74 @@ export class SnsSqsTransport extends TransportBase {
   }
 
   async init() {
-    const { moduleName, publishExchangeName } = this.options
+    const { config } = this.options
 
-    const rpcResponseQueueName = `Response-${moduleName}-${this.utils.newId()}`
+    switch (config.type) {
+      case 'AUTO':
+        {
+          const { moduleName, publishTopicName } = config
 
-    this.topicArn = await ensureTopicExists({
-      sns: this.utils.getSns(),
-      publishExchangeName,
-      tagName: moduleName,
-    })
+          const rpcResponseQueueName = `Response-${moduleName}-${this.utils.newId()}`
 
-    const deadLetterQueue = await ensureQueueExists({
-      sqs: this.utils.getSqs(),
-      queueName: `DL-${moduleName}`,
-      deadLetterQueueArn: null,
-      tagName: moduleName,
-      isFifo: true,
-    })
+          this.topicArn = await ensureTopicExists({
+            sns: this.utils.getSns(),
+            publishTopicName,
+            tagName: moduleName,
+          })
 
-    const queue = await ensureQueueExists({
-      sqs: this.utils.getSqs(),
-      queueName: moduleName,
-      deadLetterQueueArn: deadLetterQueue.queueArn,
-      tagName: moduleName,
-      isFifo: true,
-    })
+          const deadLetterQueue = await ensureQueueExists({
+            sqs: this.utils.getSqs(),
+            queueName: `DL-${moduleName}`,
+            deadLetterQueueArn: null,
+            tagName: moduleName,
+            isFifo: true,
+          })
 
-    const responseQueue = await ensureQueueExists({
-      sqs: this.utils.getSqs(),
-      queueName: rpcResponseQueueName,
-      deadLetterQueueArn: null,
-      tagName: moduleName,
-      isFifo: false,
-    })
+          const queue = await ensureQueueExists({
+            sqs: this.utils.getSqs(),
+            queueName: moduleName,
+            deadLetterQueueArn: deadLetterQueue.queueArn,
+            tagName: moduleName,
+            isFifo: true,
+          })
 
-    this.queueArn = queue.queueArn
-    this.queueUrl = queue.queueUrl
-    this.responseQueueUrl = responseQueue.queueUrl
-    this.deadLetterQueueArn = deadLetterQueue.queueArn
-    this.deadLetterQueueUrl = deadLetterQueue.queueUrl
+          const responseQueue = await ensureQueueExists({
+            sqs: this.utils.getSqs(),
+            queueName: rpcResponseQueueName,
+            deadLetterQueueArn: null,
+            tagName: moduleName,
+            isFifo: false,
+          })
+
+          this.queueArn = queue.queueArn
+          this.queueUrl = queue.queueUrl
+          this.responseQueueUrl = responseQueue.queueUrl
+          this.deadLetterQueueArn = deadLetterQueue.queueArn
+          this.deadLetterQueueUrl = deadLetterQueue.queueUrl
+        }
+        break
+
+      case 'MANUAL':
+        {
+          const rpcResponseQueueName = `Response-${this.utils.newId()}`
+
+          const responseQueue = await ensureQueueExists({
+            sqs: this.utils.getSqs(),
+            queueName: rpcResponseQueueName,
+            deadLetterQueueArn: null,
+            tagName: null,
+            isFifo: false,
+          })
+
+          this.topicArn = config.topicArn
+          this.queueArn = config.queueArn
+          this.queueUrl = config.queueUrl
+          this.responseQueueUrl = responseQueue.queueUrl
+          this.deadLetterQueueArn = config.queueArn
+          this.deadLetterQueueUrl = config.queueUrl
+        }
+        break
+    }
 
     // listen messages
     listenQueue({
@@ -123,7 +162,8 @@ export class SnsSqsTransport extends TransportBase {
       topicArn: this.topicArn,
       queueArn: this.queueArn,
       deadLetterArn: this.deadLetterQueueArn,
-      patterns: routes.concat(prefixes),
+      routes,
+      prefixes,
     })
   }
 
@@ -200,9 +240,9 @@ export class SnsSqsTransport extends TransportBase {
       sqs,
       queueUrl,
       correlationId,
-      message: '',
+      message: 'ERROR',
       metadata,
-      errorData: stringifyError(error),
+      errorData: normalizeError(error),
     })
   }
 
@@ -217,7 +257,11 @@ export class SnsSqsTransport extends TransportBase {
         shouldContinue: () => pendingItemsCount > 0,
         cb: items => {
           for (let item of items) {
-            pendingItemsCount = this.processResponseMessage(item)
+            try {
+              pendingItemsCount = this.processResponseMessage(item)
+            } catch (err) {
+              console.warn(err)
+            }
           }
         },
       })

@@ -1,6 +1,8 @@
 import { NormalizedError } from './domain/normalizeError'
 
 export interface Transport {
+  readonly state: TransportState
+
   /**
    * Make sure all entities are initialized
    */
@@ -83,4 +85,9 @@ export interface ExecuteProps<TMetadata extends MessageMetadata> {
   metadata?: TMetadata
 
   rpcTimeout?: number
+}
+
+export enum TransportState {
+  STARTED = 'STARTED',
+  STOPPED = 'STOPPED',
 }
