@@ -9,14 +9,14 @@ import { decodeRpc } from '../../utils/decodeRpc'
 import { encodeRpc } from '../../utils/encodeRpc'
 import { getCqrsClient } from '../getCqrsClient'
 import { handleCqrsApi } from '../handleCqrs'
-import { ClientApi, CqrsApi, HandlerMap } from '../types'
+import { ClientApi, CqrsApi } from '../types'
 import { v4 as uuid } from 'uuid'
 interface User {
   name: string
   id: number
 }
 
-interface Queries extends HandlerMap {
+interface Queries {
   getById: (props: { id: number }) => Promise<User>
   getAll: () => Promise<User[]>
   validation: {

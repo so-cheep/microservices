@@ -1,20 +1,20 @@
 import * as faker from 'faker'
 import { mocked } from 'ts-jest/utils'
 import { constructRouteKey } from '../../utils/constructRouteKey'
-import { encodeRpc } from '../../utils/encodeRpc'
+
 import { mockTransport } from '../../__mocks__/transport'
 import { CqrsType } from '../constants'
 import { handleCqrsSingle } from '../handleCqrs'
-import { CqrsApi, HandlerMap } from '../types'
+import { CqrsApi } from '../types'
 interface User {
   name: string
 }
 
-interface UserService extends HandlerMap {
+interface UserService {
   getById: (id: string) => Promise<User>
 }
 
-type Api = CqrsApi<'TestUser', UserService, HandlerMap>
+type Api = CqrsApi<'TestUser', UserService, never>
 
 const mockGet = jest.fn().mockResolvedValue({})
 const userService: UserService = {

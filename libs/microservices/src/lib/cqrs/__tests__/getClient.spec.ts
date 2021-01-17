@@ -1,11 +1,6 @@
 // eslint-disable-next-line @nrwl/nx/enforce-module-boundaries
 import { CqrsType } from '../constants'
-import {
-  RpcMetadata,
-  RpcOptions,
-  HandlerMap,
-  CqrsApi,
-} from '../types'
+import { RpcMetadata, RpcOptions, CqrsApi } from '../types'
 import { getCqrsClient } from '../getCqrsClient'
 import { constructRouteKey } from '../../utils/constructRouteKey'
 import { mockTransport } from '../../__mocks__/transport'
@@ -17,16 +12,16 @@ interface Thing {
 }
 type Get = (id: string) => Promise<Thing>
 
-interface SillyQuery extends HandlerMap {
+interface SillyQuery {
   get: Get
 }
-interface SillyCommand extends HandlerMap {
+interface SillyCommand {
   delete: (id: string) => Promise<void>
 }
 
 type SillyApi = CqrsApi<'Silly', SillyQuery, SillyCommand>
 
-interface SillyRecursive extends HandlerMap {
+interface SillyRecursive {
   recurse: SillyRecursive
   get: Get
 }

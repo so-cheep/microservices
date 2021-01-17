@@ -1,6 +1,7 @@
-import { Transport } from '@cheep/transport'
+import { Transport, TransportState } from '@cheep/transport'
 
 export const mockTransport = <Transport>{
+  state: TransportState.STARTED,
   execute: jest.fn().mockResolvedValue(undefined),
   publish: jest.fn().mockResolvedValue(undefined),
   on: jest.fn(),
