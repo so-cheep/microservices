@@ -1,11 +1,12 @@
 import { Transport } from '@cheep/transport'
 import { InvalidRpcPathError } from '../errors/invalidRpcPath.error'
 import { constructRouteKey } from '../utils/constructRouteKey'
-import { ClientApi, CqrsApi, HandlerMap, RpcOptions } from './types'
+import { ClientApi, GenericCqrsApi, RpcOptions } from './types'
 
-export function getCqrsClient<
-  Api extends CqrsApi<string, HandlerMap, HandlerMap>
->(transport: Transport, options?: RpcOptions): ClientApi<Api> {
+export function getCqrsClient<Api extends GenericCqrsApi>(
+  transport: Transport,
+  options?: RpcOptions,
+): ClientApi<Api> {
   return recursiveHandler(transport, options)
 }
 

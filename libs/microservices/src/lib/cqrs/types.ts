@@ -6,6 +6,7 @@ export type Handler = (...args: unknown[]) => Promise<unknown>
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 export type ShallowHandlerMap<T = Handler | object> =
+  | T
   | Record<string, T>
   | Record<string, Record<string, T>>
   | Record<string, Record<string, Record<string, T>>>
@@ -52,6 +53,7 @@ export interface CqrsApi<
   [CqrsType.Command]: TCommandHandler
   namespace: TNamespace
 }
+export type GenericCqrsApi = CqrsApi<string, QueryMap, CommandMap>
 
 export type ClientApi<
   TApi extends CqrsApi<string, QueryMap, CommandMap>

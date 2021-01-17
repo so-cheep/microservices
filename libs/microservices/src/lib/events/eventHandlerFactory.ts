@@ -37,7 +37,7 @@ export function handleEvents<
     map(item => ({
       metadata: item.metadata,
       // the event function type requires a single arg, so this is safe
-      payload: (item.message as unknown[]).shift(),
+      payload: (item.message as unknown[]).slice(0, 1).shift(),
       // split by `.` then remove the first, which is the EventRouteKey (Event)
       type: item.route.split('.').slice(1),
       route: item.route,
