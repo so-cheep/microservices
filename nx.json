@@ -23,9 +23,6 @@
     }
   },
   "projects": {
-    "cqrs-types": {
-      "tags": []
-    },
     "example-pusher-api": {
       "tags": []
     },

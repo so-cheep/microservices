@@ -1,38 +1,6 @@
 {
   "version": 2,
   "projects": {
-    "cqrs-types": {
-      "root": "libs/cqrs/types",
-      "sourceRoot": "libs/cqrs/types/src",
-      "projectType": "library",
-      "targets": {
-        "lint": {
-          "executor": "@nrwl/linter:eslint",
-          "options": {
-            "lintFilePatterns": ["libs/cqrs/types/**/*.ts"]
-          }
-        },
-        "test": {
-          "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/libs/cqrs/types"],
-          "options": {
-            "jestConfig": "libs/cqrs/types/jest.config.js",
-            "passWithNoTests": true
-          }
-        },
-        "build": {
-          "executor": "@nrwl/node:package",
-          "outputs": ["{options.outputPath}"],
-          "options": {
-            "outputPath": "dist/libs/cqrs/types",
-            "tsConfig": "libs/cqrs/types/tsconfig.lib.json",
-            "packageJson": "libs/cqrs/types/package.json",
-            "main": "libs/cqrs/types/src/index.ts",
-            "assets": ["libs/cqrs/types/*.md"]
-          }
-        }
-      }
-    },
     "example-pusher-api": {
       "root": "libs/example/pusher/api",
       "sourceRoot": "libs/example/pusher/api/src",
