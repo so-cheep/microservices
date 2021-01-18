@@ -44,6 +44,8 @@ export class SnsSqsTransport extends TransportBase {
             deadLetterQueueUrl: string
           }
 
+      skipSubscriptionCheck?: boolean
+
       queueWaitTimeInSeconds?: number
       queueMaxNumberOfMessages?: number
 
@@ -152,23 +154,21 @@ export class SnsSqsTransport extends TransportBase {
   }
 
   async start() {
-    this.isStarted = true
+    await super.start()
 
-    const routes = this.getRegisteredRoutes()
-    const prefixes = this.getRegisteredPrefixes()
+    if (!this.options.skipSubscriptionCheck) {
+      const routes = this.getRegisteredRoutes()
+      const prefixes = this.getRegisteredPrefixes()
 
-    await ensureSubscriptionExists({
-      sns: this.utils.getSns(),
-      topicArn: this.topicArn,
-      queueArn: this.queueArn,
-      deadLetterArn: this.deadLetterQueueArn,
-      routes,
-      prefixes,
-    })
-  }
-
-  async stop() {
-    this.isStarted = false
+      await ensureSubscriptionExists({
+        sns: this.utils.getSns(),
+        topicArn: this.topicArn,
+        queueArn: this.queueArn,
+        deadLetterArn: this.deadLetterQueueArn,
+        routes,
+        prefixes,
+      })
+    }
   }
 
   async dispose() {
