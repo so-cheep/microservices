@@ -14,10 +14,11 @@ import {
 
 export type MetaMergeFunction<
   TMeta extends MessageMetadata = MessageMetadata
-> = (
-  currentMetadata: TMeta,
-  referrerMetadata: TMeta,
-) => Partial<TMeta>
+> = (context: {
+  referrerMetadata?: TMeta
+  currentMetadata: Partial<TMeta>
+  currentMessage: TransportMessage
+}) => Partial<TMeta>
 
 export interface TransportOptions<
   TMeta extends MessageMetadata = MessageMetadata
@@ -70,6 +71,7 @@ export abstract class TransportBase implements Transport {
     props: SendErrorReplyMessageProps,
   ): Promise<void>
 
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   protected newRpcCallRegistered(activeRpcCallsCount: number) {}
 
   on(route: string, action: RouteHandler) {
@@ -121,7 +123,7 @@ export abstract class TransportBase implements Transport {
 
     const { route, message, metadata = {}, rpcTimeout } = props
 
-    let correlationId = this.utils.newId()
+    const correlationId = this.utils.newId()
 
     const rpcCallTimeout = rpcTimeout ?? defaultRpcTimeout
 
@@ -307,15 +309,28 @@ export abstract class TransportBase implements Transport {
     return [...this.prefixHandlers.keys()]
   }
 
-  mergeMetadata(current, prev = {}): MessageMetadata {
+  mergeMetadata(context: {
+    referrerMetadata?: MessageMetadata
+    currentMetadata: Partial<MessageMetadata>
+    currentMessage: TransportMessage
+  }): MessageMetadata {
+    const {
+      referrerMetadata,
+      currentMetadata,
+      currentMessage,
+    } = context
     const merged = this.options.metadataMerge.reduce((meta, fn) => {
-      const x = fn(prev, current)
+      const x = fn({
+        currentMessage,
+        currentMetadata: meta,
+        referrerMetadata,
+      })
       return {
         ...meta,
         ...x,
       }
       return
-    }, current)
+    }, currentMetadata)
     return merged
   }
 }
