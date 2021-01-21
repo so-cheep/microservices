@@ -7,7 +7,6 @@ import {
   EventPublisher,
   handleEvents,
   EventHandler,
-  RpcMetadata,
   getEventPublisher,
 } from '@cheep/microservices'
 import { ModuleOptionsToken, TransportToken } from '../constants'
@@ -53,9 +52,15 @@ export class CheepEvents<
     this.eventPublisher = getEventPublisher<TPublishableApi>(
       this.transport,
     )
+
+    // always get our own events!
+    const listenModules = (
+      this.moduleOptions.listenEventsFrom ?? []
+    ).concat([this.moduleOptions.moduleName])
+
     this.eventHandler = handleEvents<THandleableApi>(
       this.transport,
-      this.moduleOptions.listenEventsFrom ?? [],
+      listenModules,
     )
   }
 }
