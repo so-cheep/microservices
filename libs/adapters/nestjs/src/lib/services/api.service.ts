@@ -1,22 +1,14 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
 
-import {
-  CommandMap,
-  EventMap,
-  MicroserviceApi,
-  QueryMap,
-  ClientApi,
-  getCqrsClient,
-  RpcMetadata,
-} from '@cheep/microservices'
+import { ClientApi, getCqrsClient } from '@cheep/microservices'
 import type { Transport } from '@cheep/transport'
 
 import { TransportToken } from '../constants'
+import { GenericMicroserviceApi } from '../types'
 
 @Injectable()
-export class CheepApi<
-  TApi extends MicroserviceApi<string, QueryMap, CommandMap, EventMap>
-> implements ClientApi<TApi>, OnModuleInit {
+export class CheepApi<TApi extends GenericMicroserviceApi>
+  implements ClientApi<TApi>, OnModuleInit {
   private client: ClientApi<TApi>
 
   get Query(): ClientApi<TApi>['Query'] {
