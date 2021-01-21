@@ -46,12 +46,14 @@ export interface RpcOptions {
 export interface CqrsApi<
   TNamespace extends string,
   TQueryHandler extends QueryMap,
-  TCommandHandler extends CommandMap
+  TCommandHandler extends CommandMap,
+  TMetadata extends MessageMetadata = MessageMetadata
 > {
   [CqrsType.Query]: TQueryHandler
 
   [CqrsType.Command]: TCommandHandler
   namespace: TNamespace
+  metadata: TMetadata
 }
 export type GenericCqrsApi = CqrsApi<string, QueryMap, CommandMap>
 

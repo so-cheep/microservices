@@ -12,25 +12,29 @@ export type EventMap<
 
 export interface EventApi<
   TNamespace extends string,
-  TEvents extends EventMap
+  TEvents extends EventMap,
+  TMeta extends MessageMetadata = MessageMetadata
 > {
   namespace: TNamespace
   events: TEvents
+  metadata: TMeta
 }
 
 export type EventPublisher<
   TEventApi extends EventApi<string, EventMap>
 > = Record<
   TEventApi['namespace'],
-  EventsWithMeta<TEventApi['events']>
-> &
-  ((...events: unknown[]) => void)
+  EventsWithMeta<TEventApi['events'], TEventApi['metadata']>
+>
 
-export type EventsWithMeta<TEvents extends EventMap> = {
+export type EventsWithMeta<
+  TEvents extends EventMap,
+  TMeta extends MessageMetadata = MessageMetadata
+> = {
   [k in keyof TEvents]: TEvents[k] extends (
     ...args: unknown[]
   ) => void
-    ? (...args: [...Parameters<TEvents[k]>, MessageMetadata?]) => void
+    ? (...args: [...Parameters<TEvents[k]>, TMeta?]) => void
     : never
 }
 
@@ -138,7 +142,10 @@ type FunctionalEventHandlerFactory<
   // : 'WOOT'
 >(
   event: (event: EventSelector<TEventApi>) => TEventSelection,
-  handler: (payload: TPayload) => void | Promise<void>,
+  handler: (
+    payload: TPayload,
+    meta: TEventApi['metadata'],
+  ) => void | Promise<void>,
 ) => void
 
 type FilteredEventObservable<
