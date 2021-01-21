@@ -20,8 +20,19 @@ export interface EventApi<
 
 export type EventPublisher<
   TEventApi extends EventApi<string, EventMap>
-> = Record<TEventApi['namespace'], TEventApi['events']> &
+> = Record<
+  TEventApi['namespace'],
+  EventsWithMeta<TEventApi['events']>
+> &
   ((...events: unknown[]) => void)
+
+export type EventsWithMeta<TEvents extends EventMap> = {
+  [k in keyof TEvents]: TEvents[k] extends (
+    ...args: unknown[]
+  ) => void
+    ? (...args: [...Parameters<TEvents[k]>, MessageMetadata?]) => void
+    : never
+}
 
 export abstract class EventBase {}
 
