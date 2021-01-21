@@ -12,8 +12,18 @@ import {
   TransportState,
 } from './transport'
 
-export interface TransportOptions {
+export type MetaMergeFunction<
+  TMeta extends MessageMetadata = MessageMetadata
+> = (
+  currentMetadata: TMeta,
+  referrerMetadata: TMeta,
+) => Partial<TMeta>
+
+export interface TransportOptions<
+  TMeta extends MessageMetadata = MessageMetadata
+> {
   defaultRpcTimeout?: number
+  metadataMerge?: MetaMergeFunction<TMeta>[]
 }
 
 export interface TransportUtils {
@@ -295,6 +305,18 @@ export abstract class TransportBase implements Transport {
 
   protected getRegisteredPrefixes(): string[] {
     return [...this.prefixHandlers.keys()]
+  }
+
+  mergeMetadata(current, prev = {}): MessageMetadata {
+    const merged = this.options.metadataMerge.reduce((meta, fn) => {
+      const x = fn(prev, current)
+      return {
+        ...meta,
+        ...x,
+      }
+      return
+    }, current)
+    return merged
   }
 }
 
