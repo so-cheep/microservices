@@ -1,4 +1,5 @@
 import { CheepNestApi } from '@cheep/nestjs'
+import { AppMetadata } from '../../types'
 import type { UserCommands } from './user.commands'
 import type { UserQueries } from './user.query.service'
 
@@ -17,7 +18,8 @@ export type UserApi = CheepNestApi<
   'User',
   { Test: UserQueries },
   UserCommands,
-  UserEvents
+  UserEvents,
+  AppMetadata
 >
 
 export interface UserEvents {
