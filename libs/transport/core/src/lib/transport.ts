@@ -42,6 +42,15 @@ export interface Transport {
    * Temp queues should be deleted
    */
   dispose(): Promise<void>
+
+  // mergeMetadata<
+  //   TMeta extends MessageMetadata = MessageMetadata
+  // >(context: {
+  //   referrerMetadata?: TMeta
+  //   currentMetadata: Partial<TMeta>
+  //   currentRoute: string
+  //   currentMessage: unknown
+  // }): Partial<TMeta>
 }
 
 export interface TransportMessage {
@@ -76,13 +85,21 @@ export type FireAndForgetHandler = (
 export interface PublishProps<TMetadata extends MessageMetadata> {
   route: string
   message: unknown
-  metadata?: TMetadata
+  metadata?: Partial<TMetadata>
+  referrer?: {
+    route: string
+    metadata: TMetadata
+  }
 }
 
 export interface ExecuteProps<TMetadata extends MessageMetadata> {
   route: string
   message: unknown
   metadata?: TMetadata
+  referrer?: {
+    route: string
+    metadata: TMetadata
+  }
 
   rpcTimeout?: number
 }
@@ -91,3 +108,15 @@ export enum TransportState {
   STARTED = 'STARTED',
   STOPPED = 'STOPPED',
 }
+
+export type MetadataRule<
+  TMeta extends MessageMetadata = MessageMetadata
+> = (context: {
+  referrerRoute?: string
+  referrerMetadata?: TMeta
+  currentMetadata: Partial<TMeta>
+  currentRoute: string
+  currentMessage: unknown
+}) => Partial<TMeta>
+
+export type MetadataValidator = (msg: TransportMessage) => void

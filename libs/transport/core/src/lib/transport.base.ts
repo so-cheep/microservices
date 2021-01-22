@@ -5,6 +5,8 @@ import {
   FireAndForgetHandler,
   ListenResponseCallback,
   MessageMetadata,
+  MetadataRule,
+  MetadataValidator,
   PublishProps,
   RouteHandler,
   Transport,
@@ -12,19 +14,12 @@ import {
   TransportState,
 } from './transport'
 
-export type MetaMergeFunction<
-  TMeta extends MessageMetadata = MessageMetadata
-> = (context: {
-  referrerMetadata?: TMeta
-  currentMetadata: Partial<TMeta>
-  currentMessage: TransportMessage
-}) => Partial<TMeta>
-
 export interface TransportOptions<
   TMeta extends MessageMetadata = MessageMetadata
 > {
   defaultRpcTimeout?: number
-  metadataMerge?: MetaMergeFunction<TMeta>[]
+  metadataRules?: MetadataRule<TMeta>[]
+  metadataValidator?: MetadataValidator[]
 }
 
 export interface TransportUtils {
@@ -39,7 +34,7 @@ export abstract class TransportBase implements Transport {
   private registeredPrefixes: string[] = []
   private listenCallbacks = new Map<string, ListenResponseCallback>()
 
-  _state: TransportState
+  private _state: TransportState
   get state(): TransportState {
     return this._state
   }
@@ -107,12 +102,20 @@ export abstract class TransportBase implements Transport {
   }
 
   async publish(props: PublishProps<MessageMetadata>) {
-    const { route, message, metadata = {} } = props
+    const { route, message, metadata = {}, referrer } = props
+
+    const finalMetadata = this.mergeMetadata({
+      currentRoute: route,
+      currentMessage: message,
+      currentMetadata: metadata,
+      referrerRoute: referrer?.route,
+      referrerMetadata: referrer?.metadata,
+    })
 
     await this.sendMessage({
       route,
       message: this.utils.jsonEncode(message),
-      metadata,
+      metadata: finalMetadata,
     })
   }
 
@@ -121,7 +124,13 @@ export abstract class TransportBase implements Transport {
   ): Promise<unknown> {
     const { defaultRpcTimeout = 1000 } = this.options
 
-    const { route, message, metadata = {}, rpcTimeout } = props
+    const {
+      route,
+      message,
+      metadata = {},
+      referrer,
+      rpcTimeout,
+    } = props
 
     const correlationId = this.utils.newId()
 
@@ -165,10 +174,18 @@ export abstract class TransportBase implements Transport {
       }
     })
 
+    const finalMetadata = this.mergeMetadata({
+      currentRoute: route,
+      currentMessage: message,
+      currentMetadata: metadata,
+      referrerRoute: referrer?.route,
+      referrerMetadata: referrer?.metadata,
+    })
+
     await this.sendMessage({
       route,
       message: this.utils.jsonEncode(message),
-      metadata,
+      metadata: finalMetadata,
       correlationId,
       isRpc: true,
     })
@@ -191,6 +208,32 @@ export abstract class TransportBase implements Transport {
   }
 
   protected async processMessage(msg: TransportMessage) {
+    const { metadataValidator } = this.options
+
+    // first validate the message
+    if (metadataValidator?.length) {
+      for (const validateFn of metadataValidator) {
+        try {
+          validateFn(msg)
+        } catch (err) {
+          const isRpc = !!msg.replyTo
+          console.log('isRpc', isRpc)
+          if (isRpc) {
+            await this.sendErrorReplyMessage({
+              replyTo: msg.replyTo,
+              correlationId: msg.correlationId,
+              metadata: msg.metadata,
+              error: err,
+            })
+            return
+          }
+
+          throw err
+        }
+      }
+    }
+
+    // start processing message
     const message = this.utils.jsonDecode(msg.message)
 
     const registeredPrefixes = this.registeredPrefixes.filter(
@@ -309,28 +352,38 @@ export abstract class TransportBase implements Transport {
     return [...this.prefixHandlers.keys()]
   }
 
-  mergeMetadata(context: {
+  private mergeMetadata(context: {
+    referrerRoute?: string
     referrerMetadata?: MessageMetadata
-    currentMetadata: Partial<MessageMetadata>
-    currentMessage: TransportMessage
+    currentMetadata: MessageMetadata
+    currentRoute: string
+    currentMessage: unknown
   }): MessageMetadata {
+    const { metadataRules = [] } = this.options
+
     const {
+      referrerRoute,
       referrerMetadata,
       currentMetadata,
+      currentRoute,
       currentMessage,
     } = context
-    const merged = this.options.metadataMerge.reduce((meta, fn) => {
+
+    const merged = metadataRules.reduce((meta, fn) => {
       const x = fn({
+        currentRoute,
         currentMessage,
         currentMetadata: meta,
+        referrerRoute,
         referrerMetadata,
       })
+
       return {
         ...meta,
         ...x,
       }
-      return
     }, currentMetadata)
+
     return merged
   }
 }

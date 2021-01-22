@@ -9,12 +9,16 @@
         "lint": {
           "executor": "@nrwl/linter:eslint",
           "options": {
-            "lintFilePatterns": ["libs/example/pusher/api/**/*.ts"]
+            "lintFilePatterns": [
+              "libs/example/pusher/api/**/*.ts"
+            ]
           }
         },
         "test": {
           "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/libs/example/pusher/api"],
+          "outputs": [
+            "coverage/libs/example/pusher/api"
+          ],
           "options": {
             "jestConfig": "libs/example/pusher/api/jest.config.js",
             "passWithNoTests": true
@@ -30,12 +34,16 @@
         "lint": {
           "executor": "@nrwl/linter:eslint",
           "options": {
-            "lintFilePatterns": ["libs/example/user/api/**/*.ts"]
+            "lintFilePatterns": [
+              "libs/example/user/api/**/*.ts"
+            ]
           }
         },
         "test": {
           "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/libs/example/user/api"],
+          "outputs": [
+            "coverage/libs/example/user/api"
+          ],
           "options": {
             "jestConfig": "libs/example/user/api/jest.config.js",
             "passWithNoTests": true
@@ -51,12 +59,16 @@
         "lint": {
           "executor": "@nrwl/linter:eslint",
           "options": {
-            "lintFilePatterns": ["libs/example/user/core/**/*.ts"]
+            "lintFilePatterns": [
+              "libs/example/user/core/**/*.ts"
+            ]
           }
         },
         "test": {
           "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/libs/example/user/core"],
+          "outputs": [
+            "coverage/libs/example/user/core"
+          ],
           "options": {
             "jestConfig": "libs/example/user/core/jest.config.js",
             "passWithNoTests": true
@@ -72,12 +84,16 @@
         "lint": {
           "executor": "@nrwl/linter:eslint",
           "options": {
-            "lintFilePatterns": ["libs/transport/core/**/*.ts"]
+            "lintFilePatterns": [
+              "libs/transport/core/**/*.ts"
+            ]
           }
         },
         "test": {
           "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/libs/transport/core"],
+          "outputs": [
+            "coverage/libs/transport/core"
+          ],
           "options": {
             "jestConfig": "libs/transport/core/jest.config.js",
             "passWithNoTests": true
@@ -85,13 +101,17 @@
         },
         "build": {
           "executor": "@nrwl/node:package",
-          "outputs": ["{options.outputPath}"],
+          "outputs": [
+            "{options.outputPath}"
+          ],
           "options": {
             "outputPath": "dist/libs/transport/core",
             "tsConfig": "libs/transport/core/tsconfig.lib.json",
             "packageJson": "libs/transport/core/package.json",
             "main": "libs/transport/core/src/index.ts",
-            "assets": ["libs/transport/core/*.md"]
+            "assets": [
+              "libs/transport/core/*.md"
+            ]
           }
         }
       }
@@ -104,12 +124,16 @@
         "lint": {
           "executor": "@nrwl/linter:eslint",
           "options": {
-            "lintFilePatterns": ["libs/transport/rabbitmq/**/*.ts"]
+            "lintFilePatterns": [
+              "libs/transport/rabbitmq/**/*.ts"
+            ]
           }
         },
         "test": {
           "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/libs/transport/rabbitmq"],
+          "outputs": [
+            "coverage/libs/transport/rabbitmq"
+          ],
           "options": {
             "jestConfig": "libs/transport/rabbitmq/jest.config.js",
             "passWithNoTests": true
@@ -117,14 +141,18 @@
         },
         "build": {
           "executor": "@nrwl/node:package",
-          "outputs": ["{options.outputPath}"],
+          "outputs": [
+            "{options.outputPath}"
+          ],
           "options": {
             "outputPath": "dist/libs/transport/rabbitmq",
             "tsConfig": "libs/transport/rabbitmq/tsconfig.lib.json",
             "packageJson": "libs/transport/rabbitmq/package.json",
             "buildableProjectDepsInPackageJsonType": "peerDependencies",
             "main": "libs/transport/rabbitmq/src/index.ts",
-            "assets": ["libs/transport/rabbitmq/*.md"]
+            "assets": [
+              "libs/transport/rabbitmq/*.md"
+            ]
           }
         }
       }
@@ -137,12 +165,16 @@
         "lint": {
           "executor": "@nrwl/linter:eslint",
           "options": {
-            "lintFilePatterns": ["libs/transport/aws/**/*.ts"]
+            "lintFilePatterns": [
+              "libs/transport/aws/**/*.ts"
+            ]
           }
         },
         "test": {
           "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/libs/transport/aws"],
+          "outputs": [
+            "coverage/libs/transport/aws"
+          ],
           "options": {
             "jestConfig": "libs/transport/aws/jest.config.js",
             "passWithNoTests": true
@@ -150,14 +182,18 @@
         },
         "build": {
           "executor": "@nrwl/node:package",
-          "outputs": ["{options.outputPath}"],
+          "outputs": [
+            "{options.outputPath}"
+          ],
           "options": {
             "outputPath": "dist/libs/transport/aws",
             "tsConfig": "libs/transport/aws/tsconfig.lib.json",
             "packageJson": "libs/transport/aws/package.json",
             "buildableProjectDepsInPackageJsonType": "peerDependencies",
             "main": "libs/transport/aws/src/index.ts",
-            "assets": ["libs/transport/aws/*.md"]
+            "assets": [
+              "libs/transport/aws/*.md"
+            ]
           }
         }
       }
@@ -170,12 +206,16 @@
         "lint": {
           "executor": "@nrwl/linter:eslint",
           "options": {
-            "lintFilePatterns": ["libs/microservices/**/*.ts"]
+            "lintFilePatterns": [
+              "libs/microservices/**/*.ts"
+            ]
           }
         },
         "test": {
           "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/libs/microservices"],
+          "outputs": [
+            "coverage/libs/microservices"
+          ],
           "options": {
             "jestConfig": "libs/microservices/jest.config.js",
             "passWithNoTests": true
@@ -183,14 +223,18 @@
         },
         "build": {
           "executor": "@nrwl/node:package",
-          "outputs": ["{options.outputPath}"],
+          "outputs": [
+            "{options.outputPath}"
+          ],
           "options": {
             "outputPath": "dist/libs/microservices",
             "tsConfig": "libs/microservices/tsconfig.lib.json",
             "packageJson": "libs/microservices/package.json",
             "buildableProjectDepsInPackageJsonType": "peerDependencies",
             "main": "libs/microservices/src/index.ts",
-            "assets": ["libs/microservices/*.md"]
+            "assets": [
+              "libs/microservices/*.md"
+            ]
           }
         }
       }
@@ -203,12 +247,16 @@
         "lint": {
           "executor": "@nrwl/linter:eslint",
           "options": {
-            "lintFilePatterns": ["libs/adapters/nestjs/**/*.ts"]
+            "lintFilePatterns": [
+              "libs/adapters/nestjs/**/*.ts"
+            ]
           }
         },
         "test": {
           "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/libs/adapters/nestjs"],
+          "outputs": [
+            "coverage/libs/adapters/nestjs"
+          ],
           "options": {
             "jestConfig": "libs/adapters/nestjs/jest.config.js",
             "passWithNoTests": true
@@ -216,14 +264,18 @@
         },
         "build": {
           "executor": "@nrwl/node:package",
-          "outputs": ["{options.outputPath}"],
+          "outputs": [
+            "{options.outputPath}"
+          ],
           "options": {
             "outputPath": "dist/libs/adapters/nestjs",
             "tsConfig": "libs/adapters/nestjs/tsconfig.lib.json",
             "packageJson": "libs/adapters/nestjs/package.json",
             "buildableProjectDepsInPackageJsonType": "peerDependencies",
             "main": "libs/adapters/nestjs/src/index.ts",
-            "assets": ["libs/adapters/nestjs/*.md"]
+            "assets": [
+              "libs/adapters/nestjs/*.md"
+            ]
           }
         }
       }
@@ -236,12 +288,16 @@
       "targets": {
         "build": {
           "executor": "@nrwl/node:build",
-          "outputs": ["{options.outputPath}"],
+          "outputs": [
+            "{options.outputPath}"
+          ],
           "options": {
             "outputPath": "dist/apps/examples/nestjs-inmemory",
             "main": "apps/examples/nestjs-inmemory/src/main.ts",
             "tsConfig": "apps/examples/nestjs-inmemory/tsconfig.app.json",
-            "assets": ["apps/examples/nestjs-inmemory/src/assets"]
+            "assets": [
+              "apps/examples/nestjs-inmemory/src/assets"
+            ]
           },
           "configurations": {
             "production": {
@@ -279,10 +335,52 @@
         },
         "test": {
           "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/apps/examples/nestjs-inmemory"],
+          "outputs": [
+            "coverage/apps/examples/nestjs-inmemory"
+          ],
           "options": {
             "jestConfig": "apps/examples/nestjs-inmemory/jest.config.js",
             "passWithNoTests": true
+          }
+        }
+      }
+    },
+    "transport-api": {
+      "root": "libs/transport/api",
+      "sourceRoot": "libs/transport/api/src",
+      "projectType": "library",
+      "targets": {
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "libs/transport/api/**/*.ts"
+            ]
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": [
+            "coverage/libs/transport/api"
+          ],
+          "options": {
+            "jestConfig": "libs/transport/api/jest.config.js",
+            "passWithNoTests": true
+          }
+        },
+        "build": {
+          "executor": "@nrwl/node:package",
+          "outputs": [
+            "{options.outputPath}"
+          ],
+          "options": {
+            "outputPath": "dist/libs/transport/api",
+            "tsConfig": "libs/transport/api/tsconfig.lib.json",
+            "packageJson": "libs/transport/api/package.json",
+            "main": "libs/transport/api/src/index.ts",
+            "assets": [
+              "libs/transport/api/*.md"
+            ]
           }
         }
       }
