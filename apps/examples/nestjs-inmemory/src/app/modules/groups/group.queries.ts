@@ -4,7 +4,9 @@ import { Group, GroupApi } from './groups.api'
 
 @Injectable()
 export class GroupQueries implements OnApplicationBootstrap {
-  private groups: Group[] = [{ id: 0, name: 'default', color: 'red' }]
+  private groups: Group[] = [
+    { id: 0, name: 'default', color: 'red', members: [] },
+  ]
 
   constructor(private events: CheepEvents<GroupApi>) {}
 

@@ -7,7 +7,7 @@ import { GatewayService } from './gateway.controller'
   imports: [
     CheepMicroservicesModule.forModule<GatewayApi, ConsumedApis>({
       moduleName: 'Gateway',
-      listenEventsFrom: ['User'],
+      listenEventsFrom: ['User', 'Group'],
       commandHandlers: undefined,
       queryHandlers: null,
     }),

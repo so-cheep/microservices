@@ -10,7 +10,7 @@ export class UserCommands {
   constructor(private events: CheepEvents<never, UserApi>) {}
   async create(
     props: { user: Omit<User, 'id'> },
-    meta: AppMetadata,
+    meta?: AppMetadata,
   ): Promise<number> {
     const newUser = {
       ...props.user,

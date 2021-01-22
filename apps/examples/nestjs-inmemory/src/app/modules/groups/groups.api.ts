@@ -1,4 +1,5 @@
 import { CheepNestApi } from '@cheep/nestjs'
+import { AppMetadata } from '../../types'
 import type { GroupCommands } from './group.commands'
 import type { GroupQueries } from './group.queries'
 
@@ -6,6 +7,7 @@ export interface Group {
   id: number
   name: string
   color: 'red' | 'blue'
+  members: number[]
 }
 
 export interface UserGroup {
@@ -19,5 +21,7 @@ export type GroupApi = CheepNestApi<
   GroupCommands,
   {
     created: (user: Group) => void
-  }
+    updated: (user: Group) => void
+  },
+  AppMetadata
 >

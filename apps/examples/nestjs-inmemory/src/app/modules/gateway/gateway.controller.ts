@@ -6,8 +6,6 @@ import {
 } from '@nestjs/common'
 import { ConsumedApis } from './gateway.api'
 import * as faker from 'faker'
-import { merge } from 'rxjs'
-import { map } from 'rxjs/operators'
 
 @Controller()
 export class GatewayService implements OnApplicationBootstrap {
@@ -17,11 +15,17 @@ export class GatewayService implements OnApplicationBootstrap {
   ) {}
 
   onApplicationBootstrap() {
-    this.events
-      .observe()
-      .subscribe(e =>
-        console.log('EVENT', e.type, e.payload, e.metadata),
-      )
+    const x$ = this.events.observe()
+
+    x$.subscribe(e => {
+      console.log('EVENT', e.type, e.payload, e.metadata),
+        console.log(
+          'Event span:',
+          e.metadata.transactionStart,
+          '->',
+          new Date(),
+        )
+    })
   }
 
   @Get('users')
@@ -29,7 +33,7 @@ export class GatewayService implements OnApplicationBootstrap {
     return this.client.Query.User.Test.getAll()
   }
 
-  @Get('user/create')
+  @Get('users/create')
   async createUser() {
     const id = await this.client.Command.User.create({
       user: {
@@ -46,7 +50,7 @@ export class GatewayService implements OnApplicationBootstrap {
     return this.client.Query.Group.getAll()
   }
 
-  @Get('group/create')
+  @Get('groups/create')
   async createGroup() {
     const id = await this.client.Command.Group.create({
       group: {
