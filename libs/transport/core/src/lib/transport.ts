@@ -42,6 +42,17 @@ export interface Transport {
    * Temp queues should be deleted
    */
   dispose(): Promise<void>
+
+  /**
+   * utility function to run the configured metadata merge
+   * @param context
+   */
+  mergeMetadata(context: {
+    referrerMetadata?: MessageMetadata | undefined
+    currentMetadata: Partial<MessageMetadata>
+    route: string
+    message: unknown
+  }): MessageMetadata
 }
 
 export interface TransportMessage {
@@ -91,3 +102,5 @@ export enum TransportState {
   STARTED = 'STARTED',
   STOPPED = 'STOPPED',
 }
+
+export const MetdataToken = Symbol('Cheep Metadata Indicator')

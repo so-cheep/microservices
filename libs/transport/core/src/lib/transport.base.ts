@@ -5,19 +5,22 @@ import {
   FireAndForgetHandler,
   ListenResponseCallback,
   MessageMetadata,
+  MetdataToken,
   PublishProps,
   RouteHandler,
   Transport,
   TransportMessage,
   TransportState,
 } from './transport'
+import 'reflect-metadata'
 
 export type MetaMergeFunction<
   TMeta extends MessageMetadata = MessageMetadata
 > = (context: {
   referrerMetadata?: TMeta
   currentMetadata: Partial<TMeta>
-  currentMessage: TransportMessage
+  route: string
+  message: unknown
 }) => Partial<TMeta>
 
 export interface TransportOptions<
@@ -35,8 +38,11 @@ export interface TransportUtils {
 
 export abstract class TransportBase implements Transport {
   private routeHandlers = new Map<string, RouteHandler[]>()
-  private prefixHandlers = new Map<string, FireAndForgetHandler>()
-  private registeredPrefixes: string[] = []
+  private prefixHandlers = new Map<
+    string,
+    Set<FireAndForgetHandler>
+  >()
+  private registeredPrefixes = new Set<string>()
   private listenCallbacks = new Map<string, ListenResponseCallback>()
 
   _state: TransportState
@@ -178,8 +184,10 @@ export abstract class TransportBase implements Transport {
 
   onEvery(prefixes: string[], action: FireAndForgetHandler) {
     prefixes.forEach(x => {
-      this.registeredPrefixes.push(x)
-      this.prefixHandlers.set(x, action)
+      this.registeredPrefixes.add(x)
+      const handlers = this.prefixHandlers.get(x) ?? new Set()
+      handlers.add(action)
+      this.prefixHandlers.set(x, handlers)
     })
   }
 
@@ -187,35 +195,37 @@ export abstract class TransportBase implements Transport {
     this.routeHandlers.clear()
     this.prefixHandlers.clear()
     this.listenCallbacks.clear()
-    this.registeredPrefixes = []
+    this.registeredPrefixes.clear()
   }
 
   protected async processMessage(msg: TransportMessage) {
     const message = this.utils.jsonDecode(msg.message)
 
-    const registeredPrefixes = this.registeredPrefixes.filter(
-      prefix => msg.route.startsWith(prefix),
-    )
+    const registeredPrefixes = [
+      ...this.registeredPrefixes,
+    ].filter(prefix => msg.route.startsWith(prefix))
 
     // prefix handlers
     if (registeredPrefixes.length) {
-      const handlers = registeredPrefixes.map(prefix => {
-        const handler = this.prefixHandlers.get(prefix)
+      const handlers = registeredPrefixes.flatMap(prefix => {
+        const handlerSet = this.prefixHandlers.get(prefix)
 
-        return new Promise((resolve, reject) => {
-          try {
-            handler({
-              route: msg.route,
-              message,
-              metadata: msg.metadata,
-            })
+        return [...handlerSet].map(handler => {
+          return new Promise((resolve, reject) => {
+            try {
+              handler({
+                route: msg.route,
+                message,
+                metadata: msg.metadata,
+              })
 
-            resolve(true)
-          } catch (err) {
-            reject(err)
-          }
-        }).catch(err => {
-          console.warn('onEveryAction.Error', prefix, err)
+              resolve(true)
+            } catch (err) {
+              reject(err)
+            }
+          }).catch(err => {
+            console.warn('onEveryAction.Error', prefix, err)
+          })
         })
       })
     }
@@ -312,25 +322,31 @@ export abstract class TransportBase implements Transport {
   mergeMetadata(context: {
     referrerMetadata?: MessageMetadata
     currentMetadata: Partial<MessageMetadata>
-    currentMessage: TransportMessage
+    route: string
+    message: unknown
   }): MessageMetadata {
     const {
       referrerMetadata,
       currentMetadata,
-      currentMessage,
+      route,
+      message,
     } = context
-    const merged = this.options.metadataMerge.reduce((meta, fn) => {
-      const x = fn({
-        currentMessage,
-        currentMetadata: meta,
-        referrerMetadata,
-      })
-      return {
-        ...meta,
-        ...x,
-      }
-      return
-    }, currentMetadata)
+    const merged =
+      this.options.metadataMerge?.reduce((meta, fn) => {
+        const x = fn({
+          route,
+          message,
+          currentMetadata: meta,
+          referrerMetadata,
+        })
+        return {
+          ...meta,
+          ...x,
+        }
+        return
+      }, currentMetadata) ?? currentMetadata
+
+    Reflect.defineMetadata(MetdataToken, true, merged)
     return merged
   }
 }
