@@ -1,6 +1,6 @@
 {
   "name": "@cheep/microservices",
-  "version": "0.0.4",
+  "version": "1.0.0-beta.1",
   "dependencies": {
     "flatted": "^3.1.0",
     "reflect-metadata": "^0.1.13"

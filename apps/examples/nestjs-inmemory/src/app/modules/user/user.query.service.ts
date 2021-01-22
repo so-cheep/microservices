@@ -14,7 +14,7 @@ export class UserQueries implements OnApplicationBootstrap {
     // update query model from events!
     this.events.on(
       e => e.User.created,
-      user => {
+      (user, thing) => {
         this.users.push(user)
       },
     )

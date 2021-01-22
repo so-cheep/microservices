@@ -6,7 +6,7 @@ import type {
   QueryMap,
   ShallowHandlerMap,
 } from '@cheep/microservices'
-import type { Transport } from '@cheep/transport'
+import type { MessageMetadata, Transport } from '@cheep/transport'
 import type { Type } from '@nestjs/common'
 
 export interface CheepMicroservicesRootConfig {
@@ -22,6 +22,7 @@ export type GenericMicroserviceApi = MicroserviceApi<
 
 export type ShallowInjectableHandlerMap = ShallowHandlerMap<Type>
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type GenericNestApi = CheepNestApi<string, any, any, EventMap>
 
 export type CheepMicroservicesModuleConfig<
@@ -63,7 +64,8 @@ export type CheepNestApi<
   TNamespace extends string,
   TQueryHandlers extends ShallowHandlerMap,
   TCommandHandlers extends ShallowHandlerMap,
-  TEvents extends EventMap
+  TEvents extends EventMap,
+  TMeta extends MessageMetadata = MessageMetadata
 > = {
   queryHandlers: TQueryHandlers
   commandHandlers: TCommandHandlers
@@ -71,7 +73,8 @@ export type CheepNestApi<
   TNamespace,
   TQueryHandlers,
   TCommandHandlers,
-  TEvents
+  TEvents,
+  TMeta
 >
 
 export type ClassOf<T> = { new (...args: unknown[]): T }
