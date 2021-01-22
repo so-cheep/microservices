@@ -174,7 +174,7 @@ describe('cheep.api', () => {
     // expect(avgDuration).toBeLessThan(1)
   })
 
-  it.only('pass referrer context', done => {
+  it.only('check recursion and fire error', done => {
     const newId = () => Date.now().toString()
 
     const transport = new MemoryTransport(
