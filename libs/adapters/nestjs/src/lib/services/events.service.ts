@@ -1,6 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 // anys are ok here, this is a dummy type
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
+import {
+  Inject,
+  Injectable,
+  Logger,
+  OnModuleInit,
+} from '@nestjs/common'
 
 import {
   EventHandler as EventHandlerType,
@@ -26,6 +31,7 @@ export class CheepEvents<
 > implements EventHandlerType<THandleableApi>, OnModuleInit {
   private eventHandler: EventHandler<THandleableApi>
   private eventPublisher: EventPublisher<TPublishableApi>
+  private logger = new Logger()
 
   // get handleClass(): EventHandlerType<THandleableApi>['handleClass'] {
   //   return this.eventHandler.handleClass
@@ -57,6 +63,12 @@ export class CheepEvents<
     const listenModules = (
       this.moduleOptions.listenEventsFrom ?? []
     ).concat([this.moduleOptions.moduleName])
+
+    this.logger.log(
+      `[${
+        this.moduleOptions.moduleName
+      }] Listening to events from [${listenModules.join(' ,')}] `,
+    )
 
     this.eventHandler = handleEvents<THandleableApi>(
       this.transport,
