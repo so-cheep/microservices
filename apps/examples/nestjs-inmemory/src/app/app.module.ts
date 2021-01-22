@@ -1,6 +1,13 @@
 import { MicroserviceTransportUtils } from '@cheep/microservices'
 import { CheepMicroservicesModule } from '@cheep/nestjs'
-import { MemoryTransport, TransportOptions } from '@cheep/transport'
+import {
+  callStackRule,
+  callStackValidator,
+  createdAtRule,
+  MemoryTransport,
+  transactionDurationValidator,
+  transactionRule,
+} from '@cheep/transport'
 import { Module } from '@nestjs/common'
 import { GatewayModule } from './modules/gateway/gateway.module'
 import { GroupModule } from './modules/groups/group.module'
@@ -10,19 +17,19 @@ import { AppMetadata } from './types'
 @Module({
   imports: [
     CheepMicroservicesModule.forRoot({
-      transport: new MemoryTransport(
-        <TransportOptions<AppMetadata>>{
-          metadataMerge: [
-            ({ referrerMetadata, route }) => ({
-              transactionId:
-                referrerMetadata?.transactionId ??
-                MicroserviceTransportUtils.newId(),
-              transactionStack: (
-                referrerMetadata?.transactionStack ?? []
-              ).concat([route]),
-              transactionStart:
-                referrerMetadata?.transactionStart ?? new Date(),
-            }),
+      transport: new MemoryTransport<AppMetadata>(
+        {
+          metadataReducers: [
+            callStackRule(),
+            transactionRule(
+              MicroserviceTransportUtils.newId,
+              Date.now,
+            ),
+            createdAtRule(Date.now),
+          ],
+          metadataValidator: [
+            callStackValidator(['Command.']),
+            transactionDurationValidator(9999, Date.parse, Date.now),
           ],
         },
         MicroserviceTransportUtils,

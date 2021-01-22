@@ -21,7 +21,7 @@ export class GatewayService implements OnApplicationBootstrap {
       console.log('EVENT', e.type, e.payload, e.metadata),
         console.log(
           'Event span:',
-          e.metadata.transactionStart,
+          new Date(e.metadata.transactionStartedAt),
           '->',
           new Date(),
         )

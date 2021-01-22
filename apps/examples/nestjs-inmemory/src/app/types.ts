@@ -1,7 +1,9 @@
-import { MessageMetadata } from '@cheep/transport'
+import {
+  CallStackMetadata,
+  CreatedAtMetadata,
+  TransactionMetadata,
+} from '@cheep/transport'
 
-export interface AppMetadata extends MessageMetadata {
-  transactionId: string
-  transactionStack: string[]
-  transactionStart: Date | string
-}
+export type AppMetadata = CallStackMetadata &
+  TransactionMetadata &
+  CreatedAtMetadata
