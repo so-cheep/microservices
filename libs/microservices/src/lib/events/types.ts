@@ -52,17 +52,23 @@ export type EventWithMetadata<
 
 type EventsFromMap<
   TEventMap extends EventMap,
-  TKey extends string[]
+  TKey extends string[],
+  TMeta extends MessageMetadata = MessageMetadata
 > = ValuesOf<
   {
     [K in keyof TEventMap]: TEventMap[K] extends EventPublishFunction<
       infer R
     >
-      ? EventWithMetadata<R, [...TKey, K extends string ? K : string]>
+      ? EventWithMetadata<
+          R,
+          [...TKey, K extends string ? K : string],
+          TMeta
+        >
       : TEventMap[K] extends EventMap
       ? EventsFromMap<
           TEventMap[K],
-          [...TKey, K extends string ? K : string]
+          [...TKey, K extends string ? K : string],
+          TMeta
         >
       : unknown
   }
@@ -77,7 +83,7 @@ export type AllEventsMap<
       key,
       infer Events
     >
-      ? EventsFromMap<Events, [key]>
+      ? EventsFromMap<Events, [key], TEventApi['metadata']>
       : never
   }
 >
@@ -164,4 +170,6 @@ type FilteredEventObservable<
     : never
 >(
   event?: (event: EventSelector<TEventApi>) => TEventSelection[],
-) => Observable<EventWithMetadata<TPayload, TPath>>
+) => Observable<
+  EventWithMetadata<TPayload, TPath, TEventApi['metadata']>
+>
