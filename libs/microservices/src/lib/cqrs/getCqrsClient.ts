@@ -1,8 +1,4 @@
-import {
-  Transport,
-  MetdataToken,
-  MessageMetadata,
-} from '@cheep/transport'
+import { Transport } from '@cheep/transport'
 import { InvalidRpcPathError } from '../errors/invalidRpcPath.error'
 import { constructRouteKey } from '../utils/constructRouteKey'
 import { processArgsSafely } from '../utils/processArgsSafely'
@@ -44,7 +40,6 @@ function recursiveHandler(
 
       return transport.execute({
         message,
-        metadata: { callTime: new Date().toISOString() },
         route: routeKey,
         referrer,
       })

@@ -34,7 +34,9 @@ export type EventsWithMeta<
   [k in keyof TEvents]: TEvents[k] extends (
     ...args: unknown[]
   ) => void
-    ? (...args: [...Parameters<TEvents[k]>, TMeta?]) => void
+    ? (
+        ...args: [...Parameters<TEvents[k]>, Referrer<TMeta>?]
+      ) => Promise<void>
     : EventsWithMeta<TEvents[k], TMeta>
 }
 
@@ -151,7 +153,7 @@ type FunctionalEventHandlerFactory<
   event: (event: EventSelector<TEventApi>) => TEventSelection,
   handler: (
     payload: TPayload,
-    meta: TEventApi['metadata'],
+    referrer: Referrer<TEventApi['metadata']>,
   ) => void | Promise<void>,
 ) => void
 

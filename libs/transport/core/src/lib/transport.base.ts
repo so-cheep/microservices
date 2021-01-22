@@ -5,7 +5,7 @@ import {
   FireAndForgetHandler,
   ListenResponseCallback,
   MessageMetadata,
-  MetadataRule,
+  MetadataReducer,
   MetadataValidator,
   PublishProps,
   Referrer,
@@ -20,8 +20,8 @@ export interface TransportOptions<
   TMeta extends MessageMetadata = MessageMetadata
 > {
   defaultRpcTimeout?: number
-  metadataRules?: MetadataRule<TMeta>[]
-  metadataValidator?: MetadataValidator[]
+  metadataReducers?: MetadataReducer<TMeta>[]
+  metadataValidator?: MetadataValidator<TMeta>[]
 }
 
 export interface TransportUtils {
@@ -365,7 +365,7 @@ export abstract class TransportBase implements Transport {
     currentRoute: string
     currentMessage: unknown
   }): MessageMetadata {
-    const { metadataRules = [] } = this.options
+    const { metadataReducers: metadataRules = [] } = this.options
 
     const {
       referrer,

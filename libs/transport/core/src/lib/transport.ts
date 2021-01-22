@@ -1,4 +1,5 @@
 import { NormalizedError } from './domain/normalizeError'
+import { TransportUtils } from './transport.base'
 
 export interface Transport {
   readonly state: TransportState
@@ -44,10 +45,12 @@ export interface Transport {
   dispose(): Promise<void>
 }
 
-export interface TransportMessage {
+export interface TransportMessage<
+  TMeta extends MessageMetadata = MessageMetadata
+> {
   route: string
   message: string
-  metadata: MessageMetadata
+  metadata: TMeta
 
   correlationId: string
   replyTo?: string
@@ -100,7 +103,7 @@ export interface Referrer<
   metadata?: TMeta
 }
 
-export type MetadataRule<
+export type MetadataReducer<
   TMeta extends MessageMetadata = MessageMetadata
 > = (context: {
   referrer: Referrer<TMeta>
@@ -109,4 +112,6 @@ export type MetadataRule<
   currentMessage: unknown
 }) => Partial<TMeta>
 
-export type MetadataValidator = (msg: TransportMessage) => void
+export type MetadataValidator<TMeta extends MessageMetadata> = (
+  msg: TransportMessage<TMeta>,
+) => void

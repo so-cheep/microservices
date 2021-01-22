@@ -26,9 +26,8 @@ function buildRecursiveProxy(transport: Transport, path: string[]) {
         const route = constructRouteKey(path)
         const { message, referrer } = processArgsSafely(args)
 
-        transport.publish({
+        return transport.publish({
           message,
-          metadata: { callTime: new Date().toISOString() },
           route,
           referrer,
         })

@@ -1,4 +1,5 @@
 import {
+  MessageMetadata,
   normalizeError,
   SendErrorReplyMessageProps,
   SendMessageProps,
@@ -10,7 +11,9 @@ import {
 import * as amqp from 'amqp-connection-manager'
 import { ConfirmChannel } from 'amqplib'
 
-export class RabbitMQTransport extends TransportBase {
+export class RabbitMQTransport<
+  TMeta extends MessageMetadata = MessageMetadata
+> extends TransportBase {
   private channel: amqp.ChannelWrapper
   private queueName: string
   private responseQueueName: string
@@ -18,7 +21,7 @@ export class RabbitMQTransport extends TransportBase {
   private bindingSetup: any
 
   constructor(
-    protected options: TransportOptions & {
+    protected options: TransportOptions<TMeta> & {
       moduleName: string
       amqpConnectionString: string
       publishExchangeName: string

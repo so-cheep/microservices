@@ -1,4 +1,5 @@
 import {
+  MessageMetadata,
   normalizeError,
   SendErrorReplyMessageProps,
   SendMessageProps,
@@ -19,7 +20,9 @@ import { purgeQueue } from './app/purgeQueue'
 import { sendMessageToSns } from './app/sendMessageToSns'
 import { sendMessageToSqs } from './app/sendMessageToSqs'
 
-export class SnsSqsTransport extends TransportBase {
+export class SnsSqsTransport<
+  TMeta extends MessageMetadata = MessageMetadata
+> extends TransportBase {
   private isStarted: boolean
   private topicArn: string
   private queueArn: string
@@ -29,7 +32,7 @@ export class SnsSqsTransport extends TransportBase {
   private responseQueueUrl: string
 
   constructor(
-    protected options: TransportOptions & {
+    protected options: TransportOptions<TMeta> & {
       config:
         | {
             type: 'AUTO'
@@ -269,7 +272,7 @@ export class SnsSqsTransport extends TransportBase {
         newId: this.utils.newId,
         shouldContinue: () => pendingItemsCount > 0,
         cb: items => {
-          for (let item of items) {
+          for (const item of items) {
             try {
               pendingItemsCount = this.processResponseMessage(item)
             } catch (err) {

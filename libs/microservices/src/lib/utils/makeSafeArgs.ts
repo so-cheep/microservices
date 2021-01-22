@@ -10,7 +10,7 @@ export function makeSafeArgs(
   item: TransportCompactMessage,
 ): [unknown, ...unknown[]] {
   // make the referrer object
-  const referrer = makeReferrer
+  const referrer = makeReferrer(item)
 
   const args = Array.isArray(item.message)
     ? (item.message.concat([referrer]) as [unknown, ...unknown[]])

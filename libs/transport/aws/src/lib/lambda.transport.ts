@@ -1,4 +1,5 @@
 import {
+  MessageMetadata,
   normalizeError,
   SendErrorReplyMessageProps,
   SendMessageProps,
@@ -13,9 +14,11 @@ import { processTriggeredLambdaMessages } from './app/processTriggeredLambdaMess
 import { sendMessageToSns } from './app/sendMessageToSns'
 import { sendMessageToSqs } from './app/sendMessageToSqs'
 
-export class LambdaTransport extends TransportBase {
+export class LambdaTransport<
+  TMeta extends MessageMetadata = MessageMetadata
+> extends TransportBase {
   constructor(
-    protected options: TransportOptions & {
+    protected options: TransportOptions<TMeta> & {
       initialMessages: AWS.SQS.Message[]
       topicArn: string
       responseQueueUrl: string
@@ -30,6 +33,7 @@ export class LambdaTransport extends TransportBase {
     super(options, utils)
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   async init() {}
 
   async start() {
@@ -72,7 +76,7 @@ export class LambdaTransport extends TransportBase {
         newId: this.utils.newId,
         shouldContinue: () => pendingItemsCount > 0,
         cb: items => {
-          for (let item of items) {
+          for (const item of items) {
             pendingItemsCount = this.processResponseMessage(item)
           }
         },

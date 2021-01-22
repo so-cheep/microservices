@@ -1,4 +1,5 @@
 import { normalizeError } from './domain/normalizeError'
+import { MessageMetadata } from './transport'
 import {
   SendErrorReplyMessageProps,
   SendMessageProps,
@@ -8,9 +9,11 @@ import {
   TransportUtils,
 } from './transport.base'
 
-export class MemoryTransport extends TransportBase {
+export class MemoryTransport<
+  TMeta extends MessageMetadata = MessageMetadata
+> extends TransportBase {
   constructor(
-    protected options: TransportOptions & {
+    protected options: TransportOptions<TMeta> & {
       messageDelayTime?: number
     },
     protected utils: TransportUtils,
@@ -18,7 +21,14 @@ export class MemoryTransport extends TransportBase {
     super(options, utils)
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   async init() {}
+
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  async start() {}
+
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  async stop() {}
 
   protected async sendMessage(props: SendMessageProps) {
     const { messageDelayTime = 0 } = this.options

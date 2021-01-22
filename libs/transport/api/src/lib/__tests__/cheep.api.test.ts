@@ -179,7 +179,7 @@ describe('cheep.api', () => {
 
     const transport = new MemoryTransport(
       {
-        metadataRules: [
+        metadataReducers: [
           transactionIdRule(newId),
           createdAtRule(Date.now),
           callStackRule(),
