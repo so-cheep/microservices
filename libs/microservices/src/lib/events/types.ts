@@ -35,7 +35,7 @@ export type EventsWithMeta<
     ...args: unknown[]
   ) => void
     ? (...args: [...Parameters<TEvents[k]>, TMeta?]) => void
-    : never
+    : EventsWithMeta<TEvents[k], TMeta>
 }
 
 export abstract class EventBase {}
