@@ -22,6 +22,9 @@ export type GroupApi = CheepNestApi<
   {
     created: (user: Group) => void
     updated: (user: Group) => void
+    Members: {
+      changed: (group: Group) => void
+    }
   },
   AppMetadata
 >

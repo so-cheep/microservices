@@ -42,5 +42,6 @@ export class GroupCommands {
     }
 
     this.events.publish.Group.updated(updated, meta)
+    this.events.publish.Group.Members.changed(updated, meta)
   }
 }
