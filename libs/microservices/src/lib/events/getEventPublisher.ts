@@ -1,4 +1,8 @@
-import { Transport } from '@cheep/transport'
+import {
+  MessageMetadata,
+  MetdataToken,
+  Transport,
+} from '@cheep/transport'
 import { InvalidRpcPathError } from '../errors/invalidRpcPath.error'
 import { constructRouteKey } from '../utils/constructRouteKey'
 
@@ -22,11 +26,28 @@ function buildRecursiveProxy(transport: Transport, path: string[]) {
       if (path.length < 2) {
         throw new InvalidRpcPathError(path)
       } else {
-        // normal proxy object call here
-        transport.publish({
+        const route = constructRouteKey(path)
+
+        // determine if we recieved metadata as the last arg
+        const lastArg = args.slice(-1).pop()
+        const isLastArgMetadata =
+          lastArg && Reflect.hasOwnMetadata(MetdataToken, lastArg)
+
+        const referrerMetadata = isLastArgMetadata
+          ? (lastArg as MessageMetadata)
+          : undefined
+
+        const metadata = transport.mergeMetadata({
+          route,
           message: args,
-          metadata: {},
-          route: constructRouteKey(path),
+          currentMetadata: { callTime: new Date().toISOString() },
+          referrerMetadata,
+        })
+
+        transport.publish({
+          message: isLastArgMetadata ? args.slice(0, -1) : args,
+          metadata,
+          route,
         })
       }
     },

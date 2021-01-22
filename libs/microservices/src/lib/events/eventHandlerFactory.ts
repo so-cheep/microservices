@@ -1,10 +1,15 @@
-import { Transport, TransportCompactMessage } from '@cheep/transport'
-import { Observable, Subject } from 'rxjs'
-import { filter, map, share } from 'rxjs/operators'
+import { Transport } from '@cheep/transport'
+import { Subject } from 'rxjs'
+import { filter, share } from 'rxjs/operators'
 import { constructRouteKey } from '../utils/constructRouteKey'
 import { makeSafeArgs } from '../utils/makeSafeArgs'
 import { EventRouteKey } from './constants'
-import { EventApi, EventHandler, EventMap } from './types'
+import {
+  EventApi,
+  EventHandler,
+  EventMap,
+  EventWithMetadata,
+} from './types'
 
 /**
  * Call this function to establish an event handler in a module.
@@ -26,44 +31,55 @@ export function handleEvents<
   listenModules: TEventApi['namespace'][],
 ): EventHandler<TEventApi> {
   // set up the observable first
-  const incoming$ = new Subject<TransportCompactMessage>()
-  transport.onEvery(
-    listenModules.map(module => `${EventRouteKey}.${module}`),
-    x => incoming$.next(x),
-  )
-  // transform the observable and share the transformation
-  const event$ = incoming$.pipe(
-    filter(item => item.route.startsWith(EventRouteKey)),
-    map(item => ({
+  const event$ = new Subject<EventWithMetadata & { route: string }>()
+  event$['closure'] = listenModules.join('|')
+
+  function handler(item) {
+    if (!item.route.startsWith(EventRouteKey)) return
+    event$.next({
       metadata: item.metadata,
       // the event function type requires a single arg, so this is safe
       payload: (item.message as unknown[]).slice(0, 1).shift(),
       // split by `.` then remove the first, which is the EventRouteKey (Event)
       type: item.route.split('.').slice(1),
       route: item.route,
-    })),
-    share(),
+    })
+  }
+  Object.defineProperty(handler, 'name', {
+    value: `handle[${listenModules.join('|')}]`,
+    configurable: true,
+  })
+
+  transport.onEvery(
+    listenModules.map(module => `${EventRouteKey}.${module}`),
+    handler,
   )
 
+  const observe = eventPick => {
+    if (!eventPick) {
+      return event$
+    }
+    // this allows the callback pick of events using the proxy.
+    // BUT the proxy has a liar's type, so we need to call the returned proxy to get the path
+    const events = eventPick
+      ? ((eventPick(
+          generateEventHandlerProxy([EventRouteKey]),
+        ) as unknown) as (() => string)[])
+      : [(): null => null]
+
+    const keys = events.map(e => e()).filter(x => !!x)
+
+    return event$.pipe(
+      // protect for case where user provides no event pick filter by checking key length for 0, which should pass
+      filter(e => keys.length === 0 || keys.includes(e.route)),
+      share(),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ) as any
+  }
+
   return {
-    observe: eventPick => {
-      // this allows the callback pick of events using the proxy.
-      // BUT the proxy has a liar's type, so we need to call the returned proxy to get the path
-      const events = eventPick
-        ? ((eventPick(
-            generateEventHandlerProxy([EventRouteKey]),
-          ) as unknown) as (() => string)[])
-        : [(): null => null]
-
-      const keys = events.map(e => e()).filter(x => !!x)
-
-      return event$.pipe(
-        // protect for case where user provides no event pick filter by checking key length for 0, which should pass
-        filter(e => keys.length === 0 || keys.includes(e.route)),
-        share(),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      ) as any
-    },
+    raw: event$,
+    observe,
     on: (eventPick, handler) => {
       // this allows the callback pick of events using the proxy.
       // BUT the proxy has a liar's type, so we need to call the returned proxy to get the path
@@ -77,7 +93,7 @@ export function handleEvents<
         return handler(...(args as Parameters<typeof handler>))
       })
     },
-  }
+  } as any
 }
 
 // recursive function to generate a proxy, which is ultimately limited by typescript
