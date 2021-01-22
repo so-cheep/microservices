@@ -15,6 +15,7 @@ import { ensureTopicExists } from './app/ensureTopicExists'
 import { listenQueue } from './app/listenQueue'
 import { listenResponseQueue } from './app/listenResponseQueue'
 import { processSqsMessages } from './app/processSqsMessages'
+import { purgeQueue } from './app/purgeQueue'
 import { sendMessageToSns } from './app/sendMessageToSns'
 import { sendMessageToSqs } from './app/sendMessageToSqs'
 
@@ -45,6 +46,7 @@ export class SnsSqsTransport extends TransportBase {
           }
 
       skipSubscriptionCheck?: boolean
+      purgeQueuesOnStart?: boolean
 
       queueWaitTimeInSeconds?: number
       queueMaxNumberOfMessages?: number
@@ -130,31 +132,22 @@ export class SnsSqsTransport extends TransportBase {
         }
         break
     }
-
-    // listen messages
-    listenQueue({
-      sqs: this.utils.getSqs(),
-      queueUrl: this.queueUrl,
-      isSnsMessage: true,
-      maxNumberOfMessages: this.options.queueMaxNumberOfMessages,
-      waitTimeInSeconds: this.options.queueWaitTimeInSeconds,
-      newId: () => this.utils.newId(),
-      requestAttemptId: this.utils.newId(),
-      shouldContinue: () => this.isStarted,
-      cb: async items => {
-        processSqsMessages(
-          this.queueUrl,
-          this.deadLetterQueueUrl,
-          items,
-          this.utils.getSqs,
-          x => this.processMessage(x),
-        )
-      },
-    })
   }
 
   async start() {
     await super.start()
+
+    if (this.options.purgeQueuesOnStart) {
+      await purgeQueue({
+        sqs: this.utils.getSqs(),
+        queueUrl: this.queueUrl,
+      })
+
+      await purgeQueue({
+        sqs: this.utils.getSqs(),
+        queueUrl: this.deadLetterQueueUrl,
+      })
+    }
 
     if (!this.options.skipSubscriptionCheck) {
       const routes = this.getRegisteredRoutes()
@@ -169,6 +162,26 @@ export class SnsSqsTransport extends TransportBase {
         prefixes,
       })
     }
+
+    // listen messages
+    listenQueue({
+      sqs: this.utils.getSqs(),
+      queueUrl: this.queueUrl,
+      isSnsMessage: true,
+      maxNumberOfMessages: this.options.queueMaxNumberOfMessages,
+      waitTimeInSeconds: this.options.queueWaitTimeInSeconds,
+      newId: () => this.utils.newId(),
+      requestAttemptId: this.utils.newId(),
+      shouldContinue: () => this.isStarted,
+      cb: items =>
+        processSqsMessages(
+          this.queueUrl,
+          this.deadLetterQueueUrl,
+          items,
+          this.utils.getSqs,
+          x => this.processMessage(x),
+        ),
+    })
   }
 
   async dispose() {

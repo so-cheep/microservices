@@ -14,6 +14,7 @@ export class RabbitMQTransport extends TransportBase {
   private channel: amqp.ChannelWrapper
   private queueName: string
   private responseQueueName: string
+  private deadLetterQueueName: string
   private bindingSetup: any
 
   constructor(
@@ -39,7 +40,7 @@ export class RabbitMQTransport extends TransportBase {
     this.queueName = moduleName
     this.responseQueueName = `${moduleName}Response-${this.utils.newId()}`
 
-    const deadLetterQueueName = `${moduleName}-DLQ`
+    this.deadLetterQueueName = `${moduleName}-DLQ`
 
     const connection = amqp.connect([amqpConnectionString])
 
@@ -65,76 +66,11 @@ export class RabbitMQTransport extends TransportBase {
           }),
 
           // Dead letter queue
-          x.assertQueue(deadLetterQueueName, {
+          x.assertQueue(this.deadLetterQueueName, {
             durable: true,
             exclusive: isTestMode ? false : undefined,
           }),
         ])
-
-        x.consume(this.queueName, async msg => {
-          if (!msg) {
-            return
-          }
-
-          const message: string = msg.content
-            ? msg.content.toString()
-            : null
-
-          const route = msg.fields.routingKey
-          const replyTo = msg.properties.replyTo
-          const correlationId = msg.properties.correlationId
-          const metadata = msg.properties.headers
-
-          try {
-            await this.processMessage({
-              route,
-              correlationId,
-              message,
-              metadata,
-              replyTo,
-            })
-          } catch (err) {
-            await this.channel.sendToQueue(
-              deadLetterQueueName,
-              msg.content,
-              {
-                correlationId,
-                headers: metadata,
-                replyTo,
-                CC: route,
-              },
-            )
-          }
-
-          x.ack(msg)
-        })
-
-        x.consume(this.responseQueueName, msg => {
-          if (!msg) {
-            return
-          }
-
-          const message: string = msg.content
-            ? msg.content.toString()
-            : null
-
-          const correlationId = msg.properties.correlationId
-          const isError = msg.properties.type === 'error'
-
-          x.ack(msg)
-
-          try {
-            this.processResponseMessage({
-              correlationId,
-              message,
-              route: msg.fields.routingKey,
-              metadata: msg.properties.headers,
-              errorData: isError ? JSON.parse(message) : undefined,
-            })
-          } catch (err) {
-            console.log('processResponseMessage.error', err)
-          }
-        })
       },
     })
 
@@ -142,13 +78,15 @@ export class RabbitMQTransport extends TransportBase {
   }
 
   async start() {
+    await super.start()
+
     const routes = this.getRegisteredRoutes()
     const prefixes = this.getRegisteredPrefixes()
 
     const patterns = prefixes.map(x => `${x}#`).concat(routes)
 
-    this.bindingSetup = (x: ConfirmChannel) =>
-      Promise.all(
+    this.bindingSetup = async (x: ConfirmChannel) => {
+      await Promise.all(
         patterns.map(pattern =>
           x.bindQueue(
             this.queueName,
@@ -158,9 +96,73 @@ export class RabbitMQTransport extends TransportBase {
         ),
       )
 
-    await this.channel.addSetup(this.bindingSetup)
+      x.consume(this.queueName, async msg => {
+        if (!msg) {
+          return
+        }
 
-    await super.start()
+        const message: string = msg.content
+          ? msg.content.toString()
+          : null
+
+        const route = msg.fields.routingKey
+        const replyTo = msg.properties.replyTo
+        const correlationId = msg.properties.correlationId
+        const metadata = msg.properties.headers
+
+        try {
+          await this.processMessage({
+            route,
+            correlationId,
+            message,
+            metadata,
+            replyTo,
+          })
+        } catch (err) {
+          await this.channel.sendToQueue(
+            this.deadLetterQueueName,
+            msg.content,
+            {
+              correlationId,
+              headers: metadata,
+              replyTo,
+              CC: route,
+            },
+          )
+        }
+
+        x.ack(msg)
+      })
+
+      x.consume(this.responseQueueName, msg => {
+        if (!msg) {
+          return
+        }
+
+        const message: string = msg.content
+          ? msg.content.toString()
+          : null
+
+        const correlationId = msg.properties.correlationId
+        const isError = msg.properties.type === 'error'
+
+        x.ack(msg)
+
+        try {
+          this.processResponseMessage({
+            correlationId,
+            message,
+            route: msg.fields.routingKey,
+            metadata: msg.properties.headers,
+            errorData: isError ? JSON.parse(message) : undefined,
+          })
+        } catch (err) {
+          console.log('processResponseMessage.error', err)
+        }
+      })
+    }
+
+    await this.channel.addSetup(this.bindingSetup)
   }
 
   async stop() {

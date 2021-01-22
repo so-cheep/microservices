@@ -15,11 +15,12 @@ beforeAll(async () => {
         moduleName: 'Test',
         publishTopicName: 'TestHubTopic',
       },
+      purgeQueuesOnStart: true,
       queueMaxNumberOfMessages: 1,
       queueWaitTimeInSeconds: 1,
       responseQueueMaxNumberOfMessages: 1,
       responseQueueWaitTimeInSeconds: 1,
-      defaultRpcTimeout: 5000,
+      defaultRpcTimeout: 1000,
     },
     {
       jsonDecode: JSON.parse,
@@ -62,7 +63,7 @@ beforeAll(async () => {
 })
 
 afterAll(async () => {
-  await transport.dispose()
+  // await transport.dispose()
 })
 
 describe('snsSqs.transport', () => {

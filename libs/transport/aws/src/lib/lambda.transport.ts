@@ -30,7 +30,11 @@ export class LambdaTransport extends TransportBase {
     super(options, utils)
   }
 
-  async init() {
+  async init() {}
+
+  async start() {
+    await super.start()
+
     /**
      * Process initialMessages only
      *
@@ -45,6 +49,8 @@ export class LambdaTransport extends TransportBase {
       () => this.utils.getSqs(),
       async x => this.processMessage(x),
     )
+
+    await super.stop()
   }
 
   protected newRpcCallRegistered(activeCount: number) {
