@@ -42,17 +42,6 @@ export interface Transport {
    * Temp queues should be deleted
    */
   dispose(): Promise<void>
-
-  /**
-   * utility function to run the configured metadata merge
-   * @param context
-   */
-  mergeMetadata(context: {
-    referrerMetadata?: MessageMetadata | undefined
-    currentMetadata: Partial<MessageMetadata>
-    route: string
-    message: unknown
-  }): MessageMetadata
 }
 
 export interface TransportMessage {
@@ -87,14 +76,15 @@ export type FireAndForgetHandler = (
 export interface PublishProps<TMetadata extends MessageMetadata> {
   route: string
   message: unknown
-  metadata?: TMetadata
+  metadata?: Partial<TMetadata>
+  referrer?: Referrer<TMetadata>
 }
 
 export interface ExecuteProps<TMetadata extends MessageMetadata> {
   route: string
   message: unknown
   metadata?: TMetadata
-
+  referrer?: Referrer<TMetadata>
   rpcTimeout?: number
 }
 
@@ -103,4 +93,20 @@ export enum TransportState {
   STOPPED = 'STOPPED',
 }
 
-export const MetdataToken = Symbol('Cheep Metadata Indicator')
+export interface Referrer<
+  TMeta extends MessageMetadata = MessageMetadata
+> {
+  route?: string
+  metadata?: TMeta
+}
+
+export type MetadataRule<
+  TMeta extends MessageMetadata = MessageMetadata
+> = (context: {
+  referrer: Referrer<TMeta>
+  currentMetadata: Partial<TMeta>
+  currentRoute: string
+  currentMessage: unknown
+}) => Partial<TMeta>
+
+export type MetadataValidator = (msg: TransportMessage) => void

@@ -49,6 +49,9 @@
     },
     "examples-nestjs-inmemory": {
       "tags": []
+    },
+    "transport-api": {
+      "tags": []
     }
   }
 }

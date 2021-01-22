@@ -6,5 +6,6 @@ module.exports = {
     '<rootDir>/libs/transport/aws',
     '<rootDir>/libs/adapters/nest',
     '<rootDir>/apps/examples/nestjs-inmemory',
+    '<rootDir>/libs/transport/api',
   ],
 }

@@ -1,4 +1,4 @@
-import type { MessageMetadata } from '@cheep/transport'
+import type { MessageMetadata, Referrer } from '@cheep/transport'
 import type { Observable } from 'rxjs'
 
 export type EventPublishFunction<TPayload extends unknown> = (
@@ -48,6 +48,7 @@ export type EventWithMetadata<
   type: TEventPath
   payload: TEventPayload
   metadata: TMetadata
+  referrer: Referrer<TMetadata>
 }
 
 type EventsFromMap<

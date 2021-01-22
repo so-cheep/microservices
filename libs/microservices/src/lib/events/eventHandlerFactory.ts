@@ -2,7 +2,7 @@ import { Transport } from '@cheep/transport'
 import { Subject } from 'rxjs'
 import { filter, share } from 'rxjs/operators'
 import { constructRouteKey } from '../utils/constructRouteKey'
-import { makeSafeArgs } from '../utils/makeSafeArgs'
+import { makeReferrer, makeSafeArgs } from '../utils/makeSafeArgs'
 import { EventRouteKey } from './constants'
 import {
   EventApi,
@@ -43,6 +43,7 @@ export function handleEvents<
       // split by `.` then remove the first, which is the EventRouteKey (Event)
       type: item.route.split('.').slice(1),
       route: item.route,
+      referrer: makeReferrer(item),
     })
   }
   Object.defineProperty(handler, 'name', {

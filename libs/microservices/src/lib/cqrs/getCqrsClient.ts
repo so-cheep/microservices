@@ -5,6 +5,7 @@ import {
 } from '@cheep/transport'
 import { InvalidRpcPathError } from '../errors/invalidRpcPath.error'
 import { constructRouteKey } from '../utils/constructRouteKey'
+import { processArgsSafely } from '../utils/processArgsSafely'
 import { ClientApi, GenericCqrsApi, RpcOptions } from './types'
 
 export function getCqrsClient<Api extends GenericCqrsApi>(
@@ -38,23 +39,14 @@ function recursiveHandler(
       const routeKey = constructRouteKey(path)
 
       // determine if we recieved metadata as the last arg
-      const lastArg = args.slice(-1).pop()
-      const isLastArgMetadata =
-        lastArg && Reflect.hasOwnMetadata(MetdataToken, lastArg)
-      const referrerMetadata = isLastArgMetadata
-        ? (lastArg as MessageMetadata)
-        : undefined
 
-      const metadata = transport.mergeMetadata({
-        route: routeKey,
-        message: args,
-        currentMetadata: { callTime: new Date().toISOString() },
-        referrerMetadata,
-      })
+      const { message, referrer } = processArgsSafely(args)
+
       return transport.execute({
-        message: isLastArgMetadata ? args.slice(0, -1) : args,
-        metadata,
+        message,
+        metadata: { callTime: new Date().toISOString() },
         route: routeKey,
+        referrer,
       })
     },
   })
