@@ -93,6 +93,13 @@
             "main": "libs/transport/core/src/index.ts",
             "assets": ["libs/transport/core/*.md"]
           }
+        },
+        "publish": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "commands": ["npm publish --access=public"],
+            "cwd": "dist/libs/transport/core"
+          }
         }
       }
     },
@@ -159,6 +166,13 @@
             "main": "libs/transport/aws/src/index.ts",
             "assets": ["libs/transport/aws/*.md"]
           }
+        },
+        "publish": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "commands": ["npm publish --access=public"],
+            "cwd": "dist/libs/transport/aws"
+          }
         }
       }
     },
@@ -192,6 +206,13 @@
             "main": "libs/microservices/src/index.ts",
             "assets": ["libs/microservices/*.md"]
           }
+        },
+        "publish": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "commands": ["npm publish --access=public"],
+            "cwd": "dist/libs/microservices"
+          }
         }
       }
     },
@@ -224,6 +245,13 @@
             "buildableProjectDepsInPackageJsonType": "peerDependencies",
             "main": "libs/adapters/nestjs/src/index.ts",
             "assets": ["libs/adapters/nestjs/*.md"]
+          }
+        },
+        "publish": {
+          "executor": "@nrwl/workspace:run-commands",
+          "options": {
+            "commands": ["npm publish --access=public"],
+            "cwd": "dist/libs/adapters/nestjs"
           }
         }
       }
