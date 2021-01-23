@@ -4,7 +4,7 @@ import { MessageMetadata, MetadataReducer } from '../transport'
  * Adds new `transactionId` metadata
  * @param newId - function which will always return unique string
  */
-export function transactionRule(
+export function transactionReducer(
   newId: () => string,
   dateNow: () => string | number,
 ): MetadataReducer<TransactionMetadata> {

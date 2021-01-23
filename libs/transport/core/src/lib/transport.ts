@@ -1,5 +1,4 @@
 import { NormalizedError } from './domain/normalizeError'
-import { TransportUtils } from './transport.base'
 
 export interface Transport {
   readonly state: TransportState

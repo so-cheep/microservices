@@ -4,7 +4,7 @@ import { MessageMetadata, MetadataReducer } from '../transport'
  * Adds new `createdAt` metadata
  * @param dateNow - function which will return current date representation in string or number
  */
-export function createdAtRule(
+export function createdAtReducer(
   dateNow: () => string | number,
 ): MetadataReducer<CreatedAtMetadata> {
   const rule: MetadataReducer<CreatedAtMetadata> = _ => ({

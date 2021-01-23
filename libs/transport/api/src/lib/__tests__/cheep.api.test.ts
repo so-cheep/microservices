@@ -1,9 +1,9 @@
 import {
-  callStackRule,
+  callStackReducer,
   callStackValidator,
-  createdAtRule,
+  createdAtReducer,
   MemoryTransport,
-  transactionIdRule,
+  transactionReducer,
 } from '@cheep/transport'
 import { performance } from 'perf_hooks'
 import { cheepApi } from '../cheep.api'
@@ -180,11 +180,11 @@ describe('cheep.api', () => {
     const transport = new MemoryTransport(
       {
         metadataReducers: [
-          transactionIdRule(newId),
-          createdAtRule(Date.now),
-          callStackRule(),
+          transactionReducer(newId, Date.now),
+          createdAtReducer(Date.now),
+          callStackReducer(),
         ],
-        metadataValidator: [callStackValidator()],
+        metadataValidator: [callStackValidator('all')],
       },
       {
         jsonDecode: JSON.parse,

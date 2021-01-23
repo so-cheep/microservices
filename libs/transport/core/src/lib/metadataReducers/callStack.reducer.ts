@@ -3,7 +3,9 @@ import { MessageMetadata, MetadataReducer } from '../transport'
 /**
  * Adds new `callStack` metadata
  */
-export function callStackRule(): MetadataReducer<CallStackMetadata> {
+export function callStackReducer(): MetadataReducer<
+  CallStackMetadata
+> {
   const rule: MetadataReducer<CallStackMetadata> = x => {
     if (x.referrer?.route) {
       const callStack = (
