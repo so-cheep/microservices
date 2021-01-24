@@ -10,7 +10,7 @@ export interface CheepApiOptions<TPrefix> {
   }
 }
 
-export function cheepApi<TApi, TMetadata = MessageMetadata>(
+export function cheepApi<TApi>(
   transport: Transport,
   options?: CheepApiOptions<keyof TApi>,
 ): TApi {

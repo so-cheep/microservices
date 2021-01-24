@@ -14,7 +14,6 @@ import {
   TransportMessage,
   TransportState,
 } from './transport'
-import 'reflect-metadata'
 
 export interface TransportOptions<
   TMeta extends MessageMetadata = MessageMetadata
@@ -222,7 +221,7 @@ export abstract class TransportBase implements Transport {
           validateFn(msg)
         } catch (err) {
           const isRpc = !!msg.replyTo
-          console.log('isRpc', isRpc)
+
           if (isRpc) {
             await this.sendErrorReplyMessage({
               replyTo: msg.replyTo,

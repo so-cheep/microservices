@@ -1,5 +1,4 @@
-import { CallStackMetadata } from '../metadataRules/callStack.rule'
-import { TransactionMetadata } from '../metadataRules/transactionId.rule'
+import { CallStackMetadata } from '../metadataReducers/callStack.reducer'
 import { RecursionCallError } from '../recursion.error'
 import { TransportMessage } from '../transport'
 
