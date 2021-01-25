@@ -19,8 +19,8 @@ export type FunctionalHandlerFactory<TApi, TMetadata> = <
     api: TApi,
     payload: TPayload,
     metadata: TMetadata,
-  ) => Promise<unknown | void>,
-) => void | Promise<void>
+  ) => unknown | void | Promise<unknown | void>,
+) => void
 
 export type EventMapToReturns<
   TEventMap,
