@@ -24,10 +24,10 @@ export type EventPublisher<
   TEventApi extends EventApi<string, EventMap>
 > = Record<
   TEventApi['namespace'],
-  EventsWithMeta<TEventApi['events'], TEventApi['metadata']>
+  EventPublishersWithMeta<TEventApi['events'], TEventApi['metadata']>
 >
 
-export type EventsWithMeta<
+export type EventPublishersWithMeta<
   TEvents extends EventMap,
   TMeta extends MessageMetadata = MessageMetadata
 > = {
@@ -37,7 +37,7 @@ export type EventsWithMeta<
     ? (
         ...args: [...Parameters<TEvents[k]>, Referrer<TMeta>?]
       ) => Promise<void>
-    : EventsWithMeta<TEvents[k], TMeta>
+    : EventPublishersWithMeta<TEvents[k], TMeta>
 }
 
 export abstract class EventBase {}
