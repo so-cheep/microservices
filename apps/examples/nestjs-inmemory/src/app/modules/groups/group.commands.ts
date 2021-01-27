@@ -56,7 +56,9 @@ export class GroupCommands implements OnApplicationBootstrap {
         .concat([props.userId]),
     }
 
-    this.events.publish.Group.updated(updated, meta)
-    this.events.publish.Group.Members.changed(updated, meta)
+    await Promise.all([
+      this.events.publish.Group.updated(updated, meta),
+      this.events.publish.Group.Members.changed(updated, meta),
+    ])
   }
 }
