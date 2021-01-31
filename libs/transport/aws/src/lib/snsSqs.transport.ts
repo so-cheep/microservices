@@ -8,6 +8,7 @@ import {
   TransportUtils,
 } from '@cheep/transport'
 import type { SNS, SQS } from 'aws-sdk'
+import { batchDeleteMessages } from './app/batchDeleteMessages'
 import { deleteQueue } from './app/deleteQueue'
 import { ensureQueueExists } from './app/ensureQueueExists'
 import { ensureSubscriptionExists } from './app/ensureSubscriptionExists'
@@ -241,6 +242,16 @@ export class SnsSqsTransport<
         newId: this.utils.newId,
         shouldContinue: () => pendingItemsCount > 0,
         cb: items => {
+          // acknowledgement async way
+          if (items.length) {
+            batchDeleteMessages({
+              sqs: this.utils.getSqs(),
+              queueUrl: this.responseQueueUrl,
+              receiptHandles: items.map(x => x.receiptHandle),
+            }).catch(console.warn)
+          }
+
+          // process
           for (const item of items) {
             try {
               pendingItemsCount = this.processResponseMessage(item)

@@ -40,8 +40,6 @@ beforeAll(async () => {
   })
 
   transport.on('Command.User.Login', async ({ metadata }) => {
-    console.log('Command.User.Login handled')
-
     return 'SUCCESS'
   })
 
@@ -58,6 +56,7 @@ beforeAll(async () => {
   })
 
   transport.on('Return.Void', <any>(() => {
+    console.log('received', 'Return.Void')
     return
   }))
 
@@ -65,12 +64,12 @@ beforeAll(async () => {
 })
 
 afterAll(async () => {
-  await transport.dispose()
+  // await transport.dispose()
 })
 
 describe('snsSqs.transport', () => {
-  it.only('should execute and receive response', async () => {
-    const startedAt = Date.now()
+  it('should execute and receive response', async () => {
+    // const startedAt = Date.now()
     const result = await transport.execute({
       route: 'Command.User.Login',
       message: {
@@ -81,15 +80,15 @@ describe('snsSqs.transport', () => {
       },
     })
 
-    const duration = Date.now() - startedAt
+    // const duration = Date.now() - startedAt
 
     expect(result).toBe('SUCCESS')
 
-    console.log('duration', duration)
+    // console.log('duration', duration)
     // expect('SUCCESS').toBe('SUCCESS')
   })
 
-  it('should receve published event', async done => {
+  xit('should receve published event', async done => {
     transport.on('User.Created', async ({ message, metadata }) => {
       const duration = Date.now() - startedAt
 

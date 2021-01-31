@@ -6,9 +6,6 @@ export function normalizeSnsMessage(
   sqsMessage: SQS.Message,
 ): SqsTransportMessage {
   const body = JSON.parse(sqsMessage.Body)
-  const data = JSON.parse(body.Message)
-
-  const { message, metadata } = data
 
   const attributes = Object.fromEntries(
     Object.entries(
@@ -20,8 +17,7 @@ export function normalizeSnsMessage(
 
   return {
     route: decodeMetadataValue(route),
-    message,
-    metadata,
+    message: body.Message,
 
     correlationId,
     replyTo: decodeMetadataValue(replyTo),

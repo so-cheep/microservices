@@ -5,9 +5,6 @@ export function normalizeSqsMessage(
   sqsMessage: SQS.Message,
 ): SqsTransportMessage {
   const body = sqsMessage.Body
-  const data = JSON.parse(body)
-
-  const { message, metadata } = data
 
   const attributes = Object.fromEntries(
     Object.entries(
@@ -15,15 +12,13 @@ export function normalizeSqsMessage(
     ).map(([key, { StringValue }]: any) => [key, StringValue]),
   )
 
-  const { correlationId, errorData } = attributes
+  const { correlationId } = attributes
 
   return {
     route: '',
-    message,
-    metadata,
+    message: body,
 
     correlationId,
-    errorData: errorData ? JSON.parse(errorData) : undefined,
 
     receiptHandle: sqsMessage.ReceiptHandle,
   }
