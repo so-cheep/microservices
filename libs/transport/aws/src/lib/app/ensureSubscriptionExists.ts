@@ -7,6 +7,7 @@ export async function ensureSubscriptionExists(props: {
   deadLetterArn: string
   routes: string[]
   prefixes: string[]
+  keepExistingSubscriptionFilters: boolean
 }) {
   const {
     sns,
@@ -15,6 +16,7 @@ export async function ensureSubscriptionExists(props: {
     deadLetterArn,
     routes,
     prefixes,
+    keepExistingSubscriptionFilters,
   } = props
 
   const subscriptions = await sns
@@ -25,7 +27,9 @@ export async function ensureSubscriptionExists(props: {
     x => x.Endpoint === queueArn,
   )
 
-  const patterns = routes.concat(prefixes)
+  const routeFilters = (<SubscriptionFilter[]>routes).concat(
+    prefixes.map(prefix => ({ prefix })),
+  )
 
   let subscriptionArn = subscription?.SubscriptionArn
   if (subscription) {
@@ -39,26 +43,44 @@ export async function ensureSubscriptionExists(props: {
       ? JSON.parse(attr.Attributes.FilterPolicy)
       : {}
 
-    const routeFilters = [...(oldPolicy?.route ?? [])]
+    // const routeFilters = [...(oldPolicy?.route ?? [])]
 
-    const applyPatterns = patterns.filter(
-      prefix => !routeFilters.some(x => x.prefix === prefix),
-    )
+    const existingRouteFilters = oldPolicy?.route ?? []
 
-    if (applyPatterns.length) {
-      await sns
-        .setSubscriptionAttributes({
-          SubscriptionArn: subscriptionArn,
-          AttributeName: 'FilterPolicy',
-          AttributeValue: JSON.stringify({
-            route: routeFilters.concat(
-              applyPatterns.map(prefix => ({ prefix })),
-            ),
-          }),
-        })
-        .promise()
+    if (!areFiltersSame(existingRouteFilters, routeFilters)) {
+      const updatedRouteFilters = [
+        ...(keepExistingSubscriptionFilters
+          ? existingRouteFilters
+          : []),
+      ]
+        .concat(routeFilters)
+        .filter(uniqueSubscriptionFilter)
+
+      if (updatedRouteFilters.length) {
+        await sns
+          .setSubscriptionAttributes({
+            SubscriptionArn: subscriptionArn,
+            AttributeName: 'FilterPolicy',
+            AttributeValue: JSON.stringify({
+              route: updatedRouteFilters,
+            }),
+          })
+          .promise()
+
+        console.log(
+          'aws.transport',
+          'subscription updated',
+          topicArn,
+          queueArn,
+          updatedRouteFilters,
+        )
+      }
     }
   } else {
+    const uniqueRouteFilters = routeFilters.filter(
+      uniqueSubscriptionFilter,
+    )
+
     const result = await sns
       .subscribe({
         Protocol: 'sqs',
@@ -67,7 +89,7 @@ export async function ensureSubscriptionExists(props: {
         ReturnSubscriptionArn: true,
         Attributes: {
           FilterPolicy: JSON.stringify({
-            route: patterns.map(prefix => ({ prefix })),
+            route: uniqueRouteFilters,
           }),
           RedrivePolicy: JSON.stringify({
             deadLetterTargetArn: deadLetterArn,
@@ -76,8 +98,58 @@ export async function ensureSubscriptionExists(props: {
       })
       .promise()
 
+    console.log(
+      'aws.transport',
+      'subscription created',
+      topicArn,
+      queueArn,
+      deadLetterArn,
+      uniqueRouteFilters,
+    )
+
     subscriptionArn = result.SubscriptionArn
   }
 
   return subscriptionArn
 }
+
+function uniqueSubscriptionFilter(
+  x: SubscriptionFilter,
+  i: number,
+  self: SubscriptionFilter[],
+) {
+  if (typeof x === 'object') {
+    return (
+      self.findIndex(
+        y => typeof y === 'object' && y.prefix === x.prefix,
+      ) === i
+    )
+  } else {
+    return self.indexOf(x) === i
+  }
+}
+
+function areFiltersSame(
+  items1: SubscriptionFilter[],
+  items2: SubscriptionFilter[],
+) {
+  return (
+    items1.every(x => checkIfExists(x, items2)) &&
+    items2.every(x => checkIfExists(x, items1))
+  )
+}
+
+function checkIfExists(
+  x: SubscriptionFilter,
+  items: SubscriptionFilter[],
+) {
+  if (typeof x === 'object') {
+    return items.find(
+      y => typeof y === 'object' && y.prefix === x.prefix,
+    )
+  } else {
+    return items.find(y => typeof y === 'string' && y === x)
+  }
+}
+
+type SubscriptionFilter = string | { prefix: string }

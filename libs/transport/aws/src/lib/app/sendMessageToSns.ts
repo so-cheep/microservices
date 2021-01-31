@@ -24,38 +24,39 @@ export async function sendMessageToSns<TMetadata>(props: {
     replyToQueueUrl,
   } = props
 
-  const data = {
-    TopicArn: topicArn,
-    Message: message,
-    MessageDeduplicationId: deduplicationId,
-    MessageGroupId: messageGroupId,
-    MessageAttributes: {
-      route: {
-        DataType: 'String',
-        StringValue: encodeMetadataValue(route),
-      },
-      metadata: {
-        DataType: 'String',
-        StringValue: encodeMetadataValue(JSON.stringify(metadata)),
-      },
-      ...(correlationId
-        ? {
-            correlationId: {
-              DataType: 'String',
-              StringValue: correlationId,
-            },
-          }
-        : null),
-      ...(replyToQueueUrl
-        ? {
-            replyTo: {
-              DataType: 'String',
-              StringValue: encodeMetadataValue(replyToQueueUrl),
-            },
-          }
-        : null),
-    },
+  const sendItem = {
+    message,
+    metadata,
   }
 
-  await sns.publish(data).promise()
+  await sns
+    .publish({
+      TopicArn: topicArn,
+      Message: JSON.stringify(sendItem),
+      MessageDeduplicationId: deduplicationId,
+      MessageGroupId: messageGroupId,
+      MessageAttributes: {
+        route: {
+          DataType: 'String',
+          StringValue: encodeMetadataValue(route),
+        },
+        ...(correlationId
+          ? {
+              correlationId: {
+                DataType: 'String',
+                StringValue: correlationId,
+              },
+            }
+          : null),
+        ...(replyToQueueUrl
+          ? {
+              replyTo: {
+                DataType: 'String',
+                StringValue: encodeMetadataValue(replyToQueueUrl),
+              },
+            }
+          : null),
+      },
+    })
+    .promise()
 }

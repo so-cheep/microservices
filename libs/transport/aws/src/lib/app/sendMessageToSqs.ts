@@ -21,12 +21,11 @@ export async function sendMessageToSqs<TMetadata>(props: {
   await sqs
     .sendMessage({
       QueueUrl: queueUrl,
-      MessageBody: message,
+      MessageBody: JSON.stringify({
+        message,
+        metadata,
+      }),
       MessageAttributes: {
-        metadata: {
-          DataType: 'String',
-          StringValue: JSON.stringify(metadata),
-        },
         correlationId: {
           DataType: 'String',
           StringValue: correlationId,

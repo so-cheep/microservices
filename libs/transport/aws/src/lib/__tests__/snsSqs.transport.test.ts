@@ -15,12 +15,12 @@ beforeAll(async () => {
         moduleName: 'Test',
         publishTopicName: 'TestHubTopic',
       },
-      purgeQueuesOnStart: true,
+      purgeQueuesOnStart: false,
       queueMaxNumberOfMessages: 1,
       queueWaitTimeInSeconds: 1,
       responseQueueMaxNumberOfMessages: 1,
       responseQueueWaitTimeInSeconds: 1,
-      defaultRpcTimeout: 1000,
+      defaultRpcTimeout: 5000,
     },
     {
       jsonDecode: JSON.parse,
@@ -40,6 +40,8 @@ beforeAll(async () => {
   })
 
   transport.on('Command.User.Login', async ({ metadata }) => {
+    console.log('Command.User.Login handled')
+
     return 'SUCCESS'
   })
 
@@ -63,11 +65,12 @@ beforeAll(async () => {
 })
 
 afterAll(async () => {
-  // await transport.dispose()
+  await transport.dispose()
 })
 
 describe('snsSqs.transport', () => {
-  it('should execute and receive response', async () => {
+  it.only('should execute and receive response', async () => {
+    const startedAt = Date.now()
     const result = await transport.execute({
       route: 'Command.User.Login',
       message: {
@@ -78,21 +81,31 @@ describe('snsSqs.transport', () => {
       },
     })
 
+    const duration = Date.now() - startedAt
+
     expect(result).toBe('SUCCESS')
+
+    console.log('duration', duration)
     // expect('SUCCESS').toBe('SUCCESS')
   })
 
-  xit('should receve published event', async done => {
+  it('should receve published event', async done => {
     transport.on('User.Created', async ({ message, metadata }) => {
+      const duration = Date.now() - startedAt
+
       const msg = message as any
 
       expect(msg.userId).toBe('u1')
       expect(metadata.sessionId).toBe('s1')
 
+      console.log('duration', duration)
+
       done()
     })
 
     await transport.start()
+
+    const startedAt = Date.now()
 
     const result = await transport.publish({
       route: 'User.Created',

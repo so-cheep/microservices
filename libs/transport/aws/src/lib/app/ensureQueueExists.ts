@@ -33,29 +33,47 @@ export async function ensureQueueExists(props: {
         })
       : null
 
-    const data = {
-      QueueName: fullQueueName,
-      ...(tagName
-        ? {
-            tags: {
-              module: tagName,
-            },
-          }
-        : null),
-      Attributes: {
-        ...(redrivePolicy ? { RedrivePolicy: redrivePolicy } : null),
-
-        ...(isFifo
+    const queue = await sqs
+      .createQueue({
+        QueueName: fullQueueName,
+        ...(tagName
           ? {
-              FifoQueue: 'true',
-              FifoThroughputLimit: 'perQueue', // 'perQueue' | 'perMessageGroupId'
-              DeduplicationScope: 'messageGroup', // 'messageGroup' | 'queue'
+              tags: {
+                module: tagName,
+              },
             }
           : null),
-      },
-    }
+        Attributes: {
+          ...(redrivePolicy
+            ? { RedrivePolicy: redrivePolicy }
+            : null),
 
-    const queue = await sqs.createQueue(data).promise()
+          ...(isFifo
+            ? {
+                FifoQueue: 'true',
+                FifoThroughputLimit: 'perQueue', // 'perQueue' | 'perMessageGroupId'
+                DeduplicationScope: 'messageGroup', // 'messageGroup' | 'queue'
+              }
+            : null),
+
+          Policy: JSON.stringify({
+            Version: '2012-10-17',
+            Id: 'Policy1612036158843',
+            Statement: [
+              {
+                Sid: 'Stmt1612036157144',
+                Effect: 'Allow',
+                Principal: '*',
+                Action: 'sqs:*',
+                Resource: 'arn:aws:sqs:*:*:*',
+              },
+            ],
+          }),
+        },
+      })
+      .promise()
+
+    console.log('aws.transport', 'queue created', fullQueueName)
 
     queueUrl = queue.QueueUrl
   }

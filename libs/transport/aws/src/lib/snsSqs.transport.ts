@@ -6,6 +6,7 @@ import {
   SendReplyMessageProps,
   TransportBase,
   TransportOptions,
+  TransportState,
   TransportUtils,
 } from '@cheep/transport'
 import type { SNS, SQS } from 'aws-sdk'
@@ -23,7 +24,6 @@ import { sendMessageToSqs } from './app/sendMessageToSqs'
 export class SnsSqsTransport<
   TMeta extends MessageMetadata = MessageMetadata
 > extends TransportBase {
-  private isStarted: boolean
   private topicArn: string
   private queueArn: string
   private queueUrl: string
@@ -48,7 +48,7 @@ export class SnsSqsTransport<
             deadLetterQueueUrl: string
           }
 
-      skipSubscriptionCheck?: boolean
+      keepExistingSubscriptionFilters?: boolean
       purgeQueuesOnStart?: boolean
 
       queueWaitTimeInSeconds?: number
@@ -74,7 +74,7 @@ export class SnsSqsTransport<
         {
           const { moduleName, publishTopicName } = config
 
-          const rpcResponseQueueName = `Response-${moduleName}-${this.utils.newId()}`
+          const rpcResponseQueueName = `${moduleName}-Response-${this.utils.newId()}`
 
           this.topicArn = await ensureTopicExists({
             sns: this.utils.getSns(),
@@ -84,7 +84,7 @@ export class SnsSqsTransport<
 
           const deadLetterQueue = await ensureQueueExists({
             sqs: this.utils.getSqs(),
-            queueName: `DL-${moduleName}`,
+            queueName: `${moduleName}-DL`,
             deadLetterQueueArn: null,
             tagName: moduleName,
             isFifo: true,
@@ -152,19 +152,19 @@ export class SnsSqsTransport<
       })
     }
 
-    if (!this.options.skipSubscriptionCheck) {
-      const routes = this.getRegisteredRoutes()
-      const prefixes = this.getRegisteredPrefixes()
+    const routes = this.getRegisteredRoutes()
+    const prefixes = this.getRegisteredPrefixes()
 
-      await ensureSubscriptionExists({
-        sns: this.utils.getSns(),
-        topicArn: this.topicArn,
-        queueArn: this.queueArn,
-        deadLetterArn: this.deadLetterQueueArn,
-        routes,
-        prefixes,
-      })
-    }
+    await ensureSubscriptionExists({
+      sns: this.utils.getSns(),
+      topicArn: this.topicArn,
+      queueArn: this.queueArn,
+      deadLetterArn: this.deadLetterQueueArn,
+      routes,
+      prefixes,
+      keepExistingSubscriptionFilters:
+        this.options.keepExistingSubscriptionFilters ?? false,
+    })
 
     // listen messages
     listenQueue({
@@ -175,7 +175,7 @@ export class SnsSqsTransport<
       waitTimeInSeconds: this.options.queueWaitTimeInSeconds,
       newId: () => this.utils.newId(),
       requestAttemptId: this.utils.newId(),
-      shouldContinue: () => this.isStarted,
+      shouldContinue: () => this.state === TransportState.STARTED,
       cb: items =>
         processSqsMessages(
           this.queueUrl,
