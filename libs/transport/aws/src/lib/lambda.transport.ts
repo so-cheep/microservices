@@ -1,7 +1,5 @@
 import {
   MessageMetadata,
-  normalizeError,
-  SendErrorReplyMessageProps,
   SendMessageProps,
   SendReplyMessageProps,
   TransportBase,
