@@ -16,7 +16,7 @@ export async function processSqsMessages(
     try {
       await action(message)
     } catch (err) {
-      console.error('LAMBDA_TRANSPORT_PROCESSING_ERROR', err)
+      console.error('SQS_TRANSPORT_PROCESSING_ERROR', err)
       errorMessages.push([message, err])
     }
   }

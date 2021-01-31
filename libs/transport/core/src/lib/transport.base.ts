@@ -238,7 +238,9 @@ export abstract class TransportBase implements Transport {
     }
 
     // start processing message
-    const message = this.utils.jsonDecode(msg.message)
+    const message = msg.message
+      ? this.utils.jsonDecode(msg.message)
+      : msg.message
 
     const registeredPrefixes = [
       ...this.registeredPrefixes,

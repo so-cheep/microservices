@@ -74,7 +74,7 @@ export class SnsSqsTransport<
         {
           const { moduleName, publishTopicName } = config
 
-          const rpcResponseQueueName = `${moduleName}-Response-${this.utils.newId()}`
+          const rpcResponseQueueName = `${moduleName}-response-${this.utils.newId()}`
 
           this.topicArn = await ensureTopicExists({
             sns: this.utils.getSns(),
@@ -84,7 +84,7 @@ export class SnsSqsTransport<
 
           const deadLetterQueue = await ensureQueueExists({
             sqs: this.utils.getSqs(),
-            queueName: `${moduleName}-DL`,
+            queueName: `${moduleName}-dl`,
             deadLetterQueueArn: null,
             tagName: moduleName,
             isFifo: true,
@@ -116,7 +116,7 @@ export class SnsSqsTransport<
 
       case 'MANUAL':
         {
-          const rpcResponseQueueName = `Response-${this.utils.newId()}`
+          const rpcResponseQueueName = `response-${this.utils.newId()}`
 
           const responseQueue = await ensureQueueExists({
             sqs: this.utils.getSqs(),
