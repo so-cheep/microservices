@@ -1,12 +1,11 @@
 import type { SNS } from 'aws-sdk'
 import { encodeMetadataValue } from './encodeMetadataValue'
 
-export async function sendMessageToSns<TMetadata>(props: {
+export async function sendMessageToSns(props: {
   sns: SNS
   topicArn: string
   route: string
   message: string
-  metadata: TMetadata
   messageGroupId: string
   deduplicationId: string
   correlationId?: string
@@ -17,22 +16,16 @@ export async function sendMessageToSns<TMetadata>(props: {
     topicArn,
     route,
     message,
-    metadata,
     correlationId,
     deduplicationId,
     messageGroupId,
     replyToQueueUrl,
   } = props
 
-  const sendItem = {
-    message,
-    metadata,
-  }
-
   await sns
     .publish({
       TopicArn: topicArn,
-      Message: JSON.stringify(sendItem),
+      Message: message,
       MessageDeduplicationId: deduplicationId,
       MessageGroupId: messageGroupId,
       MessageAttributes: {

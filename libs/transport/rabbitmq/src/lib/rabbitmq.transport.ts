@@ -1,7 +1,5 @@
 import {
   MessageMetadata,
-  normalizeError,
-  SendErrorReplyMessageProps,
   SendMessageProps,
   SendReplyMessageProps,
   TransportBase,
@@ -111,14 +109,12 @@ export class RabbitMQTransport<
         const route = msg.fields.routingKey
         const replyTo = msg.properties.replyTo
         const correlationId = msg.properties.correlationId
-        const metadata = msg.properties.headers
 
         try {
           await this.processMessage({
             route,
             correlationId,
             message,
-            metadata,
             replyTo,
           })
         } catch (err) {
@@ -127,7 +123,6 @@ export class RabbitMQTransport<
             msg.content,
             {
               correlationId,
-              headers: metadata,
               replyTo,
               CC: route,
             },
@@ -147,7 +142,6 @@ export class RabbitMQTransport<
           : null
 
         const correlationId = msg.properties.correlationId
-        const isError = msg.properties.type === 'error'
 
         x.ack(msg)
 
@@ -156,8 +150,6 @@ export class RabbitMQTransport<
             correlationId,
             message,
             route: msg.fields.routingKey,
-            metadata: msg.properties.headers,
-            errorData: isError ? JSON.parse(message) : undefined,
           })
         } catch (err) {
           console.log('processResponseMessage.error', err)
@@ -181,14 +173,13 @@ export class RabbitMQTransport<
   }
 
   protected async sendMessage(props: SendMessageProps) {
-    const { route, metadata, message, correlationId, isRpc } = props
+    const { route, message, correlationId, isRpc } = props
 
     await this.channel.publish(
       this.options.publishExchangeName,
       route,
       Buffer.from(message),
       {
-        headers: metadata,
         ...(isRpc
           ? {
               replyTo: this.responseQueueName,
@@ -202,27 +193,10 @@ export class RabbitMQTransport<
   protected async sendReplyMessage(
     props: SendReplyMessageProps,
   ): Promise<void> {
-    const { replyTo, correlationId, message, metadata } = props
+    const { replyTo, correlationId, message } = props
 
     await this.channel.sendToQueue(replyTo, Buffer.from(message), {
       correlationId,
-      headers: metadata,
     })
-  }
-
-  protected async sendErrorReplyMessage(
-    props: SendErrorReplyMessageProps,
-  ) {
-    const { replyTo, correlationId, error, metadata } = props
-
-    await this.channel.sendToQueue(
-      replyTo,
-      Buffer.from(JSON.stringify(normalizeError(error))),
-      {
-        type: 'error',
-        correlationId,
-        headers: metadata,
-      },
-    )
   }
 }

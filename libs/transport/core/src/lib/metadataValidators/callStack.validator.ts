@@ -1,11 +1,11 @@
 import { CallStackMetadata } from '../metadataReducers/callStack.reducer'
 import { RecursionCallError } from '../recursion.error'
-import { TransportMessage } from '../transport'
+import { ValidatorMessage } from '../transport'
 
 export function callStackValidator(
   prefixesToCheck: string[] | 'all',
 ) {
-  return (msg: TransportMessage<CallStackMetadata>) => {
+  return (msg: ValidatorMessage<CallStackMetadata>) => {
     const callStack = <string[]>msg.metadata.callStack ?? []
 
     if (

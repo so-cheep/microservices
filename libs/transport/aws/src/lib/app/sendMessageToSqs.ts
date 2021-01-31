@@ -1,30 +1,19 @@
 import { NormalizedError } from '@cheep/transport'
 import type { SQS } from 'aws-sdk'
 
-export async function sendMessageToSqs<TMetadata>(props: {
+export async function sendMessageToSqs(props: {
   sqs: SQS
   queueUrl: string
   message: string
-  metadata: TMetadata
   correlationId: string
   errorData?: NormalizedError
 }) {
-  const {
-    sqs,
-    queueUrl,
-    message,
-    metadata,
-    correlationId,
-    errorData,
-  } = props
+  const { sqs, queueUrl, message, correlationId, errorData } = props
 
   await sqs
     .sendMessage({
       QueueUrl: queueUrl,
-      MessageBody: JSON.stringify({
-        message,
-        metadata,
-      }),
+      MessageBody: message,
       MessageAttributes: {
         correlationId: {
           DataType: 'String',

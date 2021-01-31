@@ -44,17 +44,12 @@ export interface Transport {
   dispose(): Promise<void>
 }
 
-export interface TransportMessage<
-  TMeta extends MessageMetadata = MessageMetadata
-> {
+export interface TransportMessage {
   route: string
   message: string
-  metadata: TMeta
 
   correlationId: string
   replyTo?: string
-
-  errorData?: NormalizedError
 }
 
 export interface TransportCompactMessage {
@@ -111,6 +106,14 @@ export type MetadataReducer<
   currentMessage: unknown
 }) => Partial<TMeta>
 
-export type MetadataValidator<TMeta extends MessageMetadata> = (
-  msg: TransportMessage<TMeta>,
-) => void
+export type MetadataValidator<
+  TMeta extends MessageMetadata = MessageMetadata
+> = (msg: ValidatorMessage<TMeta>) => void
+
+export interface ValidatorMessage<
+  TMeta extends MessageMetadata = MessageMetadata
+> {
+  route: string
+  message: unknown
+  metadata: TMeta
+}

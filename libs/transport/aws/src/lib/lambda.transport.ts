@@ -87,7 +87,7 @@ export class LambdaTransport<
   protected async sendMessage(props: SendMessageProps) {
     const { topicArn, responseQueueUrl } = this.options
 
-    const { route, metadata, message, correlationId, isRpc } = props
+    const { route, message, correlationId, isRpc } = props
 
     const sns = this.utils.getSns()
 
@@ -96,7 +96,6 @@ export class LambdaTransport<
       topicArn,
       route,
       message,
-      metadata,
       deduplicationId: this.utils.newId(),
       messageGroupId: this.utils.getMessageGroup(route),
 
@@ -112,12 +111,7 @@ export class LambdaTransport<
   protected async sendReplyMessage(
     props: SendReplyMessageProps,
   ): Promise<void> {
-    const {
-      replyTo: queueUrl,
-      correlationId,
-      message,
-      metadata,
-    } = props
+    const { replyTo: queueUrl, correlationId, message } = props
 
     const sqs = this.utils.getSqs()
 
@@ -126,29 +120,6 @@ export class LambdaTransport<
       queueUrl,
       correlationId,
       message,
-      metadata,
-    })
-  }
-
-  protected async sendErrorReplyMessage(
-    props: SendErrorReplyMessageProps,
-  ): Promise<void> {
-    const {
-      replyTo: queueUrl,
-      correlationId,
-      error,
-      metadata,
-    } = props
-
-    const sqs = this.utils.getSqs()
-
-    await sendMessageToSqs({
-      sqs,
-      queueUrl,
-      correlationId,
-      message: '',
-      metadata,
-      errorData: normalizeError(error),
     })
   }
 }

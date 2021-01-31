@@ -1,3 +1,7 @@
+import {
+  NormalizedError,
+  normalizeError,
+} from './domain/normalizeError'
 import { RemoteError } from './remote.error'
 import { RpcTimeoutError } from './rpcTimeout.error'
 import {
@@ -25,8 +29,8 @@ export interface TransportOptions<
 
 export interface TransportUtils {
   newId: () => string
-  jsonEncode: (s: unknown) => string
-  jsonDecode: (s: string) => unknown
+  jsonEncode: (s: PureMessage) => string
+  jsonDecode: (s: string) => PureMessage
 }
 
 export abstract class TransportBase implements Transport {
@@ -64,10 +68,6 @@ export abstract class TransportBase implements Transport {
 
   protected abstract sendReplyMessage(
     props: SendReplyMessageProps,
-  ): Promise<void>
-
-  protected abstract sendErrorReplyMessage(
-    props: SendErrorReplyMessageProps,
   ): Promise<void>
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -117,8 +117,10 @@ export abstract class TransportBase implements Transport {
 
     await this.sendMessage({
       route,
-      message: this.utils.jsonEncode(message),
-      metadata: finalMetadata,
+      message: this.utils.jsonEncode({
+        data: message,
+        metadata: finalMetadata,
+      }),
     })
   }
 
@@ -145,22 +147,22 @@ export abstract class TransportBase implements Transport {
         this.listenCallbacks.set(correlationId, item => {
           clearTimeout(timer)
 
-          if (item.errorData) {
+          const { data: content, errorData } = this.utils.jsonDecode(
+            item.message,
+          )
+
+          if (errorData) {
             reject(
               new RemoteError(
-                item.errorData.errorMessage,
-                item.errorData.errorCallStack,
-                item.errorData.errorClassName,
+                errorData.errorMessage,
+                errorData.errorCallStack,
+                errorData.errorClassName,
               ),
             )
             return
           }
 
-          const decodedMessage: { result: unknown } = <any>(
-            this.utils.jsonDecode(item.message)
-          )
-
-          resolve(decodedMessage.result)
+          resolve(content)
         })
 
         // RPC Timeout logic
@@ -186,8 +188,10 @@ export abstract class TransportBase implements Transport {
 
     await this.sendMessage({
       route,
-      message: this.utils.jsonEncode(message),
-      metadata: finalMetadata,
+      message: this.utils.jsonEncode({
+        data: message,
+        metadata: finalMetadata,
+      }),
       correlationId,
       isRpc: true,
     })
@@ -214,20 +218,29 @@ export abstract class TransportBase implements Transport {
   protected async processMessage(msg: TransportMessage) {
     const { metadataValidator } = this.options
 
+    // start processing message
+    const message = this.utils.jsonDecode(msg.message)
+
     // first validate the message
     if (metadataValidator?.length) {
       for (const validateFn of metadataValidator) {
         try {
-          validateFn(msg)
+          validateFn({
+            route: msg.route,
+            message: message.data,
+            metadata: message.metadata,
+          })
         } catch (err) {
           const isRpc = !!msg.replyTo
 
           if (isRpc) {
-            await this.sendErrorReplyMessage({
+            await this.sendReplyMessage({
               replyTo: msg.replyTo,
               correlationId: msg.correlationId,
-              metadata: msg.metadata,
-              error: err,
+              message: this.utils.jsonEncode({
+                metadata: message.metadata,
+                errorData: normalizeError(err),
+              }),
             })
             return
           }
@@ -236,11 +249,6 @@ export abstract class TransportBase implements Transport {
         }
       }
     }
-
-    // start processing message
-    const message = msg.message
-      ? this.utils.jsonDecode(msg.message)
-      : msg.message
 
     const registeredPrefixes = [
       ...this.registeredPrefixes,
@@ -256,8 +264,8 @@ export abstract class TransportBase implements Transport {
             try {
               handler({
                 route: msg.route,
-                message,
-                metadata: msg.metadata,
+                message: message.data,
+                metadata: message.metadata,
               })
 
               resolve(true)
@@ -282,16 +290,18 @@ export abstract class TransportBase implements Transport {
         // Always call first handler
         result = await routeHandler({
           route: msg.route,
-          message,
-          metadata: msg.metadata,
+          message: message.data,
+          metadata: message.metadata,
         })
       } catch (err) {
         if (isRpc) {
-          await this.sendErrorReplyMessage({
+          await this.sendReplyMessage({
             replyTo: msg.replyTo,
             correlationId: msg.correlationId,
-            metadata: msg.metadata,
-            error: err,
+            message: this.utils.jsonEncode({
+              metadata: message.metadata,
+              errorData: normalizeError(err),
+            }),
           })
 
           return
@@ -307,8 +317,10 @@ export abstract class TransportBase implements Transport {
         await this.sendReplyMessage({
           replyTo: msg.replyTo,
           correlationId: msg.correlationId,
-          metadata: msg.metadata,
-          message: this.utils.jsonEncode({ result }),
+          message: this.utils.jsonEncode({
+            data: result,
+            metadata: message.metadata,
+          }),
         })
       }
       // Process additional handlers
@@ -316,8 +328,8 @@ export abstract class TransportBase implements Transport {
         const tasks = additionalHandlers.map(handler =>
           handler({
             route: msg.route,
-            message,
-            metadata: msg.metadata,
+            message: message.data,
+            metadata: message.metadata,
           }),
         )
 
@@ -396,7 +408,6 @@ export abstract class TransportBase implements Transport {
 export interface SendMessageProps {
   route: string
   message: string
-  metadata: MessageMetadata
   correlationId?: string
   isRpc?: boolean
 }
@@ -404,15 +415,7 @@ export interface SendMessageProps {
 export interface SendReplyMessageProps {
   replyTo: string
   correlationId: string
-  metadata: MessageMetadata
-  message: string
-}
-
-export interface SendErrorReplyMessageProps {
-  replyTo: string
-  correlationId: string
-  metadata: MessageMetadata
-  error: Error
+  message: string // includes: payload, metadata, errorInfo
 }
 
 export interface ListenMessagesProps {
@@ -421,4 +424,10 @@ export interface ListenMessagesProps {
 
 export interface ListenResponseMessagesProps {
   cb: (items: TransportMessage[]) => void
+}
+
+export interface PureMessage {
+  data?: unknown
+  metadata: MessageMetadata
+  errorData?: NormalizedError
 }

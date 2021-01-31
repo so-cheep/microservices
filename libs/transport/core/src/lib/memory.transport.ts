@@ -1,7 +1,5 @@
-import { normalizeError } from './domain/normalizeError'
 import { MessageMetadata } from './transport'
 import {
-  SendErrorReplyMessageProps,
   SendMessageProps,
   SendReplyMessageProps,
   TransportBase,
@@ -33,14 +31,13 @@ export class MemoryTransport<
   protected async sendMessage(props: SendMessageProps) {
     const { messageDelayTime = 0 } = this.options
 
-    const { route, message, metadata, correlationId, isRpc } = props
+    const { route, message, correlationId, isRpc } = props
 
     const processAction = async () => {
       try {
         await this.processMessage({
           route,
           message,
-          metadata,
           correlationId,
           replyTo: isRpc ? 'REPLY' : undefined,
         })
@@ -64,14 +61,13 @@ export class MemoryTransport<
   protected async sendReplyMessage(props: SendReplyMessageProps) {
     const { messageDelayTime = 0 } = this.options
 
-    const { replyTo, message, correlationId, metadata } = props
+    const { replyTo, message, correlationId } = props
 
     const processAction = async () => {
       try {
         this.processResponseMessage({
           route: replyTo,
           message,
-          metadata,
           correlationId,
           replyTo: undefined,
         })
@@ -86,20 +82,5 @@ export class MemoryTransport<
     }
 
     setTimeout(() => processAction(), messageDelayTime)
-  }
-
-  protected async sendErrorReplyMessage(
-    props: SendErrorReplyMessageProps,
-  ) {
-    const { replyTo, metadata, correlationId, error } = props
-
-    this.processResponseMessage({
-      route: replyTo,
-      message: '',
-      metadata,
-      correlationId,
-      replyTo: undefined,
-      errorData: normalizeError(error),
-    })
   }
 }
