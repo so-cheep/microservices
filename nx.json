@@ -52,6 +52,9 @@
     },
     "transport-api": {
       "tags": []
+    },
+    "transport-nats": {
+      "tags": []
     }
   }
 }

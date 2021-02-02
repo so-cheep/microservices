@@ -117,7 +117,9 @@
         "publish": {
           "executor": "@nrwl/workspace:run-commands",
           "options": {
-            "commands": ["npm publish --access=public"],
+            "commands": [
+              "npm publish --access=public"
+            ],
             "cwd": "dist/libs/transport/core"
           }
         }
@@ -206,7 +208,9 @@
         "publish": {
           "executor": "@nrwl/workspace:run-commands",
           "options": {
-            "commands": ["npm publish --access=public"],
+            "commands": [
+              "npm publish --access=public"
+            ],
             "cwd": "dist/libs/transport/aws"
           }
         }
@@ -254,7 +258,9 @@
         "publish": {
           "executor": "@nrwl/workspace:run-commands",
           "options": {
-            "commands": ["npm publish --access=public"],
+            "commands": [
+              "npm publish --access=public"
+            ],
             "cwd": "dist/libs/microservices"
           }
         }
@@ -302,7 +308,9 @@
         "publish": {
           "executor": "@nrwl/workspace:run-commands",
           "options": {
-            "commands": ["npm publish --access=public"],
+            "commands": [
+              "npm publish --access=public"
+            ],
             "cwd": "dist/libs/adapters/nestjs"
           }
         }
@@ -408,6 +416,46 @@
             "main": "libs/transport/api/src/index.ts",
             "assets": [
               "libs/transport/api/*.md"
+            ]
+          }
+        }
+      }
+    },
+    "transport-nats": {
+      "root": "libs/transport/nats",
+      "sourceRoot": "libs/transport/nats/src",
+      "projectType": "library",
+      "targets": {
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "libs/transport/nats/**/*.ts"
+            ]
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": [
+            "coverage/libs/transport/nats"
+          ],
+          "options": {
+            "jestConfig": "libs/transport/nats/jest.config.js",
+            "passWithNoTests": true
+          }
+        },
+        "build": {
+          "executor": "@nrwl/node:package",
+          "outputs": [
+            "{options.outputPath}"
+          ],
+          "options": {
+            "outputPath": "dist/libs/transport/nats",
+            "tsConfig": "libs/transport/nats/tsconfig.lib.json",
+            "packageJson": "libs/transport/nats/package.json",
+            "main": "libs/transport/nats/src/index.ts",
+            "assets": [
+              "libs/transport/nats/*.md"
             ]
           }
         }
