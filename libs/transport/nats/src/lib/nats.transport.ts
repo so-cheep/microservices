@@ -86,14 +86,11 @@ export class NatsTransport<
 
           const route = msg.subject
           const replyTo = msg.reply
-          const correlationId = msg.headers?.get(
-            this.correlationIdHeader,
-          )
 
           try {
             await this.processMessage({
               route,
-              correlationId,
+              correlationId: null,
               message,
               replyTo,
             })
