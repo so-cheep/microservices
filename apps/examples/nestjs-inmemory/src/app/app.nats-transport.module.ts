@@ -4,10 +4,10 @@ import {
   callStackReducer,
   callStackValidator,
   createdAtReducer,
-  MemoryTransport,
   transactionDurationValidator,
   transactionReducer,
 } from '@cheep/transport'
+import { NatsTransport } from '@cheep/nats'
 import { Module } from '@nestjs/common'
 import { GatewayModule } from './modules/gateway/gateway.module'
 import { GroupModule } from './modules/groups/group.module'
@@ -17,8 +17,10 @@ import { AppMetadata } from './types'
 @Module({
   imports: [
     CheepMicroservicesModule.forRoot({
-      transport: new MemoryTransport<AppMetadata>(
+      transport: new NatsTransport<AppMetadata>(
         {
+          moduleName: 'example',
+          natsServerUrls: `nats://demo.nats.io`,
           metadataReducers: [
             callStackReducer(),
             transactionReducer(
@@ -40,4 +42,4 @@ import { AppMetadata } from './types'
     GatewayModule,
   ],
 })
-export class AppModule {}
+export class AppNatsTransportModule {}

@@ -16,7 +16,6 @@ export class GatewayService implements OnApplicationBootstrap {
 
   onApplicationBootstrap() {
     const x$ = this.events.observe()
-
     x$.subscribe(e => {
       console.log('EVENT', e.type, e.payload, e.metadata),
         console.log(
