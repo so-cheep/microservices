@@ -56,7 +56,7 @@ export class CqrsHandlerRegistryService implements OnModuleInit {
         this.moduleRef,
       ).catch(() => {
         throw Error(
-          'Query handlers could not be resolved, either the map is too deep (more than 4 objects) or one of your Query handlers is not provided in the module',
+          `Query handlers for [${this.moduleOptions.moduleName}] could not be resolved, either the map is too deep (more than 4 objects) or one of your Query handlers is not provided in the module`,
         )
       }),
       Command: await recurseNestHandlerMap(
@@ -64,7 +64,7 @@ export class CqrsHandlerRegistryService implements OnModuleInit {
         this.moduleRef,
       ).catch(() => {
         throw Error(
-          'Command handlers could not be resolved, either the map is too deep (more than 4 objects) or one of your Query handlers is not provided in the module',
+          `Command handlers for [${this.moduleOptions.moduleName}] could not be resolved, either the map is too deep (more than 4 objects) or one of your Query handlers is not provided in the module`,
         )
       }),
     }
