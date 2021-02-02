@@ -24,7 +24,6 @@ export class CheepMicroservicesModule {
   static forRoot(
     options: CheepMicroservicesRootConfig,
   ): DynamicModule {
-    options.transport.init()
     return {
       module: CheepMicroservicesModule,
       providers: [

@@ -23,7 +23,17 @@ export class CheepTransportModule
     transport
       .init()
       .then(() =>
-        logger.log(`${transport.constructor.name} Initialized!`),
+        logger.log(
+          `${transport.constructor.name} Initialized!`,
+          'Init',
+        ),
+      )
+      .catch(err =>
+        logger.error(
+          `${transport.constructor.name} encountered an error: ${err}`,
+          err,
+          'Init',
+        ),
       )
 
     return {
