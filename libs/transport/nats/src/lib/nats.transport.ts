@@ -52,7 +52,6 @@ export class NatsTransport<
       pass: this.options.password,
       token: this.options.token,
       reconnect: true,
-      headers: true,
     })
   }
 
@@ -78,7 +77,41 @@ export class NatsTransport<
 
     this.subscriptions = patterns.map(p =>
       this.nc.subscribe(p, {
-        callback: (err, msg) => this.messageCallback(err, msg),
+        callback: async (err, msg) => {
+          if (!msg) {
+            return
+          }
+
+          const message: string = msg?.data?.toString() ?? null
+
+          const route = msg.subject
+          const replyTo = msg.reply
+          const correlationId = msg.headers?.get(
+            this.correlationIdHeader,
+          )
+
+          try {
+            await this.processMessage({
+              route,
+              correlationId,
+              message,
+              replyTo,
+            })
+          } catch (err) {
+            // TODO: dead letter queue
+            // await this.channel.sendToQueue(
+            //   this.deadLetterQueueName,
+            //   msg.content,
+            //   {
+            //     correlationId,
+            //     replyTo,
+            //     CC: route,
+            //   },
+            // )
+          }
+
+          // TODO: ack!
+        },
       }),
     )
 
@@ -93,6 +126,7 @@ export class NatsTransport<
 
     await super.stop()
   }
+
   async dispose() {
     if (!this.nc.isClosed()) {
       // ensure all messages have been sent
@@ -109,15 +143,12 @@ export class NatsTransport<
   protected async sendMessage(
     props: SendMessageProps,
   ): Promise<void> {
-    // const hdrs = headers()
-    // hdrs.set(this.correlationIdHeader, props.correlationId)
     if (props.isRpc) {
       const msg = await this.nc.request(
         props.route,
         Buffer.from(props.message),
         {
           timeout: this.options.defaultRpcTimeout,
-          // headers: hdrs,
         },
       )
 
@@ -129,54 +160,13 @@ export class NatsTransport<
         route: msg.subject,
       })
     } else {
-      this.nc.publish(props.route, Buffer.from(props.message), {
-        // headers: hdrs,
-      })
+      this.nc.publish(props.route, Buffer.from(props.message), {})
     }
   }
 
   protected async sendReplyMessage(
     props: SendReplyMessageProps,
   ): Promise<void> {
-    const hdrs = headers()
-    hdrs.set(this.correlationIdHeader, props.correlationId ?? '')
-
-    this.nc.publish(props.replyTo, Buffer.from(props.message), {
-      // headers: hdrs,
-    })
-  }
-
-  private async messageCallback(err, msg) {
-    if (!msg) {
-      return
-    }
-
-    const message: string = msg?.data?.toString() ?? null
-
-    const route = msg.subject
-    const replyTo = msg.reply
-    const correlationId = msg.headers?.get(this.correlationIdHeader)
-
-    try {
-      await this.processMessage({
-        route,
-        correlationId,
-        message,
-        replyTo,
-      })
-    } catch (err) {
-      // TODO: dead letter queue
-      // await this.channel.sendToQueue(
-      //   this.deadLetterQueueName,
-      //   msg.content,
-      //   {
-      //     correlationId,
-      //     replyTo,
-      //     CC: route,
-      //   },
-      // )
-    }
-
-    // TODO: ack!
+    this.nc.publish(props.replyTo, Buffer.from(props.message), {})
   }
 }
