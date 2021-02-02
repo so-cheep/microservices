@@ -1,1 +1,1 @@
-export * from './lib/TransportNats'
+export * from './lib/nats.transport'

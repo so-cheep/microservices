@@ -16,15 +16,15 @@ import { connect, NatsConnection, Subscription, headers } from 'nats'
 export class NatsTransport<
   TMeta extends MessageMetadata = MessageMetadata
 > extends TransportBase {
-  private nc: NatsConnection
-  private subscriptions: Subscription[]
-  private correlationIdHeader = 'X-CHEEP-CORRELATION-ID'
+  protected nc: NatsConnection
+  protected subscriptions: Subscription[]
+  protected correlationIdHeader = 'X-CHEEP-CORRELATION-ID'
 
   constructor(
     protected options: TransportOptions<TMeta> & {
       moduleName: string
       /** array of urls to connect to, may optionally contain username and password or token encoded in the url */
-      natsServerUrls: string[]
+      natsServerUrls: string[] | string
       isTestMode?: boolean
       maxPingOut?: number
 
@@ -51,55 +51,34 @@ export class NatsTransport<
       user: this.options.user,
       pass: this.options.password,
       token: this.options.token,
+      reconnect: true,
       headers: true,
     })
   }
 
   async start() {
+    if (!this.nc || this.nc?.isClosed()) {
+      await this.init()
+    }
     // specific route handlers
     const routes = this.getRegisteredRoutes()
     // wildcard ending routes
-    const prefixes = this.getRegisteredPrefixes().map(x => `${x}.>`)
+    const prefixes = this.getRegisteredPrefixes()
     // everyone together!
-    const patterns = prefixes.concat(routes)
+    const patterns = prefixes
+      // put the nats wildcard suffix on the prefix routes
+      .map(x => `${x}.>`)
+      // remove any routes that are already covered by prefixes
+      // this avoids duplicate delivery
+      .concat(
+        routes.filter(r => !prefixes.find(p => r.startsWith(p))),
+      )
+
+    console.log(`NATS subscriptions:`, patterns)
 
     this.subscriptions = patterns.map(p =>
       this.nc.subscribe(p, {
-        callback: async (err, msg) => {
-          if (!msg) {
-            return
-          }
-
-          const message: string = msg?.data?.toString() ?? null
-
-          const route = msg.subject
-          const replyTo = msg.reply
-          const correlationId = msg.headers.get(
-            this.correlationIdHeader,
-          )
-
-          try {
-            await this.processMessage({
-              route,
-              correlationId,
-              message,
-              replyTo,
-            })
-          } catch (err) {
-            // TODO: dead letter queue
-            // await this.channel.sendToQueue(
-            //   this.deadLetterQueueName,
-            //   msg.content,
-            //   {
-            //     correlationId,
-            //     replyTo,
-            //     CC: route,
-            //   },
-            // )
-          }
-
-          // TODO: ack!
-        },
+        callback: (err, msg) => this.messageCallback(err, msg),
       }),
     )
 
@@ -130,16 +109,28 @@ export class NatsTransport<
   protected async sendMessage(
     props: SendMessageProps,
   ): Promise<void> {
-    const hdrs = headers()
-    hdrs.set(this.correlationIdHeader, props.correlationId)
+    // const hdrs = headers()
+    // hdrs.set(this.correlationIdHeader, props.correlationId)
     if (props.isRpc) {
-      this.nc.request(props.route, Buffer.from(props.message), {
-        timeout: this.options.defaultRpcTimeout,
-        headers: hdrs,
+      const msg = await this.nc.request(
+        props.route,
+        Buffer.from(props.message),
+        {
+          timeout: this.options.defaultRpcTimeout,
+          // headers: hdrs,
+        },
+      )
+
+      const message: string = msg?.data?.toString() ?? null
+
+      this.processResponseMessage({
+        correlationId: props.correlationId,
+        message,
+        route: msg.subject,
       })
     } else {
       this.nc.publish(props.route, Buffer.from(props.message), {
-        headers: hdrs,
+        // headers: hdrs,
       })
     }
   }
@@ -148,10 +139,44 @@ export class NatsTransport<
     props: SendReplyMessageProps,
   ): Promise<void> {
     const hdrs = headers()
-    hdrs.set(this.correlationIdHeader, props.correlationId)
+    hdrs.set(this.correlationIdHeader, props.correlationId ?? '')
 
     this.nc.publish(props.replyTo, Buffer.from(props.message), {
-      headers: hdrs,
+      // headers: hdrs,
     })
+  }
+
+  private async messageCallback(err, msg) {
+    if (!msg) {
+      return
+    }
+
+    const message: string = msg?.data?.toString() ?? null
+
+    const route = msg.subject
+    const replyTo = msg.reply
+    const correlationId = msg.headers?.get(this.correlationIdHeader)
+
+    try {
+      await this.processMessage({
+        route,
+        correlationId,
+        message,
+        replyTo,
+      })
+    } catch (err) {
+      // TODO: dead letter queue
+      // await this.channel.sendToQueue(
+      //   this.deadLetterQueueName,
+      //   msg.content,
+      //   {
+      //     correlationId,
+      //     replyTo,
+      //     CC: route,
+      //   },
+      // )
+    }
+
+    // TODO: ack!
   }
 }
