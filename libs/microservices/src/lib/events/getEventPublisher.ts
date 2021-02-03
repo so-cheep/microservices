@@ -27,7 +27,7 @@ function buildRecursiveProxy(transport: Transport, path: string[]) {
         const { message, referrer } = processArgsSafely(args)
 
         return transport.publish({
-          message,
+          payload: message,
           route,
           referrer,
         })

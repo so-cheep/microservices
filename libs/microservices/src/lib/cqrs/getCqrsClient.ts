@@ -39,7 +39,7 @@ function recursiveHandler(
       const { message, referrer } = processArgsSafely(args)
 
       return transport.execute({
-        message,
+        payload: message,
         route: routeKey,
         referrer,
       })

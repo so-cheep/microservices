@@ -12,9 +12,9 @@ export function makeSafeArgs(
   // make the referrer object
   const referrer = makeReferrer(item)
 
-  const args = Array.isArray(item.message)
-    ? (item.message.concat([referrer]) as [unknown, ...unknown[]])
-    : ([item.message, referrer] as [unknown, ...unknown[]])
+  const args = Array.isArray(item.payload)
+    ? (item.payload.concat([referrer]) as [unknown, ...unknown[]])
+    : ([item.payload, referrer] as [unknown, ...unknown[]])
   return args
 }
 
