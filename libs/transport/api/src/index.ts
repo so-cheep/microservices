@@ -1,3 +1,3 @@
-export * from './lib/cheep.api'
-export * from './lib/cheep.handler'
-export { CheepHandler } from './lib/types'
+export * from './lib/transport.api'
+export * from './lib/transport.handler'
+export { TransportHandler as CheepHandler } from './lib/types'

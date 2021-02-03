@@ -1,4 +1,4 @@
-export type CheepHandler<TApi, TMetadata> = {
+export type TransportHandler<TApi, TMetadata> = {
   on: FunctionalHandlerFactory<TApi, TMetadata>
 }
 

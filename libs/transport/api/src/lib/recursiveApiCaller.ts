@@ -42,12 +42,12 @@ export function recursiveApiCaller(
         route.startsWith(prefix + joinSymbol),
       )
 
-      const [message, metadata] = args
+      const [payload, metadata] = args
 
       if (isExecutable) {
         return transport.execute({
           route,
-          message,
+          payload,
           metadata: <any>metadata,
           referrer,
         })
@@ -55,7 +55,7 @@ export function recursiveApiCaller(
 
       return transport.publish({
         route,
-        message,
+        payload,
         metadata: <any>metadata,
         referrer,
       })
