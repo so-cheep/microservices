@@ -54,7 +54,7 @@ export interface TransportMessage {
 
 export interface TransportCompactMessage {
   route: string
-  message: unknown
+  payload: unknown
   metadata: MessageMetadata
 }
 
@@ -72,14 +72,14 @@ export type FireAndForgetHandler = (
 
 export interface PublishProps<TMetadata extends MessageMetadata> {
   route: string
-  message: unknown
+  payload: unknown
   metadata?: Partial<TMetadata>
   referrer?: Referrer<TMetadata>
 }
 
 export interface ExecuteProps<TMetadata extends MessageMetadata> {
   route: string
-  message: unknown
+  payload: unknown
   metadata?: TMetadata
   referrer?: Referrer<TMetadata>
   rpcTimeout?: number
@@ -103,7 +103,7 @@ export type MetadataReducer<
   referrer: Referrer<TMeta>
   currentMetadata: Partial<TMeta>
   currentRoute: string
-  currentMessage: unknown
+  currentPayload: unknown
 }) => Partial<TMeta>
 
 export type MetadataValidator<
@@ -114,6 +114,6 @@ export interface ValidatorMessage<
   TMeta extends MessageMetadata = MessageMetadata
 > {
   route: string
-  message: unknown
+  payload: unknown
   metadata: TMeta
 }

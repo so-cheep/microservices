@@ -106,11 +106,11 @@ export abstract class TransportBase implements Transport {
   }
 
   async publish(props: PublishProps<MessageMetadata>) {
-    const { route, message, metadata = {}, referrer } = props
+    const { route, payload: message, metadata = {}, referrer } = props
 
     const finalMetadata = this.mergeMetadata({
       currentRoute: route,
-      currentMessage: message,
+      currentPayload: message,
       currentMetadata: metadata,
       referrer,
     })
@@ -118,7 +118,7 @@ export abstract class TransportBase implements Transport {
     await this.sendMessage({
       route,
       message: this.utils.jsonEncode({
-        data: message,
+        payload: message,
         metadata: finalMetadata,
       }),
     })
@@ -131,7 +131,7 @@ export abstract class TransportBase implements Transport {
 
     const {
       route,
-      message,
+      payload: message,
       metadata = {},
       referrer,
       rpcTimeout,
@@ -147,9 +147,10 @@ export abstract class TransportBase implements Transport {
         this.listenCallbacks.set(correlationId, item => {
           clearTimeout(timer)
 
-          const { data: content, errorData } = this.utils.jsonDecode(
-            item.message,
-          )
+          const {
+            payload: content,
+            errorData,
+          } = this.utils.jsonDecode(item.message)
 
           if (errorData) {
             reject(
@@ -181,7 +182,7 @@ export abstract class TransportBase implements Transport {
 
     const finalMetadata = this.mergeMetadata({
       currentRoute: route,
-      currentMessage: message,
+      currentPayload: message,
       currentMetadata: metadata,
       referrer,
     })
@@ -189,7 +190,7 @@ export abstract class TransportBase implements Transport {
     await this.sendMessage({
       route,
       message: this.utils.jsonEncode({
-        data: message,
+        payload: message,
         metadata: finalMetadata,
       }),
       correlationId,
@@ -227,7 +228,7 @@ export abstract class TransportBase implements Transport {
         try {
           validateFn({
             route: msg.route,
-            message: message.data,
+            payload: message.payload,
             metadata: message.metadata,
           })
         } catch (err) {
@@ -264,7 +265,7 @@ export abstract class TransportBase implements Transport {
             try {
               handler({
                 route: msg.route,
-                message: message.data,
+                payload: message.payload,
                 metadata: message.metadata,
               })
 
@@ -290,7 +291,7 @@ export abstract class TransportBase implements Transport {
         // Always call first handler
         result = await routeHandler({
           route: msg.route,
-          message: message.data,
+          payload: message.payload,
           metadata: message.metadata,
         })
       } catch (err) {
@@ -318,7 +319,7 @@ export abstract class TransportBase implements Transport {
           replyTo: msg.replyTo,
           correlationId: msg.correlationId,
           message: this.utils.jsonEncode({
-            data: result,
+            payload: result,
             metadata: message.metadata,
           }),
         })
@@ -328,7 +329,7 @@ export abstract class TransportBase implements Transport {
         const tasks = additionalHandlers.map(handler =>
           handler({
             route: msg.route,
-            message: message.data,
+            payload: message.payload,
             metadata: message.metadata,
           }),
         )
@@ -376,21 +377,21 @@ export abstract class TransportBase implements Transport {
     referrer?: Referrer
     currentMetadata: MessageMetadata
     currentRoute: string
-    currentMessage: unknown
+    currentPayload: unknown
   }): MessageMetadata {
-    const { metadataReducers: metadataRules = [] } = this.options
+    const { metadataReducers = [] } = this.options
 
     const {
       referrer,
       currentMetadata,
       currentRoute,
-      currentMessage,
+      currentPayload,
     } = context
 
-    const merged = metadataRules.reduce((meta, fn) => {
+    const merged = metadataReducers.reduce((meta, fn) => {
       const x = fn({
         currentRoute,
-        currentMessage,
+        currentPayload,
         currentMetadata: meta,
         referrer,
       })
@@ -427,7 +428,7 @@ export interface ListenResponseMessagesProps {
 }
 
 export interface PureMessage {
-  data?: unknown
+  payload?: unknown
   metadata: MessageMetadata
   errorData?: NormalizedError
 }
