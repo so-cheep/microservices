@@ -36,12 +36,14 @@ export class RabbitMQTransport<
       amqpConnectionString,
       publishExchangeName,
       isTestMode,
+      errorQueueName,
     } = this.options
 
     this.queueName = moduleName
-    this.responseQueueName = `${moduleName}Response-${this.utils.newId()}`
+    this.responseQueueName = `${moduleName}-response-${this.utils.newId()}`
 
-    this.deadLetterQueueName = `${moduleName}-DLQ`
+    this.deadLetterQueueName =
+      errorQueueName || `${moduleName}-errors`
 
     const connection = amqp.connect([amqpConnectionString])
 
