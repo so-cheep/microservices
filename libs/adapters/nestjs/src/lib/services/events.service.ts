@@ -31,7 +31,7 @@ export class CheepEvents<
 > implements EventHandlerType<THandleableApi>, OnModuleInit {
   private eventHandler: EventHandler<THandleableApi>
   private eventPublisher: EventPublisher<TPublishableApi>
-  private logger = new Logger()
+  private logger
 
   // get handleClass(): EventHandlerType<THandleableApi>['handleClass'] {
   //   return this.eventHandler.handleClass
@@ -55,6 +55,7 @@ export class CheepEvents<
   ) {}
 
   onModuleInit() {
+    this.logger = new Logger(this.moduleOptions.moduleName)
     this.eventPublisher = getEventPublisher<TPublishableApi>(
       this.transport,
     )
@@ -65,9 +66,7 @@ export class CheepEvents<
     ).concat([this.moduleOptions.moduleName])
 
     this.logger.log(
-      `[${
-        this.moduleOptions.moduleName
-      }] Listening to events from [${listenModules.join(' ,')}] `,
+      `Listening to events from [${listenModules.join(' ,')}] `,
     )
 
     this.eventHandler = handleEvents<THandleableApi>(
