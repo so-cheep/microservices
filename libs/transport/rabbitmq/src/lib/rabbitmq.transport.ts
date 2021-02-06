@@ -48,6 +48,7 @@ export class RabbitMQTransport<
     const connection = amqp.connect([amqpConnectionString])
 
     this.channel = connection.createChannel({
+      name: moduleName,
       setup: async (x: ConfirmChannel) => {
         await Promise.all([
           // Hub Exchange
@@ -126,7 +127,9 @@ export class RabbitMQTransport<
             {
               correlationId,
               replyTo,
-              CC: route,
+              headers: {
+                route,
+              },
             },
           )
         }
