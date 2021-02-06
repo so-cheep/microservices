@@ -25,7 +25,7 @@ export interface TransportOptions<
   defaultRpcTimeout?: number
   metadataReducers?: MetadataReducer<TMeta>[]
   metadataValidator?: MetadataValidator<TMeta>[]
-  errorQueueName?: string
+  failedMessagesQueueName?: string
 }
 
 export interface TransportUtils {
