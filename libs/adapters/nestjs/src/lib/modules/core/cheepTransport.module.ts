@@ -7,7 +7,7 @@ import {
   OnApplicationShutdown,
   Logger,
 } from '@nestjs/common'
-import type { Transport } from '@cheep/transport'
+import { Transport, TransportBase } from '@cheep/transport'
 import { TransportToken } from '../../constants'
 import { onHandlerRegistrationComplete } from '../../util/moduleRegistry'
 const logger = new Logger('CheepTransport')
@@ -32,6 +32,14 @@ export class CheepTransportModule
         {
           provide: TransportToken,
           useValue: transport,
+        },
+        {
+          provide: TransportBase,
+          useExisting: TransportToken,
+        },
+        {
+          provide: Object.getPrototypeOf(transport),
+          useExisting: transport,
         },
       ],
       exports: [TransportToken],

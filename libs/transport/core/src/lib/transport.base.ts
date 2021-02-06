@@ -332,17 +332,19 @@ export abstract class TransportBase implements Transport {
             route: msg.route,
             payload: message.payload,
             metadata: message.metadata,
+          }).catch(err => {
+            throw { reason: err, handler: handler.name }
           }),
         )
 
         Promise.allSettled(tasks)
-          .then(items =>
-            items
-              .filter(x => x.status === 'rejected')
-              .map(x => x.status === 'rejected' && x.reason),
+          .then(results =>
+            results.filter(r => r.status === 'rejected'),
           )
           .then(errs => {
-            console.warn('Multiple.RouteHandlers.Error', errs)
+            if (errs.length > 0) {
+              console.warn('Multiple.RouteHandlers.Error', errs)
+            }
           })
       }
     }
