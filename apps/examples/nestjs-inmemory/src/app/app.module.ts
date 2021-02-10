@@ -1,12 +1,12 @@
 import { MicroserviceTransportUtils } from '@cheep/microservices'
 import { CheepMicroservicesModule } from '@cheep/nestjs'
 import {
-  callStackRule,
+  callStackReducer,
   callStackValidator,
-  createdAtRule,
+  createdAtReducer,
   MemoryTransport,
   transactionDurationValidator,
-  transactionRule,
+  transactionReducer,
 } from '@cheep/transport'
 import { Module } from '@nestjs/common'
 import { GatewayModule } from './modules/gateway/gateway.module'
@@ -20,12 +20,12 @@ import { AppMetadata } from './types'
       transport: new MemoryTransport<AppMetadata>(
         {
           metadataReducers: [
-            callStackRule(),
-            transactionRule(
+            callStackReducer(),
+            transactionReducer(
               MicroserviceTransportUtils.newId,
               Date.now,
             ),
-            createdAtRule(Date.now),
+            createdAtReducer(Date.now),
           ],
           metadataValidator: [
             callStackValidator(['Command.']),
