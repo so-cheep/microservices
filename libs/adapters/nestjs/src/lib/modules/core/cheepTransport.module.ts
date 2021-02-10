@@ -37,10 +37,10 @@ export class CheepTransportModule
           provide: TransportBase,
           useExisting: TransportToken,
         },
-        {
-          provide: Object.getPrototypeOf(transport),
-          useExisting: transport,
-        },
+        // {
+        //   provide: Object.getPrototypeOf(transport),
+        //   useExisting: transport,
+        // },
       ],
       exports: [TransportToken],
       global: true,
