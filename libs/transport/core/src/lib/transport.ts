@@ -12,7 +12,23 @@ export interface Transport {
 
   off(route: string): void
 
-  onEvery(prefixes: string[], action: FireAndForgetHandler): void
+  /** provide a fire-and-forget handler for an array of prefixes*/
+  onEvery(
+    prefixes: string[],
+    action: FireAndForgetHandler,
+    isRawHandler?: false,
+  ): void
+  /** provide raw handler for a specific prefix */
+  onEvery(
+    prefix: string,
+    action: RawHandler,
+    isRawHandler: true,
+  ): void
+  onEvery(
+    prefixes: string[] | string,
+    action: RawHandler | FireAndForgetHandler,
+    isRawHandler?: boolean,
+  ): void
 
   /**
    * At this point all handlers are registered and we can
@@ -47,7 +63,6 @@ export interface Transport {
 export interface TransportMessage {
   route: string
   message: string
-
   correlationId: string
   replyTo?: string
 }
@@ -61,6 +76,11 @@ export interface TransportCompactMessage {
 export type ListenResponseCallback = (item: TransportMessage) => void
 
 export type MessageMetadata = Record<string, unknown>
+
+export type RawHandler = (
+  item: TransportCompactMessage,
+  raw: TransportMessage,
+) => Promise<unknown | void>
 
 export type RouteHandler = (
   item: TransportCompactMessage,

@@ -12,12 +12,14 @@ import {
   MetadataReducer,
   MetadataValidator,
   PublishProps,
+  RawHandler,
   Referrer,
   RouteHandler,
   Transport,
   TransportMessage,
   TransportState,
 } from './transport'
+import 'reflect-metadata'
 
 export interface TransportOptions<
   TMeta extends MessageMetadata = MessageMetadata
@@ -34,12 +36,14 @@ export interface TransportUtils {
   jsonDecode: (s: string) => PureMessage
 }
 
+const HANDLER_META = Symbol('ROUTE_HANDLER')
 export abstract class TransportBase implements Transport {
   private routeHandlers = new Map<string, RouteHandler[]>()
   private prefixHandlers = new Map<
     string,
     Set<FireAndForgetHandler>
   >()
+  private rawHandlers = new Map<string, Set<RawHandler>>()
   private registeredPrefixes = new Set<string>()
   private listenCallbacks = new Map<string, ListenResponseCallback>()
 
@@ -201,13 +205,42 @@ export abstract class TransportBase implements Transport {
     return await resultTask
   }
 
-  onEvery(prefixes: string[], action: FireAndForgetHandler) {
-    prefixes.forEach(x => {
-      this.registeredPrefixes.add(x)
-      const handlers = this.prefixHandlers.get(x) ?? new Set()
-      handlers.add(action)
-      this.prefixHandlers.set(x, handlers)
-    })
+  // this needs to allow for a fire and forget or a route handler for the router to work
+  /** provide a fire-and-forget handler for an array of prefixes*/
+  onEvery(
+    prefixes: string[],
+    action: FireAndForgetHandler,
+    isRawHandler?: false,
+  ): void
+  /** provide raw handler for a specific prefix */
+  onEvery(
+    prefix: string,
+    action: RawHandler,
+    isRawHandler: true,
+  ): void
+  onEvery(
+    prefixes: string[] | string,
+    action: RawHandler | FireAndForgetHandler,
+    isRawHandler?: boolean,
+  ): void {
+    const safePrefixes = Array.isArray(prefixes)
+      ? prefixes
+      : [prefixes]
+    safePrefixes.forEach(p => this.registeredPrefixes.add(p))
+
+    if (isRawHandler) {
+      const prefix = prefixes as string
+      Reflect.defineMetadata(HANDLER_META, true, action)
+      const handlers = this.rawHandlers.get(prefix) ?? new Set()
+      handlers.add(<RawHandler>action)
+      this.rawHandlers.set(prefix, handlers)
+    } else {
+      safePrefixes.forEach(prefix => {
+        const handlers = this.prefixHandlers.get(prefix) ?? new Set()
+        handlers.add(<FireAndForgetHandler>action)
+        this.prefixHandlers.set(prefix, handlers)
+      })
+    }
   }
 
   async dispose() {
@@ -259,29 +292,44 @@ export abstract class TransportBase implements Transport {
     // prefix handlers
     if (registeredPrefixes.length) {
       const handlers = registeredPrefixes.flatMap(prefix => {
-        const handlerSet = this.prefixHandlers.get(prefix)
+        const handlerSet = this.prefixHandlers.get(prefix) ?? []
 
-        return [...handlerSet].map(handler => {
-          return new Promise((resolve, reject) => {
-            try {
-              handler({
-                route: msg.route,
-                payload: message.payload,
-                metadata: message.metadata,
-              })
+        return [...handlerSet]
+          .filter(
+            handler =>
+              // only fire for handlers who DO NOT have the metadata
+              !Reflect.hasMetadata(HANDLER_META, handler),
+          )
+          .map(handler => {
+            return new Promise((resolve, reject) => {
+              try {
+                handler({
+                  route: msg.route,
+                  payload: message.payload,
+                  metadata: message.metadata,
+                })
 
-              resolve(true)
-            } catch (err) {
-              reject(err)
-            }
-          }).catch(err => {
-            console.warn('onEveryAction.Error', prefix, err)
+                resolve(true)
+              } catch (err) {
+                reject(err)
+              }
+            }).catch(err => {
+              console.warn('onEveryAction.Error', prefix, err)
+            })
           })
-        })
       })
     }
 
-    const routeHandlers = this.routeHandlers.get(msg.route)
+    // find any prefix handlers that are declared as route handlers
+    const rawPrefixHandlers = registeredPrefixes
+      .flatMap(p => [...this.rawHandlers.get(p)])
+      .filter(handler => Reflect.hasMetadata(HANDLER_META, handler))
+
+    // put the route prefix handlers last, so if there are more specific handlers provided, they will be the RPC call
+    const routeHandlers = [
+      ...(this.routeHandlers.get(msg.route) ?? []),
+      ...rawPrefixHandlers,
+    ]
     if (routeHandlers?.length) {
       const [routeHandler, ...additionalHandlers] = routeHandlers
 
@@ -290,11 +338,15 @@ export abstract class TransportBase implements Transport {
 
       try {
         // Always call first handler
-        result = await routeHandler({
-          route: msg.route,
-          payload: message.payload,
-          metadata: message.metadata,
-        })
+        // it may be a raw handler, so include the msg prop just in case
+        result = await routeHandler(
+          {
+            route: msg.route,
+            payload: message.payload,
+            metadata: message.metadata,
+          },
+          msg,
+        )
       } catch (err) {
         if (isRpc) {
           await this.sendReplyMessage({
@@ -326,13 +378,17 @@ export abstract class TransportBase implements Transport {
         })
       }
       // Process additional handlers
-      else if (additionalHandlers.length) {
+      // NOTE(kb): removed `else` here, I think we should be calling additional handlers even if it was an RPC
+      if (additionalHandlers.length) {
         const tasks = additionalHandlers.map(handler =>
-          handler({
-            route: msg.route,
-            payload: message.payload,
-            metadata: message.metadata,
-          }).catch(err => {
+          handler(
+            {
+              route: msg.route,
+              payload: message.payload,
+              metadata: message.metadata,
+            },
+            msg,
+          ).catch(err => {
             throw { reason: err, handler: handler.name }
           }),
         )

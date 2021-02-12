@@ -117,7 +117,9 @@
         "publish": {
           "executor": "@nrwl/workspace:run-commands",
           "options": {
-            "commands": ["npm publish --access=public"],
+            "commands": [
+              "npm publish --access=public"
+            ],
             "cwd": "dist/libs/transport/core"
           }
         }
@@ -206,7 +208,9 @@
         "publish": {
           "executor": "@nrwl/workspace:run-commands",
           "options": {
-            "commands": ["npm publish --access=public"],
+            "commands": [
+              "npm publish --access=public"
+            ],
             "cwd": "dist/libs/transport/aws"
           }
         }
@@ -254,7 +258,9 @@
         "publish": {
           "executor": "@nrwl/workspace:run-commands",
           "options": {
-            "commands": ["npm publish --access=public"],
+            "commands": [
+              "npm publish --access=public"
+            ],
             "cwd": "dist/libs/microservices"
           }
         }
@@ -302,7 +308,9 @@
         "publish": {
           "executor": "@nrwl/workspace:run-commands",
           "options": {
-            "commands": ["npm publish --access=public"],
+            "commands": [
+              "npm publish --access=public"
+            ],
             "cwd": "dist/libs/adapters/nestjs"
           }
         }
@@ -408,6 +416,46 @@
             "main": "libs/transport/api/src/index.ts",
             "assets": [
               "libs/transport/api/*.md"
+            ]
+          }
+        }
+      }
+    },
+    "router": {
+      "root": "libs/router",
+      "sourceRoot": "libs/router/src",
+      "projectType": "library",
+      "targets": {
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "libs/router/**/*.ts"
+            ]
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": [
+            "coverage/libs/router"
+          ],
+          "options": {
+            "jestConfig": "libs/router/jest.config.js",
+            "passWithNoTests": true
+          }
+        },
+        "build": {
+          "executor": "@nrwl/node:package",
+          "outputs": [
+            "{options.outputPath}"
+          ],
+          "options": {
+            "outputPath": "dist/libs/router",
+            "tsConfig": "libs/router/tsconfig.lib.json",
+            "packageJson": "libs/router/package.json",
+            "main": "libs/router/src/index.ts",
+            "assets": [
+              "libs/router/*.md"
             ]
           }
         }
