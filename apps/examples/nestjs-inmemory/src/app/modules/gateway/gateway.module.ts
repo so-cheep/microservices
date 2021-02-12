@@ -2,6 +2,7 @@ import { CheepMicroservicesModule } from '@cheep/nestjs'
 import { Module } from '@nestjs/common'
 import { GatewayApi, ConsumedApis } from './gateway.api'
 import { GatewayService } from './gateway.controller'
+import { TunnelGateway } from './tunnel.gateway'
 
 @Module({
   imports: [
@@ -13,5 +14,6 @@ import { GatewayService } from './gateway.controller'
     }),
   ],
   controllers: [GatewayService],
+  providers: [TunnelGateway],
 })
 export class GatewayModule {}

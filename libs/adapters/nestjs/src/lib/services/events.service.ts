@@ -14,7 +14,7 @@ import {
   EventHandler,
   getEventPublisher,
 } from '@cheep/microservices'
-import { ModuleOptionsToken, TransportToken } from '../constants'
+import { ModuleConfigToken, TransportToken } from '../constants'
 import type { Transport } from '@cheep/transport'
 import { GenericMicroserviceApi } from '../types'
 
@@ -51,7 +51,7 @@ export class CheepEvents<
 
   constructor(
     @Inject(TransportToken) private transport: Transport,
-    @Inject(ModuleOptionsToken) private moduleOptions,
+    @Inject(ModuleConfigToken) private moduleOptions,
   ) {}
 
   onModuleInit() {

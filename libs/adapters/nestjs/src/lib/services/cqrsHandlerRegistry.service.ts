@@ -13,7 +13,7 @@ import {
   OnModuleInit,
   Type,
 } from '@nestjs/common'
-import { ModuleOptionsToken, TransportToken } from '../constants'
+import { ModuleConfigToken, TransportToken } from '../constants'
 import type {
   CheepMicroservicesModuleConfig,
   GenericMicroserviceApi,
@@ -35,7 +35,7 @@ const NestLifecycleFunctions = [
 export class CqrsHandlerRegistryService implements OnModuleInit {
   private logger: Logger
   constructor(
-    @Inject(ModuleOptionsToken)
+    @Inject(ModuleConfigToken)
     private moduleOptions: CheepMicroservicesModuleConfig<
       GenericNestApi,
       GenericMicroserviceApi

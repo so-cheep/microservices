@@ -321,9 +321,10 @@ export abstract class TransportBase implements Transport {
     }
 
     // find any prefix handlers that are declared as route handlers
-    const rawPrefixHandlers = registeredPrefixes
-      .flatMap(p => [...this.rawHandlers.get(p)])
-      .filter(handler => Reflect.hasMetadata(HANDLER_META, handler))
+    const rawPrefixHandlers = registeredPrefixes.flatMap(p => [
+      ...this.rawHandlers.get(p),
+    ])
+    // .filter(handler => Reflect.hasMetadata(HANDLER_META, handler))
 
     // put the route prefix handlers last, so if there are more specific handlers provided, they will be the RPC call
     const routeHandlers = [
@@ -491,3 +492,16 @@ export interface PureMessage {
   metadata: MessageMetadata
   errorData?: NormalizedError
 }
+
+type ArrayToIntersection<T extends unknown[]> = UnionToIntersection<
+  ArrayToUnion<T>
+>
+type ArrayToUnion<A extends Array<unknown>> = A[number]
+type UnionToIntersection<U> = (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  U extends any
+    ? (k: U) => void
+    : never
+) extends (k: infer I) => void
+  ? I
+  : never

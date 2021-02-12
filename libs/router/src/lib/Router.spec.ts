@@ -6,9 +6,8 @@ import {
   MemoryTransport,
   TransactionMetadata,
   transactionReducer,
-  TransportCompactMessage,
 } from '@cheep/transport'
-import { createRouter, TunnelNextHop } from './router'
+import { createRouter, TunnelNextHop } from './createRouter'
 import { v4 } from 'uuid'
 import { parse, stringify } from 'flatted'
 
@@ -77,7 +76,6 @@ describe('router with tunnel next hop', () => {
           payload: {},
           metadata: { original: 1234 },
           correlationId: '',
-          message: '',
         },
       )
 
@@ -114,7 +112,7 @@ describe('router with tunnel next hop', () => {
         {
           route: '',
           correlationId: args[1].correlationId,
-          message: '',
+          replyTo: null,
           metadata: {},
           payload: { mockResult },
         },
@@ -134,7 +132,6 @@ describe('router with tunnel next hop', () => {
         metadata: { original: 1234 },
         correlationId: correlationId,
         replyTo: 'replymessagething',
-        message: '',
       })
 
       expect(mockListener).toHaveBeenCalledTimes(1)

@@ -1,68 +1,74 @@
-import { Module, DynamicModule, Inject } from '@nestjs/common'
+import {
+  Module,
+  DynamicModule,
+  OnModuleInit,
+  Inject,
+} from '@nestjs/common'
 
 import type {
   CheepMicroservicesModuleConfig,
   CheepMicroservicesRootConfig,
-  GenericMicroserviceApi,
-  GenericNestApi,
 } from './types'
-import {
-  ModuleNameToken,
-  ModuleOptionsToken,
-  RootOptionsToken,
-  TransportToken,
-} from './constants'
-import { registerModuleName } from './util/moduleRegistry'
+import { ModuleConfigToken, RootOptionsToken } from './constants'
 import { CheepApi } from './services/api.service'
 import { CheepEvents } from './services/events.service'
 import { CqrsHandlerRegistryService } from './services/cqrsHandlerRegistry.service'
 import { CheepTransportModule } from './modules/core/cheepTransport.module'
-import type { Transport } from '@cheep/transport'
+import type { Transport, TransportBase } from '@cheep/transport'
+import { TransportApi, transportHandler } from '@cheep/transport-api'
 
 @Module({})
-export class CheepMicroservicesModule {
+export class CheepMicroservicesModule<
+  TModuleApi extends TransportApi,
+  TRemoteApi extends TransportApi
+> implements OnModuleInit {
   static forRoot(
     options: CheepMicroservicesRootConfig,
   ): DynamicModule {
     options.transport.init()
     return {
       module: CheepMicroservicesModule,
-      providers: [
-        {
-          provide: RootOptionsToken,
-          useValue: options,
-        },
-      ],
       imports: [CheepTransportModule.forRoot(options.transport)],
     }
   }
 
   static forModule<
-    TModuleApi extends GenericNestApi,
-    TRemoteApi extends GenericMicroserviceApi
+    TModuleApi extends TransportApi,
+    TRemoteApi extends TransportApi
   >(
-    options: CheepMicroservicesModuleConfig<TModuleApi, TRemoteApi>,
+    config: CheepMicroservicesModuleConfig<TModuleApi, TRemoteApi>,
   ): DynamicModule {
-    registerModuleName(options.moduleName)
-
     return {
       module: CheepMicroservicesModule,
       providers: [
         CqrsHandlerRegistryService,
         CheepEvents,
-        {
-          provide: ModuleNameToken,
-          useValue: options.moduleName,
-        },
-        {
-          provide: ModuleOptionsToken,
-          useValue: options,
-        },
         CheepApi,
+        {
+          provide: ModuleConfigToken,
+          useValue: config,
+        },
       ],
       exports: [CheepEvents, CheepApi],
     }
   }
 
-  constructor(@Inject(TransportToken) private transport: Transport) {}
+  constructor(
+    private transport: TransportBase,
+    @Inject(ModuleConfigToken)
+    private config: CheepMicroservicesModuleConfig<
+      TModuleApi,
+      TRemoteApi
+    >,
+  ) {}
+
+  onModuleInit() {
+    const handler = transportHandler<TModuleApi | TRemoteApi>(
+      this.transport,
+      this.config,
+    )
+    // reduce handlers to array of [path, handler]
+
+    // call
+  }
 }

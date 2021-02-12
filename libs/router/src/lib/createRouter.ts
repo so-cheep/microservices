@@ -62,8 +62,9 @@ export function createRouter<
           // TODO: cover edge case where corelation ids collide across tunnels
           const rpcPromise = outstandingRpcs.get(item.correlationId)
           if (rpcPromise) {
-            // TODO: figure out how we provide updated metadata as well, so we can capture full call stack
+            // resolve the outstanding promise
             rpcPromise(item.payload)
+            outstandingRpcs.delete(item.correlationId)
           } else {
             const props = {
               route: item.route,
@@ -87,7 +88,6 @@ export function createRouter<
                 payload: result,
                 correlationId: item.correlationId,
                 replyTo: null,
-                message: '',
                 metadata: item.metadata,
                 route: item.route,
               })
@@ -102,7 +102,7 @@ export function createRouter<
 }
 
 export type CompleteMessage = TransportCompactMessage &
-  TransportMessage
+  Pick<TransportMessage, 'replyTo' | 'correlationId'>
 
 export interface TunnelNextHop<
   TTunnelId extends Record<string, unknown> = Record<string, unknown>
