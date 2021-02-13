@@ -1,3 +1,20 @@
 export function getLeafAddresses<TLeaf>(
-  tree: Record,
-): [string, TLeaf][]
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  tree: object,
+  /** DO NOT PROVIDE, USED FOR RECURSION */
+  path: string[] = [],
+): [string, TLeaf][] {
+  const branches = Object.entries(tree).flatMap<[string, TLeaf]>(
+    ([key, value]) => {
+      const newPath = [...path, key]
+      switch (typeof value) {
+        case 'object':
+          return getLeafAddresses(value, newPath)
+        default:
+          return [([newPath, value] as unknown) as [string, TLeaf]]
+      }
+    },
+  )
+
+  return branches
+}
