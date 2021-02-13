@@ -5,21 +5,25 @@ import {
   MemoryTransport,
   transactionReducer,
 } from '@cheep/transport'
-import { performance } from 'perf_hooks'
-import { cheepApi } from '../cheep.api'
-import { cheepHandler } from '../cheep.handler'
+import { performance, PerformanceObserver } from 'perf_hooks'
+import { transportApi } from '../transport.api'
+import { transportHandler } from '../transport.handler'
 import { recursiveApiCaller } from '../recursiveApiCaller'
 
 type T = {
   A1: {
-    B: () => boolean
+    B: (props: { count: number }) => boolean
   }
   A2: {
     B: {
-      C: () => number
-      D: () => void
-      E: (props: { id: string; count: number }) => Promise<string>
-      F: (a1: string, a2: number, a3: boolean) => Promise<string>
+      $: (arg: {
+        socketId: string
+      }) => {
+        C: () => number
+        D: () => void
+        E: (props: { id: string; count: number }) => Promise<string>
+        F: (a1: string, a2: number, a3: boolean) => Promise<string>
+      }
     }
   }
   A3: {
@@ -30,7 +34,11 @@ type T = {
             F: {
               G: {
                 H: {
-                  I: (props: { count: number }) => void
+                  _: (
+                    routeModifier: string,
+                  ) => {
+                    I: (props: { count: number }) => void
+                  }
                 }
               }
             }
@@ -77,7 +85,7 @@ type PusherApi = {
 }
 
 describe('cheep.api', () => {
-  it('should work', done => {
+  it('should work', async () => {
     const transport = new MemoryTransport(
       {},
       {
@@ -87,21 +95,86 @@ describe('cheep.api', () => {
       },
     )
 
-    const rootApi = cheepApi<T>(transport)
+    const rootApi = transportApi<T>(transport, {
+      executablePrefixes: ['A1', 'A2'],
+    })
 
-    const handler = cheepHandler<T>(transport, {
+    const handler = transportHandler<T>(transport, {
+      executablePrefixes: ['A1', 'A2'],
+    })
+
+    const mockHandler = jest.fn().mockReturnValue(true)
+    handler.on(x => x.A1.B, mockHandler)
+
+    const result = await rootApi.A1.B({
+      count: 10,
+    })
+
+    expect(mockHandler).toHaveBeenCalledTimes(1)
+    expect(mockHandler).toHaveBeenCalledWith(
+      Object,
+      { count: 10 },
+      expect.anything(),
+    )
+    expect(result).toBeTruthy()
+  })
+  it('should work with route variables', async () => {
+    const transport = new MemoryTransport(
+      {},
+      {
+        jsonDecode: JSON.parse,
+        jsonEncode: JSON.stringify,
+        newId: () => Date.now().toString(),
+      },
+    )
+
+    const rootApi = transportApi<T>(transport)
+
+    const handler = transportHandler<T>(transport, {
       executablePrefixes: ['A1', 'A2'],
     })
 
     handler.on(
-      x => x.A3.B.C.D.E.F.G.H.I,
+      x => x.A3.B.C.D.E.F.G.H._('routed').I,
       async (_, x) => {
         expect(x.count).toBe(10)
-        done()
       },
     )
 
-    rootApi.A3.B.C.D.E.F.G.H.I({ count: 10 })
+    await rootApi.A3.B.C.D.E.F.G.H._('routed').I({
+      count: 10,
+    })
+  })
+
+  it('should work with metadata injection operator', async () => {
+    const transport = new MemoryTransport(
+      {},
+      {
+        jsonDecode: JSON.parse,
+        jsonEncode: JSON.stringify,
+        newId: () => Date.now().toString(),
+      },
+    )
+
+    const rootApi = transportApi<T>(transport)
+
+    const handler = transportHandler<T>(transport, {
+      executablePrefixes: ['A1', 'A2'],
+    })
+
+    const mockHandle = jest.fn()
+    handler.on(x => x.A2.B.C, mockHandle)
+
+    const routeParam = { socketId: 'wipekafnoeinwef' }
+    console.log(rootApi.A2.B.$(routeParam).C)
+
+    await rootApi.A2.B.$(routeParam).C()
+
+    expect(mockHandle).toHaveBeenCalledTimes(1)
+
+    // last arg to function is metadata
+    const meta = mockHandle.mock.calls[0].slice(-1).pop()
+    expect(meta).toMatchObject(expect.objectContaining(routeParam))
   })
 
   it('should receive events', async () => {
@@ -114,11 +187,11 @@ describe('cheep.api', () => {
       },
     )
 
-    const rootApi = cheepApi<PusherApi>(transport, {
+    const rootApi = transportApi<PusherApi>(transport, {
       executablePrefixes: ['Command', 'Event'],
     })
 
-    const handler = cheepHandler<UserApi & PusherApi>(transport, {
+    const handler = transportHandler<UserApi & PusherApi>(transport, {
       executablePrefixes: ['Command', 'Event'],
     })
 
@@ -137,7 +210,7 @@ describe('cheep.api', () => {
     expect(result).toBe('123')
   })
 
-  it('should not take too much time', async () => {
+  it('should not take too much time', done => {
     const transport = {
       publish: jest.fn(),
     }
@@ -146,12 +219,11 @@ describe('cheep.api', () => {
       executablePrefixes: [],
       joinSymbol: '.',
     })
-
     const count = 10
 
     const startedAt = performance.now()
     for (let i = 0; i < count; i++) {
-      proxy.Command.User['Login' + i]({
+      proxy.Command.User._(i).login({
         username: 'playerx',
         password: '123',
       })
@@ -171,17 +243,18 @@ describe('cheep.api', () => {
     )
 
     expect(transport.publish).toBeCalledTimes(count)
-    // expect(avgDuration).toBeLessThan(1)
+    // expect(avgDuration).toBeLessThan(0.015)
   })
 
-  it.only('check recursion and fire error', done => {
+  // TODO: move this test to transport base lib
+  it('check recursion and fire error', done => {
     const newId = () => Date.now().toString()
 
-    const transport = new MemoryTransport(
+    const transport = new MemoryTransport<any>(
       {
         metadataReducers: [
-          transactionReducer(newId, Date.now),
           createdAtReducer(Date.now),
+          transactionReducer(newId, Date.now),
           callStackReducer(),
         ],
         metadataValidator: [callStackValidator('all')],
@@ -193,8 +266,8 @@ describe('cheep.api', () => {
       },
     )
 
-    const handler = cheepHandler<UserApi>(transport)
-    const rootApi = cheepApi<UserApi>(transport)
+    const handler = transportHandler<UserApi>(transport)
+    const rootApi = transportApi<UserApi>(transport)
 
     handler.on(
       x => x.Command.User.register,

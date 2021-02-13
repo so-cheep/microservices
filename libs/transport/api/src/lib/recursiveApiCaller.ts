@@ -1,4 +1,5 @@
 import { MessageMetadata, Transport } from '@cheep/transport'
+import { MetadataOperator, RouteVariableOperator } from './types'
 
 interface Options {
   joinSymbol: string
@@ -7,6 +8,11 @@ interface Options {
     route: string
     metadata: MessageMetadata
   }
+  routeRewrite?: (
+    routePath: string[],
+    $args: (string | Record<string, unknown>)[],
+    routeMetadata: Record<string, unknown>,
+  ) => string[]
 }
 
 export function recursiveApiCaller(
@@ -14,6 +20,7 @@ export function recursiveApiCaller(
   options: Options,
   /** only needed internally, **DO NOT SET** */
   path: string[] = [],
+  routeMetadata: Record<string, unknown> = {},
 ): () => void {
   // make array safe
   return new Proxy(() => undefined, {
@@ -22,43 +29,83 @@ export function recursiveApiCaller(
         transport,
         options,
         path.concat([String(propertyName)]),
+        routeMetadata,
       )
     },
 
-    apply: (_, __: any, args: unknown[]) => {
-      if (!path.length) {
-        return
+    apply: (_, __, args: unknown[]) => {
+      switch (path[path.length - 1]) {
+        // handle operators first, api call is default case
+        // merge metadata operator
+        case MetadataOperator: {
+          const mergedMetadata = args.reduce<MessageMetadata>(
+            (meta, arg) => ({
+              ...meta,
+              ...(typeof arg === 'object' && !Array.isArray(arg)
+                ? arg
+                : {}),
+            }),
+            routeMetadata,
+          )
+
+          return recursiveApiCaller(
+            transport,
+            options,
+            // don't forget to remove the operator!
+            path.slice(0, -1),
+            mergedMetadata,
+          )
+        }
+        // path variable operator
+        case RouteVariableOperator: {
+          const route = args.reduce<string[]>(
+            (route, arg) =>
+              typeof arg === 'string' ? route.concat([arg]) : route,
+            path.slice(0, -1),
+          )
+
+          return recursiveApiCaller(
+            transport,
+            options,
+            route,
+            routeMetadata,
+          )
+        }
+        // actually calling the api
+        default: {
+          if (!path.length) {
+            return
+          }
+
+          const {
+            joinSymbol,
+            executablePrefixes = [],
+            referrer,
+          } = options
+
+          const route = path.join(joinSymbol)
+
+          const isExecutable = executablePrefixes.some(prefix =>
+            route.startsWith(prefix + joinSymbol),
+          )
+
+          if (isExecutable) {
+            return transport.execute({
+              route,
+              payload: args,
+              metadata: routeMetadata,
+              referrer,
+            })
+          }
+
+          return transport.publish({
+            route,
+            payload: args,
+            metadata: routeMetadata,
+            referrer,
+          })
+        }
       }
-
-      const {
-        joinSymbol,
-        executablePrefixes = [],
-        referrer,
-      } = options
-
-      const route = path.join(joinSymbol)
-
-      const isExecutable = executablePrefixes.some(prefix =>
-        route.startsWith(prefix + joinSymbol),
-      )
-
-      const [payload, metadata] = args
-
-      if (isExecutable) {
-        return transport.execute({
-          route,
-          payload,
-          metadata: <any>metadata,
-          referrer,
-        })
-      }
-
-      return transport.publish({
-        route,
-        payload,
-        metadata: <any>metadata,
-        referrer,
-      })
     },
   })
 }
