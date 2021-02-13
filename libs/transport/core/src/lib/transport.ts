@@ -52,9 +52,9 @@ export interface TransportMessage {
   replyTo?: string
 }
 
-export interface TransportCompactMessage {
+export interface TransportCompactMessage<TPayload = unknown> {
   route: string
-  payload: unknown
+  payload: TPayload
   metadata: MessageMetadata
 }
 

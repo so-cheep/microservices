@@ -1,5 +1,6 @@
 import { MessageMetadata, Transport } from '@cheep/transport'
 import { recursiveApiCaller } from './recursiveApiCaller'
+import { Api, CallableApi } from './types'
 
 export interface TransportApiOptions<TPrefix> {
   executablePrefixes?: TPrefix[]
@@ -10,10 +11,10 @@ export interface TransportApiOptions<TPrefix> {
   }
 }
 
-export function transportApi<TApi>(
+export function transportApi<TApi extends Api>(
   transport: Transport,
   options?: TransportApiOptions<keyof TApi>,
-): TApi {
+): CallableApi<TApi> {
   const {
     executablePrefixes = ['Command', 'Query'],
     joinSymbol = '.',

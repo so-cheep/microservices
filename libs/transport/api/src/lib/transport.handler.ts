@@ -1,14 +1,21 @@
-import { MessageMetadata, Transport } from '@cheep/transport'
+import {
+  MessageMetadata,
+  Transport,
+  TransportCompactMessage,
+} from '@cheep/transport'
 import { transportApi } from './transport.api'
 import { createRouteBuilderProxy } from './createRouteBuilderProxy'
-import { TransportHandler } from './types'
+import { Api, TransportHandler } from './types'
 
 export interface CheepHandlerOptions<TPrefix> {
   executablePrefixes?: TPrefix[]
   joinSymbol?: string
 }
 
-export function transportHandler<TApi, TMetadata = MessageMetadata>(
+export function transportHandler<
+  TApi extends Api,
+  TMetadata = MessageMetadata
+>(
   transport: Transport,
   options?: CheepHandlerOptions<keyof TApi>,
 ): TransportHandler<TApi, TMetadata> {
@@ -24,7 +31,9 @@ export function transportHandler<TApi, TMetadata = MessageMetadata>(
 
     const route = proxy()
 
-    return transport.on(route, msg => {
+    const intermediateHandler = (
+      msg: TransportCompactMessage<unknown[]>,
+    ) => {
       const api = transportApi(transport, {
         joinSymbol,
         executablePrefixes,
@@ -34,8 +43,15 @@ export function transportHandler<TApi, TMetadata = MessageMetadata>(
         },
       })
 
-      return handler.apply(null, [api, msg.payload, msg.metadata])
+      const result = handler(api, ...msg.payload, msg.metadata)
+      return Promise.resolve(result)
+    }
+
+    Object.defineProperty(intermediateHandler, 'name', {
+      value: `Cheep[${handler.name ?? 'Handler'}]@[${route}]`,
+      configurable: true,
     })
+    return transport.on(route, intermediateHandler)
   }
 
   return {
