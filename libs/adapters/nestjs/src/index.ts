@@ -7,3 +7,5 @@ export type {
   CheepMicroservicesRootConfig,
   CheepNestApi,
 } from './lib/types'
+
+export { TransportToken } from './lib/constants'
