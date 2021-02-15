@@ -5,7 +5,12 @@ import {
 } from '@cheep/transport'
 import { transportApi } from './transport.api'
 import { createRouteBuilderProxy } from './createRouteBuilderProxy'
-import { Api, TransportHandler } from './types'
+import {
+  Api,
+  CallableApi,
+  RouteMapReturn,
+  TransportHandler,
+} from './types'
 
 export interface CheepHandlerOptions<TPrefix> {
   executablePrefixes?: TPrefix[]
@@ -21,9 +26,21 @@ export function transportHandler<
 ): TransportHandler<TApi, TMetadata> {
   const { joinSymbol = '.', executablePrefixes } = options ?? {}
 
-  function onHandler(
-    routePick: (o: any) => any,
-    handler: (...args: any[]) => Promise<unknown | void>,
+  function onHandler<
+    TRoutePick extends RouteMapReturn<unknown[], string[], unknown>,
+    TPayload extends unknown[] = TRoutePick extends RouteMapReturn<
+      infer P,
+      string[],
+      unknown
+    >
+      ? P
+      : never
+  >(
+    routePick: (o: any) => TRoutePick,
+    handler: (
+      api: CallableApi<TApi>,
+      ...args: [...TPayload, TMetadata]
+    ) => Promise<unknown | void>,
   ) {
     const proxy = (routePick(
       createRouteBuilderProxy(joinSymbol),
@@ -32,7 +49,7 @@ export function transportHandler<
     const route = proxy()
 
     const intermediateHandler = (
-      msg: TransportCompactMessage<unknown[]>,
+      msg: TransportCompactMessage<TPayload>,
     ) => {
       const api = transportApi(transport, {
         joinSymbol,
@@ -43,7 +60,11 @@ export function transportHandler<
         },
       })
 
-      const result = handler(api, ...msg.payload, msg.metadata)
+      const result = handler(
+        api,
+        ...msg.payload,
+        msg.metadata as TMetadata,
+      )
       return Promise.resolve(result)
     }
 

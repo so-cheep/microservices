@@ -5,7 +5,7 @@ import {
   MemoryTransport,
   transactionReducer,
 } from '@cheep/transport'
-import { performance, PerformanceObserver } from 'perf_hooks'
+import { performance } from 'perf_hooks'
 import { transportApi } from '../transport.api'
 import { transportHandler } from '../transport.handler'
 import { recursiveApiCaller } from '../recursiveApiCaller'
@@ -19,10 +19,25 @@ type T = {
       $: (arg: {
         socketId: string
       }) => {
-        C: () => number
+        C: () => Promise<number>
         D: () => void
         E: (props: { id: string; count: number }) => Promise<string>
         F: (a1: string, a2: number, a3: boolean) => Promise<string>
+      }
+      X: () => boolean
+    }
+    B2: {
+      _: (
+        routeVar: string,
+      ) => {
+        X: () => void
+        $: (arg: {
+          socketId: string
+        }) => {
+          C2: (arg: {
+            thing: [number, string, boolean, null]
+          }) => Promise<void>
+        }
       }
     }
   }
@@ -37,7 +52,10 @@ type T = {
                   _: (
                     routeModifier: string,
                   ) => {
-                    I: (props: { count: number }) => void
+                    I: (
+                      props: { count: number },
+                      isGood?: boolean,
+                    ) => void
                   }
                 }
               }
@@ -166,10 +184,44 @@ describe('cheep.api', () => {
     handler.on(x => x.A2.B.C, mockHandle)
 
     const routeParam = { socketId: 'wipekafnoeinwef' }
-    console.log(rootApi.A2.B.$(routeParam).C)
 
     await rootApi.A2.B.$(routeParam).C()
 
+    expect(mockHandle).toHaveBeenCalledTimes(1)
+
+    // last arg to function is metadata
+    const meta = mockHandle.mock.calls[0].slice(-1).pop()
+    expect(meta).toMatchObject(expect.objectContaining(routeParam))
+  })
+
+  it('should work with route variable + metadata injection operators', async () => {
+    const transport = new MemoryTransport(
+      {},
+      {
+        jsonDecode: JSON.parse,
+        jsonEncode: JSON.stringify,
+        newId: () => Date.now().toString(),
+      },
+    )
+
+    const rootApi = transportApi<T>(transport, {
+      executablePrefixes: ['A1', 'A2'],
+    })
+
+    const handler = transportHandler<T>(transport, {
+      executablePrefixes: ['A1', 'A2'],
+    })
+
+    const mockHandle = jest.fn().mockResolvedValue(7)
+    handler.on(x => x.A2.B2._('routeString').C2, mockHandle)
+
+    const routeParam = { socketId: 'wipekafnoeinwef' }
+
+    const result = await rootApi.A2.B2._('routeString')
+      .$(routeParam)
+      .C2({ thing: [5, 'x', true, null] })
+
+    expect(result).toBe(7)
     expect(mockHandle).toHaveBeenCalledTimes(1)
 
     // last arg to function is metadata
@@ -243,6 +295,7 @@ describe('cheep.api', () => {
     )
 
     expect(transport.publish).toBeCalledTimes(count)
+    done()
     // expect(avgDuration).toBeLessThan(0.015)
   })
 

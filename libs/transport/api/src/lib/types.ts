@@ -7,7 +7,7 @@ export type CheepOperators = MetadataOperator | RouteVariableOperator
 export const MetadataOperator: MetadataOperator = '$'
 export const RouteVariableOperator: RouteVariableOperator = '_'
 
-export type TransportHandler<TApi, TMetadata> = {
+export type TransportHandler<TApi extends Api, TMetadata> = {
   on: FunctionalHandlerFactory<TApi, TMetadata>
 }
 
@@ -17,17 +17,20 @@ export type TransportHandler<TApi, TMetadata> = {
 // }
 
 // Events
-export type FunctionalHandlerFactory<TApi, TMetadata> = <
-  TEventSelection extends RouteMapReturn<unknown, string[]>,
-  TPayload = TEventSelection extends RouteMapReturn<infer R, string[]>
-    ? R
+export type FunctionalHandlerFactory<TApi extends Api, TMetadata> = <
+  TEventSelection extends RouteMapReturn<unknown[], string[]>,
+  TPayload extends Array<
+    unknown
+  > = TEventSelection extends RouteMapReturn<infer R, string[]>
+    ? R extends Array<unknown>
+      ? R
+      : never
     : never
 >(
   route: (event: RouteMap<TApi>) => TEventSelection,
   handler: (
-    api: TApi,
-    payload: TPayload,
-    metadata: TMetadata,
+    api: CallableApi<TApi>,
+    ...args: [...TPayload, TMetadata]
   ) => unknown | void | Promise<unknown | void>,
 ) => void
 
@@ -36,28 +39,33 @@ export type RouteMap<TRouteMap, TKey extends string[] = string[]> = {
     TRouteMap,
     MetadataOperator
   >]: K extends RouteVariableOperator
-    ? // TODO: support strings or tuples of string
-      (
-        ...args: TRouteMap[K] extends (...args: infer A) => unknown
-          ? A
-          : string[]
-      ) => RouteMap<
-        TRouteMap[K] extends (...args) => infer R ? R : never,
+    ? TRouteMap[K] extends (...args: infer A) => infer InnerMap
+      ? // TODO: support strings or tuples of string
+        (
+          ...args: A
+        ) => CombineWithoutMetadataOperator<InnerMap, [...TKey, K]>
+      : never
+    : // K does not extend RouteVariableOperator
+    TRouteMap[K] extends Api
+    ? // handle case of $ operator, need to merge the return of the $ function with other keys
+      CombineWithoutMetadataOperator<
+        TRouteMap[K],
         [...TKey, K extends string ? K : string]
       >
-    : TRouteMap[K] extends RoutePublishFunction<infer R>
-    ? RouteMapReturn<R, [...TKey, K extends string ? K : string]>
-    : // handle case of $ operator, need to merge the return of the $ function with other keys
-    TRouteMap[K] extends {
-        [MetadataOperator]: (...args: unknown[]) => infer M
-      }
-    ? RouteMap<M, TKey> &
-        RouteMap<
-          TRouteMap[K],
-          [...TKey, K extends string ? K : string]
-        >
-    : RouteMap<TRouteMap[K], [...TKey, K extends string ? K : string]>
+    : TRouteMap[K] extends (...args: infer P) => unknown
+    ? RouteMapReturn<P, [...TKey, K extends string ? K : string]>
+    : never
 }
+
+export type CombineWithoutMetadataOperator<
+  TRouteMap,
+  TKey extends string[]
+> = TRouteMap extends {
+  [MetadataOperator]: (...args: unknown[]) => infer M
+}
+  ? RouteMap<M, TKey> &
+      RouteMap<Omit<TRouteMap, MetadataOperator>, TKey>
+  : RouteMap<TRouteMap, TKey>
 
 /**
  * ensures that the callable api type is awaitable, even for non-promise based handlers, because the transport always adds async
@@ -78,11 +86,17 @@ type EnsurePromise<T> = T extends (...args: infer A) => infer P
     : (...args: A) => Promise<P>
   : never
 
+type UnwrapPromise<T> = T extends Promise<infer P> ? P : T
+
 type RoutePublishFunction<TPayload extends unknown> = (
   payload: TPayload,
 ) => void
 
-type RouteMapReturn<TPayload, TPath, TResult = void> = {
+export type RouteMapReturn<
+  TPayload extends unknown[],
+  TPath,
+  TResult = void
+> = {
   payload: TPayload
   path: TPath
   result: TResult
