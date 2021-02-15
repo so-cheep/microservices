@@ -3,15 +3,15 @@ export function getLeafAddresses<TLeaf>(
   tree: object,
   /** DO NOT PROVIDE, USED FOR RECURSION */
   path: string[] = [],
-): [string, TLeaf][] {
-  const branches = Object.entries(tree).flatMap<[string, TLeaf]>(
+): [string[], TLeaf][] {
+  const branches = Object.entries(tree).flatMap<[string[], TLeaf]>(
     ([key, value]) => {
       const newPath = [...path, key]
       switch (typeof value) {
         case 'object':
-          return getLeafAddresses(value, newPath)
+          return getLeafAddresses<TLeaf>(value, newPath)
         default:
-          return [([newPath, value] as unknown) as [string, TLeaf]]
+          return [[newPath, value as TLeaf]]
       }
     },
   )

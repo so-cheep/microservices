@@ -41,4 +41,19 @@ describe('get leaf addresses', () => {
     expect(results).toContainEqual([['A'], 1])
     expect(results).toContainEqual([['B', '0', 'BB'], 'Q'])
   })
+
+  it('should work with constructors as leaf values', () => {
+    class A {}
+    class B {}
+
+    const obj = {
+      A: A,
+      B: { BB: B },
+    }
+
+    const results = getLeafAddresses(obj)
+
+    expect(results).toContainEqual([['A'], A])
+    expect(results).toContainEqual([['B', 'BB'], B])
+  })
 })

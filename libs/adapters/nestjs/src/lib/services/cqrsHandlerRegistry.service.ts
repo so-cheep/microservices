@@ -23,14 +23,8 @@ import type { Transport } from '@cheep/transport'
 import { ModuleRef } from '@nestjs/core'
 import { HandlerRegistrationError } from '../errors/handlerRegistration.error'
 import { completeModuleHandlerRegistration } from '../util/moduleRegistry'
+import { getFunctionValues } from '../util/getFunctionValues'
 
-const NestLifecycleFunctions = [
-  'constructor',
-  'onModuleInit',
-  'onApplicationBootstrap',
-  'onModuleDestroy',
-  'onApplicationShutdown',
-]
 @Injectable()
 export class CqrsHandlerRegistryService implements OnModuleInit {
   private logger: Logger
@@ -164,20 +158,4 @@ async function recurseNestHandlerMap(
     }
     return Object.fromEntries(await Promise.all(entries))
   }
-}
-
-// eslint-disable-next-line @typescript-eslint/ban-types
-function getFunctionValues<T extends object>(x: T): T {
-  const proto = Object.getPrototypeOf(x)
-  return Object.fromEntries(
-    Reflect.ownKeys(proto)
-      .filter(
-        key =>
-          !NestLifecycleFunctions.includes(String(key)) &&
-          typeof Reflect.get(x, key) === 'function',
-      )
-      .map(key => {
-        return [key, x[key].bind(x)]
-      }),
-  ) as T
 }
