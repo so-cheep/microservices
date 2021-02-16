@@ -8,8 +8,8 @@ import { UserQueries } from './user.query.service'
   imports: [
     CheepMicroservicesModule.forModule<UserApi, never>({
       handlers: {
-        Command: UserCommands,
-        Query: UserQueries,
+        Command: { User: UserCommands },
+        Query: { User: UserQueries },
       },
       listenEvery: {
         Event: true,

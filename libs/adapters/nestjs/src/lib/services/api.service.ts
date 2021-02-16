@@ -129,15 +129,16 @@ export class CheepApi<
       this.moduleConfig.listenEvery ?? {},
     ).map(([path]) => path.join(this.getMergedOptions().joinSymbol))
 
-    function handler(item: TransportCompactMessage) {
+    function handler(item: TransportCompactMessage<unknown[]>) {
+      const processed = processArgsSafely(item.payload)
       this.event$.next({
         metadata: item.metadata,
         // the event function type requires a single arg, so this is safe
-        payload: (item.payload as unknown[]).slice(0, 1).shift(),
+        payload: processed.payload,
         // split by `.` then remove the first, which is the EventRouteKey (Event)
         type: item.route.split('.').slice(1),
         route: item.route,
-        referrer: makeReferrer(item),
+        referrer: processed.referrer,
       })
     }
     Object.defineProperty(handler, 'name', {
@@ -145,7 +146,7 @@ export class CheepApi<
       configurable: true,
     })
 
-    this.transport.onEvery(listenPaths, handler)
+    this.transport.onEvery(listenPaths, handler.bind(this))
   }
 
   //#region helpers

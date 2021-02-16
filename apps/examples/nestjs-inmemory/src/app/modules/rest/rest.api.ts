@@ -1,4 +1,5 @@
 export type GatewayApi = never
 
 export type ConsumedApis = import('../user/user.api').UserApi &
-  import('../groups/groups.api').GroupApi
+  import('../groups/groups.api').GroupApi &
+  import('../clientAccess/clientAccess.api').ClientAccessApi

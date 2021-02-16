@@ -16,7 +16,6 @@ import { TunnelGateway } from './tunnel.gateway'
       listenEvery: {},
     }),
   ],
-  controllers: [TunnelGateway],
-  providers: [],
+  providers: [TunnelGateway],
 })
-export class GatewayModule {}
+export class ClientAccessModule {}

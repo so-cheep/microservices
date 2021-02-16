@@ -1,15 +1,16 @@
-import { OnModuleInit } from '@nestjs/common'
+import { Injectable, OnModuleInit } from '@nestjs/common'
 import { HttpAdapterHost } from '@nestjs/core'
 import { Subject } from 'rxjs'
 import { Server, Socket } from 'socket.io'
 import { ExpressAdapter } from '@nestjs/platform-express'
-import { CompleteMessage, createRouter } from '@cheep/router'
+import { createRouter } from '@cheep/router'
 import { TransportBase } from '@cheep/transport'
 
 /**
  * because of a conflicting version of Socket.io used in another demo, we're NOT using the nest socketio gateway,
  * instead we're just rolling our own simple one
  */
+@Injectable()
 export class TunnelGateway implements OnModuleInit {
   public readonly routerAddress = 'ClientAccess'
   constructor(
@@ -32,6 +33,7 @@ export class TunnelGateway implements OnModuleInit {
         serveClient: false,
       },
     )
+
     this.socketServer.on('connection', (socket: Socket) =>
       this.handleConnection(socket),
     )
@@ -55,11 +57,12 @@ export class TunnelGateway implements OnModuleInit {
   }
 
   private handleConnection(client: Socket) {
+    console.log('New connection!', client.id)
     // store the socket
     this.activeTunnels.set(client.id, client)
     // just collect all events and send them onward
     // stripping off the event name, which we don't use
-    client.onAny((_, ...args) =>
+    client.onAny((_, args) =>
       this.inbound$.next({
         tunnelId: { clientId: client.id },
         message: args,
@@ -72,6 +75,6 @@ export class TunnelGateway implements OnModuleInit {
 
   /** send a data payload to the correct tunnel */
   private send(tunnelId: { clientId: string }, data: unknown) {
-    this.activeTunnels.get(tunnelId.clientId).send(data)
+    this.activeTunnels.get(tunnelId.clientId)?.send(data)
   }
 }

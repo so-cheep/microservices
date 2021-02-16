@@ -10,21 +10,18 @@ import type {
   CheepMicroservicesModuleConfig,
   CheepMicroservicesRootConfig,
 } from './types'
-import {
-  ModuleConfigToken,
-  RootConfigToken,
-  TransportToken,
-} from './constants'
+import { ModuleConfigToken, RootConfigToken } from './constants'
 import { CheepApi } from './services/api.service'
-import type {
-  TransportBase,
-  TransportCompactMessage,
-} from '@cheep/transport'
+import type { TransportCompactMessage } from '@cheep/transport'
 import { TransportApi } from '@cheep/transport-api'
 import { getLeafAddresses } from './util/getLeafAddresses'
 import { ModuleRef } from '@nestjs/core'
 import { getFunctionValues } from './util/getFunctionValues'
 import { makeSafeArgs } from './util/makeSafeArgs'
+import {
+  addModuleRegistrationRequired,
+  completeModuleRegistration,
+} from './util/handlerRegistration'
 
 @Module({})
 export class CheepMicroservicesModule<
@@ -37,6 +34,8 @@ export class CheepMicroservicesModule<
   >(
     config: CheepMicroservicesModuleConfig<TModuleApi, TRemoteApi>,
   ): DynamicModule {
+    const registrationId = Date.now() + Math.random()
+    addModuleRegistrationRequired(registrationId)
     return {
       module: CheepMicroservicesModule,
       providers: [
@@ -44,6 +43,10 @@ export class CheepMicroservicesModule<
         {
           provide: ModuleConfigToken,
           useValue: config,
+        },
+        {
+          provide: 'PRIVATE_REGISTRATION_ID',
+          useValue: Date.now() + Math.random(),
         },
       ],
       exports: [CheepApi],
@@ -59,11 +62,13 @@ export class CheepMicroservicesModule<
       TRemoteApi
     >,
     private moduleRef: ModuleRef,
+    @Inject('PRIVATE_REGISTRATION_ID') private registrationId: number,
   ) {}
 
   onModuleInit() {
     if (this.config?.handlers) {
       this.registerHandlers()
+      completeModuleRegistration(this.registrationId)
     }
     // const handler = transportHandler<TModuleApi | TRemoteApi>(
     //   this.transport,
@@ -89,7 +94,7 @@ export class CheepMicroservicesModule<
           // add the function name onto the path and handle with fn
           const route = path
             .concat([fnName])
-            .join(this.config.joinSymbol)
+            .join(this.rootConfig.joinSymbol)
           // build the handler function
           const handler = async (
             item: TransportCompactMessage<unknown[]>,
@@ -101,7 +106,7 @@ export class CheepMicroservicesModule<
 
           // set the name of the handler for debugging
           Object.defineProperty(handler, 'name', {
-            value: `Cheep[${fnName ?? 'Handler'}]@[${route}]`,
+            value: `Cheep[${service.__proto__.constructor.name}.${fnName}]@[${route}]`,
             configurable: true,
           })
 

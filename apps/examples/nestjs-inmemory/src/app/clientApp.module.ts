@@ -1,7 +1,6 @@
-import { MicroserviceTransportUtils } from '@cheep/microservices'
 import {
-  CheepMicroservicesModule,
   CheepTransportModule,
+  NestTransportUtils,
 } from '@cheep/nestjs'
 import {
   callStackReducer,
@@ -22,10 +21,7 @@ import { AppMetadata } from './types'
         {
           metadataReducers: [
             callStackReducer(),
-            transactionReducer(
-              MicroserviceTransportUtils.newId,
-              Date.now,
-            ),
+            transactionReducer(NestTransportUtils.newId, Date.now),
             createdAtReducer(Date.now),
           ],
           metadataValidator: [
@@ -33,12 +29,17 @@ import { AppMetadata } from './types'
             transactionDurationValidator(9999, Date.parse, Date.now),
           ],
         },
-        MicroserviceTransportUtils,
+        NestTransportUtils,
       ),
-      executablePrefixes: ['Command', 'Query'],
+      executablePrefixes: [
+        'Command',
+        'Query',
+        'Server.Command',
+        'Server.Query',
+      ],
       joinSymbol: '.',
     }),
     ClientModule,
   ],
 })
-export class AppModule {}
+export class ClientAppModule {}

@@ -16,5 +16,6 @@ export function transportApi<TApi extends Api>(
     executablePrefixes: <string[]>executablePrefixes,
     joinSymbol,
     referrer,
+    argsProcessor: options.argsProcessor,
   })
 }

@@ -3,6 +3,7 @@ import { TransportBase } from '@cheep/transport'
 import { Module, OnModuleInit } from '@nestjs/common'
 import { inspect } from 'util'
 import { ClientApi, ClientRemoteApi } from './client.api'
+import { ClientController } from './client.controller'
 import { SocketService } from './socket.service'
 
 @Module({
@@ -13,6 +14,7 @@ import { SocketService } from './socket.service'
     }),
   ],
   providers: [SocketService],
+  controllers: [ClientController],
 })
 export class ClientModule implements OnModuleInit {
   constructor(private transport: TransportBase) {}

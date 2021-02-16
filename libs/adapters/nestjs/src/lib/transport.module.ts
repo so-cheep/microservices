@@ -15,6 +15,7 @@ import {
 } from './constants'
 
 import { CheepMicroservicesRootConfig } from './types'
+import { onHandlerRegistrationComplete } from './util/handlerRegistration'
 const logger = new Logger('CheepTransport')
 /**
  * the core module is used for storing globally available config, which is just the transport for now

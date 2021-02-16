@@ -322,7 +322,7 @@ export abstract class TransportBase implements Transport {
 
     // find any prefix handlers that are declared as route handlers
     const rawPrefixHandlers = registeredPrefixes.flatMap(p => [
-      ...this.rawHandlers.get(p),
+      ...(this.rawHandlers.get(p) ?? []),
     ])
     // .filter(handler => Reflect.hasMetadata(HANDLER_META, handler))
 

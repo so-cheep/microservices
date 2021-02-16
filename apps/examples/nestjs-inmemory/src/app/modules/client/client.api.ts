@@ -1,6 +1,10 @@
 /* eslint-disable @typescript-eslint/ban-types */
 export type ClientApi = {
-  Command: {}
+  Command: {
+    XuLi: {
+      doTheThing(arg: { num: number }): Promise<boolean>
+    }
+  }
   Query: {}
   Event: {}
 }

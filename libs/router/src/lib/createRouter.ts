@@ -1,4 +1,5 @@
 import {
+  RawHandler,
   Transport,
   TransportCompactMessage,
   TransportMessage,
@@ -27,33 +28,36 @@ export function createRouter<
     `^${routerAddress.replace('.', '\\.')}.`,
   )
 
+  const onEveryHandler: RawHandler = (item, msg) => {
+    // remove the routerAddress from the route
+    const revisedRoute = item.route.replace(routeRewriteRegExp, '')
+    const revisedItem = { ...msg, ...item, route: revisedRoute }
+
+    // route the message to next hops
+    nextHops.forEach(h => sendNextHop(h, revisedItem))
+
+    if (msg.replyTo) {
+      const rpcPromise = new Promise((resolve, reject) => {
+        outstandingRpcs.set(msg.correlationId, resolve)
+        setTimeout(() => {
+          outstandingRpcs.delete(msg.correlationId)
+          reject('Router RPC Timeout')
+        }, rpcTimeout)
+      })
+      return rpcPromise
+    }
+
+    // if not an RPC, the best we can do is send on to next hop, so just resolve
+    return Promise.resolve()
+  }
+
+  Object.defineProperty(onEveryHandler, 'name', {
+    value: `CheepRouter@[${routerAddress}]`,
+    configurable: true,
+  })
+
   // subscribe to anything destined for the router on the transport
-  transport.onEvery(
-    routerAddress,
-    (item, msg) => {
-      // remove the routerAddress from the route
-      const revisedRoute = item.route.replace(routeRewriteRegExp, '')
-      const revisedItem = { ...msg, ...item, route: revisedRoute }
-
-      // route the message to next hops
-      nextHops.forEach(h => sendNextHop(h, revisedItem))
-
-      if (msg.replyTo) {
-        const rpcPromise = new Promise((resolve, reject) => {
-          outstandingRpcs.set(msg.correlationId, resolve)
-          setTimeout(() => {
-            outstandingRpcs.delete(msg.correlationId)
-            reject('Router RPC Timeout')
-          }, rpcTimeout)
-        })
-        return rpcPromise
-      }
-
-      // if not an RPC, the best we can do is send on to next hop, so just resolve
-      return Promise.resolve()
-    },
-    true,
-  )
+  transport.onEvery(routerAddress, onEveryHandler, true)
 
   nextHops.forEach(target => {
     switch (target.type) {
@@ -75,7 +79,7 @@ export function createRouter<
               },
               referrer: {
                 metadata: item.metadata,
-                route: item.route,
+                route: routerAddress,
               },
             }
             if (item.replyTo && item.correlationId) {

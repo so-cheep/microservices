@@ -6,3 +6,4 @@ export type {
   CheepMicroservicesModuleConfig,
   CheepMicroservicesRootConfig,
 } from './lib/types'
+export * from './lib/util/transportUtils'
