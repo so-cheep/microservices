@@ -1,18 +1,20 @@
 import { CheepMicroservicesModule } from '@cheep/nestjs'
 import { Module } from '@nestjs/common'
-import { GroupApi, newApi } from './groups.api'
+import { GroupApi } from './groups.api'
 import { GroupCommands } from './group.commands'
 import { GroupQueries } from './group.queries'
 import { UserEventHandler } from './user.eventHandler'
+import { GroupEventHandler } from './group.eventHandler'
 
 @Module({
   imports: [
-    CheepMicroservicesModule.forModule<newApi, never>({
+    CheepMicroservicesModule.forModule<GroupApi, never>({
       handlers: {
         Query: { Group: GroupQueries },
         Command: { Group: GroupCommands },
         Event: {
           User: UserEventHandler,
+          Group: GroupEventHandler,
         },
       },
       listenEvery: {
@@ -20,6 +22,11 @@ import { UserEventHandler } from './user.eventHandler'
       },
     }),
   ],
-  providers: [GroupQueries, GroupCommands],
+  providers: [
+    GroupQueries,
+    GroupCommands,
+    UserEventHandler,
+    GroupEventHandler,
+  ],
 })
 export class GroupModule {}

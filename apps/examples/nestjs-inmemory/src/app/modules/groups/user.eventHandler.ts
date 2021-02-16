@@ -1,10 +1,16 @@
+import { CheepApi } from '@cheep/nestjs'
 import { Injectable } from '@nestjs/common'
 import { User } from '../user/user.api'
-import { userApi } from './groups.api'
+import { GroupApi, RemoteApi } from './groups.api'
 
-type userEvents = userApi['Event']['User']
+type events = RemoteApi['Event']['User']
 @Injectable()
-export class UserEventHandler implements Partial<userEvents> {
-  created: (user: User) => {}
-  updated: (user: User) => void
+export class UserEventHandler implements Partial<events> {
+  constructor(private api: CheepApi<RemoteApi, GroupApi>) {}
+  created(user: User) {
+    console.log('User created handler', user)
+  }
+  updated(user: User) {
+    console.log('User updated handler', user)
+  }
 }

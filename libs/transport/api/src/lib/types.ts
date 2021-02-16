@@ -1,3 +1,5 @@
+import type { MessageMetadata, Referrer } from '@cheep/transport'
+
 export type Api = Record<string, unknown>
 
 export type MetadataOperator = '$'
@@ -54,7 +56,10 @@ export type RouteMap<TRouteMap, TKey extends string[] = string[]> = {
       >
     : TRouteMap[K] extends (...args: infer P) => unknown
     ? RouteMapReturn<P, [...TKey, K extends string ? K : string]>
-    : never
+    : CombineWithoutMetadataOperator<
+        TRouteMap[K],
+        [...TKey, K extends string ? K : string]
+      >
 }
 
 export type CombineWithoutMetadataOperator<
@@ -72,11 +77,14 @@ export type CombineWithoutMetadataOperator<
  *
  * also adds exceptions for the operator types
  */
-export type CallableApi<TApi extends Api> = {
+export type CallableApi<TApi> = {
   [K in keyof TApi]: TApi[K] extends Record<string, unknown>
     ? CallableApi<TApi[K]>
     : K extends CheepOperators
     ? TApi[K]
+    : // add catch here if we get never from ensure promise, assume it's a class in the api definition, or something else we should be stepping into
+    EnsurePromise<TApi[K]> extends never
+    ? CallableApi<TApi[K]>
     : EnsurePromise<TApi[K]>
 }
 
@@ -100,4 +108,17 @@ export type RouteMapReturn<
   payload: TPayload
   path: TPath
   result: TResult
+}
+
+export interface TransportApiOptions<TPrefix> {
+  executablePrefixes?: TPrefix[]
+  joinSymbol?: string
+  referrer?: {
+    route: string
+    metadata: MessageMetadata
+  }
+  /** optional function to extract the referrer from the args array */
+  argsProcessor?: (
+    args: unknown[],
+  ) => { payload: unknown; referrer?: Referrer }
 }

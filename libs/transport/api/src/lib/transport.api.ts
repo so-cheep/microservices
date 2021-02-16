@@ -1,15 +1,6 @@
-import { MessageMetadata, Transport } from '@cheep/transport'
+import { Transport } from '@cheep/transport'
 import { recursiveApiCaller } from './recursiveApiCaller'
-import { Api, CallableApi } from './types'
-
-export interface TransportApiOptions<TPrefix> {
-  executablePrefixes?: TPrefix[]
-  joinSymbol?: string
-  referrer?: {
-    route: string
-    metadata: MessageMetadata
-  }
-}
+import { Api, CallableApi, TransportApiOptions } from './types'
 
 export function transportApi<TApi extends Api>(
   transport: Transport,

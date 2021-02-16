@@ -1,6 +1,4 @@
-import { CheepNestApi } from '@cheep/nestjs'
-import { AppMetadata } from '../../types'
-import { User } from '../user/user.api'
+import type { Referrer } from '@cheep/transport'
 import type { GroupCommands } from './group.commands'
 import type { GroupQueries } from './group.queries'
 
@@ -16,42 +14,18 @@ export interface UserGroup {
   name: string
 }
 
-export type GroupApi = CheepNestApi<
-  'Group',
-  GroupQueries,
-  GroupCommands,
-  {
-    created: (user: Group) => void
-    updated: (user: Group) => void
-    Members: {
-      changed: (group: Group) => void
-    }
-  },
-  AppMetadata
->
-
-export type newApi = {
+export type GroupApi = {
   Query: { Group: GroupQueries }
   Command: { Group: GroupCommands }
   Event: {
     Group: {
-      created: (user: Group) => void
-      updated: (user: Group) => void
+      created: (group: Group, ref?: Referrer) => void
+      updated: (group: Group, ref?: Referrer) => void
       Members: {
-        changed: (group: Group) => void
+        changed: (group: Group, ref?: Referrer) => void
       }
     }
   }
 }
 
-export type userApi = {
-  Event: {
-    User: {
-      created: (user: string) => void
-      updated: (user: User) => void
-      Members: {
-        changed: (user: User) => void
-      }
-    }
-  }
-}
+export type RemoteApi = import('../user/user.api').UserApi

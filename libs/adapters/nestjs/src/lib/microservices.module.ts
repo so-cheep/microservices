@@ -10,10 +10,12 @@ import type {
   CheepMicroservicesModuleConfig,
   CheepMicroservicesRootConfig,
 } from './types'
-import { ModuleConfigToken } from './constants'
+import {
+  ModuleConfigToken,
+  RootConfigToken,
+  TransportToken,
+} from './constants'
 import { CheepApi } from './services/api.service'
-import { CheepEvents } from './services/events.service'
-import { CheepTransportModule } from './modules/core/cheepTransport.module'
 import type {
   TransportBase,
   TransportCompactMessage,
@@ -29,16 +31,6 @@ export class CheepMicroservicesModule<
   TModuleApi extends TransportApi,
   TRemoteApi extends TransportApi
 > implements OnModuleInit {
-  static forRoot(
-    options: CheepMicroservicesRootConfig,
-  ): DynamicModule {
-    options.transport.init()
-    return {
-      module: CheepMicroservicesModule,
-      imports: [CheepTransportModule.forRoot(options.transport)],
-    }
-  }
-
   static forModule<
     TModuleApi extends TransportApi,
     TRemoteApi extends TransportApi
@@ -48,19 +40,19 @@ export class CheepMicroservicesModule<
     return {
       module: CheepMicroservicesModule,
       providers: [
-        CheepEvents,
         CheepApi,
         {
           provide: ModuleConfigToken,
           useValue: config,
         },
       ],
-      exports: [CheepEvents, CheepApi],
+      exports: [CheepApi],
     }
   }
 
   constructor(
-    private transport: TransportBase,
+    @Inject(RootConfigToken)
+    private rootConfig: CheepMicroservicesRootConfig,
     @Inject(ModuleConfigToken)
     private config: CheepMicroservicesModuleConfig<
       TModuleApi,
@@ -85,9 +77,9 @@ export class CheepMicroservicesModule<
 
     for (const [path, token] of leaves) {
       // check dep injection
-      const service = this.moduleRef
-        .get(token as Type, { strict: false })
-        .catch(() => undefined)
+      const service = this.moduleRef.get(token as Type, {
+        strict: false,
+      })
 
       if (service) {
         const methods = getFunctionValues<
@@ -113,7 +105,7 @@ export class CheepMicroservicesModule<
             configurable: true,
           })
 
-          this.transport.on(route, handler)
+          this.rootConfig.transport.on(route, handler)
         })
       }
     }

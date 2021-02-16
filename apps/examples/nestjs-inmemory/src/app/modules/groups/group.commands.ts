@@ -1,5 +1,5 @@
-import { CheepApi, CheepEvents } from '@cheep/nestjs'
-import { Injectable, OnApplicationBootstrap } from '@nestjs/common'
+import { CheepApi } from '@cheep/nestjs'
+import { Injectable } from '@nestjs/common'
 import { Group, GroupApi } from './groups.api'
 import * as faker from 'faker'
 import { AppMetadata } from '../../types'
@@ -7,24 +7,12 @@ import { GroupQueries } from './group.queries'
 import { Referrer } from '@cheep/transport'
 
 @Injectable()
-export class GroupCommands implements OnApplicationBootstrap {
+export class GroupCommands {
   constructor(
-    private events: CheepEvents<GroupApi, GroupApi>,
     private api: CheepApi<GroupApi>,
     private query: GroupQueries,
   ) {}
 
-  onApplicationBootstrap() {
-    this.events.on(
-      e => e.Group.updated,
-      (group, x) => {
-        this.api.Command.Group.addUser(
-          { groupId: group.id, userId: 1 },
-          x,
-        )
-      },
-    )
-  }
   async create(
     props: { group: Omit<Group, 'id' | 'members'> },
     meta?: Referrer<AppMetadata>,
@@ -35,9 +23,9 @@ export class GroupCommands implements OnApplicationBootstrap {
       members: [],
     }
     // simulate long running creation process!
-    this.events.publish.Group.created(newGroup, meta)
+    await this.api.do.Event.Group.created(newGroup, meta)
     setTimeout(
-      () => this.events.publish.Group.updated(newGroup, meta),
+      () => this.api.do.Event.Group.updated(newGroup, meta),
       1000,
     )
     return newGroup.id
@@ -57,8 +45,8 @@ export class GroupCommands implements OnApplicationBootstrap {
     }
 
     await Promise.all([
-      this.events.publish.Group.updated(updated, meta),
-      this.events.publish.Group.Members.changed(updated, meta),
+      this.api.do.Event.Group.updated(updated, meta),
+      this.api.do.Event.Group.Members.changed(updated, meta),
     ])
   }
 }

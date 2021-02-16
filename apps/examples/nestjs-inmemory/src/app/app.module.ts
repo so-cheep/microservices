@@ -1,5 +1,5 @@
 import { MicroserviceTransportUtils } from '@cheep/microservices'
-import { CheepMicroservicesModule } from '@cheep/nestjs'
+import { CheepTransportModule } from '@cheep/nestjs'
 import {
   callStackReducer,
   callStackValidator,
@@ -9,14 +9,14 @@ import {
   transactionReducer,
 } from '@cheep/transport'
 import { Module } from '@nestjs/common'
-import { GatewayModule } from './modules/gateway/gateway.module'
 import { GroupModule } from './modules/groups/group.module'
+import { RestModule } from './modules/rest/rest.module'
 import { UserModule } from './modules/user/user.module'
 import { AppMetadata } from './types'
 
 @Module({
   imports: [
-    CheepMicroservicesModule.forRoot({
+    CheepTransportModule.forRoot({
       transport: new MemoryTransport<AppMetadata>(
         {
           metadataReducers: [
@@ -34,10 +34,12 @@ import { AppMetadata } from './types'
         },
         MicroserviceTransportUtils,
       ),
+      executablePrefixes: ['Command', 'Query'],
+      joinSymbol: '.',
     }),
     UserModule,
     GroupModule,
-    GatewayModule,
+    RestModule,
   ],
 })
 export class AppModule {}

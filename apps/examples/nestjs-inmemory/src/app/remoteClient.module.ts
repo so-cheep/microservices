@@ -1,5 +1,8 @@
 import { MicroserviceTransportUtils } from '@cheep/microservices'
-import { CheepMicroservicesModule } from '@cheep/nestjs'
+import {
+  CheepMicroservicesModule,
+  CheepTransportModule,
+} from '@cheep/nestjs'
 import {
   callStackReducer,
   callStackValidator,
@@ -14,7 +17,7 @@ import { AppMetadata } from './types'
 
 @Module({
   imports: [
-    CheepMicroservicesModule.forRoot({
+    CheepTransportModule.forRoot({
       transport: new MemoryTransport<AppMetadata>(
         {
           metadataReducers: [
@@ -32,6 +35,8 @@ import { AppMetadata } from './types'
         },
         MicroserviceTransportUtils,
       ),
+      executablePrefixes: ['Command', 'Query'],
+      joinSymbol: '.',
     }),
     ClientModule,
   ],

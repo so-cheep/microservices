@@ -1,27 +1,24 @@
-import { CheepApi, CheepEvents } from '@cheep/nestjs'
+import { CheepApi } from '@cheep/nestjs'
 import {
   Controller,
   Get,
   OnApplicationBootstrap,
 } from '@nestjs/common'
-import { ConsumedApis } from './gateway.api'
+import { ConsumedApis } from './rest.api'
 import * as faker from 'faker'
 
 @Controller()
-export class GatewayService implements OnApplicationBootstrap {
-  constructor(
-    private client: CheepApi<ConsumedApis>,
-    private events: CheepEvents<ConsumedApis>,
-  ) {}
+export class RestService implements OnApplicationBootstrap {
+  constructor(private client: CheepApi<ConsumedApis>) {}
 
   onApplicationBootstrap() {
-    const x$ = this.events.observe()
+    const x$ = this.client.observe()
 
     x$.subscribe(e => {
       console.log('EVENT', e.type, e.payload, e.metadata),
         console.log(
           'Event span:',
-          new Date(e.metadata.transactionStartedAt),
+          new Date((e as any).metadata.transactionStartedAt),
           '->',
           new Date(),
         )
@@ -30,36 +27,36 @@ export class GatewayService implements OnApplicationBootstrap {
 
   @Get('users')
   async getUsers() {
-    return this.client.Query.User.Test.getAll()
+    return this.client.do.Query.User.getAll()
   }
 
   @Get('users/create')
   async createUser() {
-    const id = await this.client.Command.User.create({
+    const id = await this.client.do.Command.User.create({
       user: {
         email: faker.internet.email(),
         name: faker.name.findName(),
       },
     })
 
-    return this.client.Query.User.Test.getById({ id })
+    return this.client.do.Query.User.getById({ id })
   }
 
   @Get('groups')
   async getGroups() {
-    return this.client.Query.Group.getAll()
+    return this.client.do.Query.Group.getAll()
   }
 
   @Get('groups/create')
   async createGroup() {
-    const id = await this.client.Command.Group.create({
+    const id = await this.client.do.Command.Group.create({
       group: {
         name: faker.commerce.department(),
         color: faker.random.arrayElement(['red', 'blue']),
       },
     })
 
-    return this.client.Query.Group.getById({ id })
+    return this.client.do.Query.Group.getById({ id })
   }
 
   /**
@@ -68,6 +65,6 @@ export class GatewayService implements OnApplicationBootstrap {
    */
   @Get('test')
   async test() {
-    return await this.client.Command.User['thisIsPrivate'](true)
+    return await this.client.do.Command.User['thisIsPrivate'](true)
   }
 }

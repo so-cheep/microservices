@@ -4,7 +4,8 @@ import type {
 } from '@cheep/transport-api'
 import type { Transport } from '@cheep/transport'
 
-export interface CheepMicroservicesRootConfig {
+export interface CheepMicroservicesRootConfig
+  extends CheepHandlerOptions<string> {
   transport: Transport
 }
 

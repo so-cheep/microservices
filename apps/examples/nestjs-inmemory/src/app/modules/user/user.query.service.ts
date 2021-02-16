@@ -1,4 +1,4 @@
-import { CheepEvents } from '@cheep/nestjs'
+import { CheepApi } from '@cheep/nestjs'
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common'
 import { User, UserApi } from './user.api'
 
@@ -8,16 +8,15 @@ export class UserQueries implements OnApplicationBootstrap {
     { id: 0, name: 'default', email: 'default' },
   ]
 
-  constructor(private events: CheepEvents<UserApi>) {}
+  constructor(private api: CheepApi<UserApi>) {}
 
   onApplicationBootstrap() {
     // update query model from events!
-    this.events.on(
-      e => e.User.created,
-      (user, thing) => {
-        this.users.push(user)
-      },
-    )
+    this.api
+      .observe(e => [e.Event.User.created])
+      .subscribe(({ payload }) => {
+        this.users.push(payload[0])
+      })
   }
 
   async getById(props: { id: number }): Promise<User> {

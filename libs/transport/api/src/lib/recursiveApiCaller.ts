@@ -1,23 +1,13 @@
 import { MessageMetadata, Transport } from '@cheep/transport'
-import { MetadataOperator, RouteVariableOperator } from './types'
-
-interface Options {
-  joinSymbol: string
-  executablePrefixes?: string[]
-  referrer?: {
-    route: string
-    metadata: MessageMetadata
-  }
-  routeRewrite?: (
-    routePath: string[],
-    $args: (string | Record<string, unknown>)[],
-    routeMetadata: Record<string, unknown>,
-  ) => string[]
-}
+import {
+  MetadataOperator,
+  RouteVariableOperator,
+  TransportApiOptions,
+} from './types'
 
 export function recursiveApiCaller(
   transport: Transport,
-  options: Options,
+  options: TransportApiOptions<string>,
   /** only needed internally, **DO NOT SET** */
   path: string[] = [],
   routeMetadata: Record<string, unknown> = {},
@@ -80,7 +70,7 @@ export function recursiveApiCaller(
           const {
             joinSymbol,
             executablePrefixes = [],
-            referrer,
+            referrer: providedReferrer,
           } = options
 
           const route = path.join(joinSymbol)
@@ -89,10 +79,15 @@ export function recursiveApiCaller(
             route.startsWith(prefix + joinSymbol),
           )
 
+          // optionally process the args to extract the referrer
+          const { payload, referrer } = options.argsProcessor
+            ? options.argsProcessor(args)
+            : { payload: args, referrer: providedReferrer }
+
           if (isExecutable) {
             return transport.execute({
               route,
-              payload: args,
+              payload,
               metadata: routeMetadata,
               referrer,
             })
@@ -100,7 +95,7 @@ export function recursiveApiCaller(
 
           return transport.publish({
             route,
-            payload: args,
+            payload,
             metadata: routeMetadata,
             referrer,
           })

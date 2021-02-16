@@ -7,10 +7,13 @@ import { UserQueries } from './user.query.service'
 @Module({
   imports: [
     CheepMicroservicesModule.forModule<UserApi, never>({
-      moduleName: 'User',
-      queryHandlers: { Test: UserQueries },
-      commandHandlers: UserCommands,
-      listenEventsFrom: [],
+      handlers: {
+        Command: UserCommands,
+        Query: UserQueries,
+      },
+      listenEvery: {
+        Event: true,
+      },
     }),
   ],
   providers: [UserQueries, UserCommands],

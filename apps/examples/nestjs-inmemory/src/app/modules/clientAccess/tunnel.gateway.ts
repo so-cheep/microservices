@@ -1,9 +1,9 @@
-import { OnApplicationBootstrap, OnModuleInit } from '@nestjs/common'
+import { OnModuleInit } from '@nestjs/common'
 import { HttpAdapterHost } from '@nestjs/core'
 import { Subject } from 'rxjs'
 import { Server, Socket } from 'socket.io'
 import { ExpressAdapter } from '@nestjs/platform-express'
-import { createRouter } from '@cheep/router'
+import { CompleteMessage, createRouter } from '@cheep/router'
 import { TransportBase } from '@cheep/transport'
 
 /**
@@ -11,7 +11,7 @@ import { TransportBase } from '@cheep/transport'
  * instead we're just rolling our own simple one
  */
 export class TunnelGateway implements OnModuleInit {
-  public readonly routerAddress = 'RemoteClient'
+  public readonly routerAddress = 'ClientAccess'
   constructor(
     private adapterHost: HttpAdapterHost<ExpressAdapter>,
     private transport: TransportBase,
@@ -19,7 +19,7 @@ export class TunnelGateway implements OnModuleInit {
 
   private activeTunnels = new Map<string, Socket>()
   private inbound$ = new Subject<{
-    tunnelId: { socketId: string }
+    tunnelId: { clientId: string }
     message: unknown
   }>()
   private socketServer: Server
@@ -42,8 +42,11 @@ export class TunnelGateway implements OnModuleInit {
       transport: this.transport,
       nextHops: [
         {
-          exampleTunnelId: { socketId: '' },
-          registerReceiver: rcv => this.inbound$.subscribe(rcv),
+          exampleTunnelId: { clientId: '' },
+          registerReceiver: rcv =>
+            this.inbound$.subscribe({
+              next: x => rcv(x.tunnelId, x.message as any),
+            }),
           send: (tunnelId, data) => this.send(tunnelId, data),
           type: 'TUNNEL',
         },
@@ -58,7 +61,7 @@ export class TunnelGateway implements OnModuleInit {
     // stripping off the event name, which we don't use
     client.onAny((_, ...args) =>
       this.inbound$.next({
-        tunnelId: { socketId: client.id },
+        tunnelId: { clientId: client.id },
         message: args,
       }),
     )
@@ -68,7 +71,7 @@ export class TunnelGateway implements OnModuleInit {
   }
 
   /** send a data payload to the correct tunnel */
-  private send(tunnelId: { socketId: string }, data: unknown) {
-    this.activeTunnels.get(tunnelId.socketId).send(data)
+  private send(tunnelId: { clientId: string }, data: unknown) {
+    this.activeTunnels.get(tunnelId.clientId).send(data)
   }
 }
