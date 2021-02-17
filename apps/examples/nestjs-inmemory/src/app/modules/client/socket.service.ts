@@ -1,17 +1,18 @@
+import { CheepApi } from '@cheep/nestjs'
 import { createRouter } from '@cheep/router'
 import { TransportBase } from '@cheep/transport'
-import {
-  Injectable,
-  OnApplicationBootstrap,
-  OnModuleInit,
-} from '@nestjs/common'
+import { Injectable, OnModuleInit } from '@nestjs/common'
 import { io, Socket } from 'socket.io-client'
 import { inspect } from 'util'
+import { ClientApi } from './client.api'
 
 @Injectable()
 export class SocketService implements OnModuleInit {
   private socket: Socket
-  constructor(private transport: TransportBase) {}
+  constructor(
+    private transport: TransportBase,
+    private api: CheepApi<ClientApi>,
+  ) {}
 
   onModuleInit() {
     // connect socket.io
@@ -22,16 +23,24 @@ export class SocketService implements OnModuleInit {
       transport: this.transport,
       nextHops: [
         {
-          exampleTunnelId: { clientId: '' },
+          exampleTunnelId: {},
           type: 'TUNNEL',
-          registerReceiver: rcv => this.socket.onAny(rcv),
-          send: (tunnelId, data) => this.socket.send(data),
+          registerReceiver: rcv =>
+            this.socket.onAny((event, data) => rcv({ event }, data)),
+          send: (_, data) => {
+            console.log('SOCKET SENDING', data)
+            this.socket.send(data)
+          },
         },
       ],
     })
 
     this.socket.onAny((...args) =>
       console.log('SOCKET GOT', inspect(args)),
+    )
+
+    this.socket.on('connected', () =>
+      this.api.do.Event.Socket.connected(),
     )
   }
 }

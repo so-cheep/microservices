@@ -22,6 +22,7 @@ import { AppMetadata } from './types'
     CheepTransportModule.forRoot({
       transport: new MemoryTransport<AppMetadata>(
         {
+          // defaultRpcTimeout: 99999,
           metadataReducers: [
             callStackReducer(),
             transactionReducer(NestTransportUtils.newId, Date.now),
@@ -34,7 +35,12 @@ import { AppMetadata } from './types'
         },
         NestTransportUtils,
       ),
-      executablePrefixes: ['Command', 'Query'],
+      executablePrefixes: [
+        'Command',
+        'Query',
+        'ClientAccess.Command',
+        'ClientAccess.Query',
+      ],
       joinSymbol: '.',
     }),
     UserModule,

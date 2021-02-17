@@ -3,17 +3,20 @@ import { TransportBase } from '@cheep/transport'
 import { Module, OnModuleInit } from '@nestjs/common'
 import { inspect } from 'util'
 import { ClientApi, ClientRemoteApi } from './client.api'
+import { ClientCommands } from './client.commands'
 import { ClientController } from './client.controller'
 import { SocketService } from './socket.service'
 
 @Module({
   imports: [
     CheepMicroservicesModule.forModule<ClientApi, ClientRemoteApi>({
-      handlers: {},
+      handlers: {
+        Command: { XuLi: ClientCommands },
+      },
       listenEvery: {},
     }),
   ],
-  providers: [SocketService],
+  providers: [SocketService, ClientCommands],
   controllers: [ClientController],
 })
 export class ClientModule implements OnModuleInit {

@@ -4,6 +4,7 @@ import {
   Get,
   OnApplicationBootstrap,
   Param,
+  Query,
 } from '@nestjs/common'
 import { ConsumedApis } from './rest.api'
 import * as faker from 'faker'
@@ -69,10 +70,13 @@ export class RestService implements OnApplicationBootstrap {
     return await this.client.do.Command.User['thisIsPrivate'](true)
   }
 
-  @Get('clients/:clientId/XuLi/doTheThing')
-  async routingTest(@Param('clientId') clientId: string) {
+  @Get('clients/:clientId')
+  async routingTest(
+    @Param('clientId') clientId: string,
+    @Query('value') value?: string,
+  ) {
     return await this.client.do.ClientAccess.$({
       clientId,
-    }).Command.XuLi.doTheThing({ num: 1 })
+    }).Command.XuLi.doTheThing({ num: Number(value) })
   }
 }

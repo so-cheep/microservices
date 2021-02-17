@@ -68,6 +68,7 @@ export class TunnelGateway implements OnModuleInit {
         message: args,
       }),
     )
+
     client.on('disconnect', () =>
       this.activeTunnels.delete(client.id),
     )
