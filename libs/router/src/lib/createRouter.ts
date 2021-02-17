@@ -4,6 +4,7 @@ import {
   Transport,
   TransportCompactMessage,
   TransportMessage,
+  WILL_NOT_HANDLE,
 } from '@cheep/transport'
 import { TransportApi } from '@cheep/transport-api'
 import {
@@ -44,7 +45,7 @@ export function createRouter<
   const onEveryHandler: RawHandler = (item, msg) => {
     // remove the routerAddress from the route
     if (checkLastHop(item.metadata, routerId)) {
-      return Promise.resolve()
+      return Promise.reject(WILL_NOT_HANDLE)
     }
 
     const revisedItem = {
@@ -58,6 +59,7 @@ export function createRouter<
     const isBroadcast = broadcastPrefixes.some(p =>
       item.route.startsWith(p),
     )
+    //TODO: next hop should throw if it knows it won't handle something
     nextHops.forEach(h => sendNextHop(h, isBroadcast, revisedItem))
 
     if (msg.replyTo && !isBroadcast) {
