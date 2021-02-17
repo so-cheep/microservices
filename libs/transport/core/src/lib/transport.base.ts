@@ -380,7 +380,7 @@ export abstract class TransportBase implements Transport {
         })
       }
       // Process additional handlers
-      else if (additionalHandlers.length) {
+      if (additionalHandlers.length) {
         const tasks = additionalHandlers.map(handler =>
           handler(
             {
