@@ -35,12 +35,7 @@ import { AppMetadata } from './types'
         },
         NestTransportUtils,
       ),
-      executablePrefixes: [
-        'Command',
-        'Query',
-        'ClientAccess.Command',
-        'ClientAccess.Query',
-      ],
+      executablePrefixes: ['Command', 'Query'],
       joinSymbol: '.',
     }),
     UserModule,

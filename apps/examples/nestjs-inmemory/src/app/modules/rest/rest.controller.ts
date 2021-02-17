@@ -75,8 +75,10 @@ export class RestService implements OnApplicationBootstrap {
     @Param('clientId') clientId: string,
     @Query('value') value?: string,
   ) {
-    return await this.client.do.ClientAccess.$({
-      clientId,
-    }).Command.XuLi.doTheThing({ num: Number(value) })
+    return await this.client.do
+      .$({
+        clientId,
+      })
+      .Command.XuLi.doTheThing({ num: Number(value) })
   }
 }

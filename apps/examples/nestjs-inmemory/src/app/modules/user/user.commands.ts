@@ -1,7 +1,7 @@
 import { CheepApi } from '@cheep/nestjs'
 import { Injectable } from '@nestjs/common'
 import * as faker from 'faker'
-import { AppMetadata } from '../../types'
+
 import { User, UserApi } from './user.api'
 
 @Injectable()
@@ -15,7 +15,7 @@ export class UserCommands {
       ...props.user,
       id: faker.random.number(),
     }
-    await this.api.do.Event.User.created(newUser, referrer)
+    await this.api.publish.Event.User.created(newUser, referrer)
     return newUser.id
   }
 

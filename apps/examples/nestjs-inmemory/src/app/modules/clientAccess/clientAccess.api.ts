@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/ban-types */
 
-export type ClientAccessApi = {
-  ClientAccess: ClientAccessRoutedApi
-}
+import { Router } from '@cheep/router'
 
-export type ClientAccessRemoteApi = {}
+export type ClientAccessApi = Router<
+  import('../client/client.api').ClientApi,
+  { clientId: string }
+>
 
-export type ClientAccessRoutedApi = {
-  $({ clientId }): import('../client/client.api').ClientApi
-}
+export type ClientAccessRemoteApi = import('../user/user.api').UserApi &
+  import('../groups/groups.api').GroupApi

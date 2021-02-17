@@ -8,7 +8,7 @@ type events = RemoteApi['Event']['User']
 export class UserEventHandler implements Partial<events> {
   constructor(private api: CheepApi<RemoteApi, GroupApi>) {}
   created(user: User) {
-    console.log('User created handler', user)
+    console.log('User created handler in group module', user)
   }
   updated(user: User) {
     console.log('User updated handler', user)

@@ -6,17 +6,21 @@ import { ClientApi, ClientRemoteApi } from './client.api'
 import { ClientCommands } from './client.commands'
 import { ClientController } from './client.controller'
 import { SocketService } from './socket.service'
+import { ClientUserEventHandler } from './user.eventHandler'
 
 @Module({
   imports: [
     CheepMicroservicesModule.forModule<ClientApi, ClientRemoteApi>({
       handlers: {
         Command: { XuLi: ClientCommands },
+        Event: {
+          User: ClientUserEventHandler,
+        },
       },
-      listenEvery: {},
+      listenEvery: { Event: true },
     }),
   ],
-  providers: [SocketService, ClientCommands],
+  providers: [SocketService, ClientCommands, ClientUserEventHandler],
   controllers: [ClientController],
 })
 export class ClientModule implements OnModuleInit {

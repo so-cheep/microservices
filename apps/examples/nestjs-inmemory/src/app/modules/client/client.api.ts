@@ -6,15 +6,8 @@ export type ClientApi = {
     XuLi: ClientCommands
   }
   Query: {}
-  Event: {
-    Socket: {
-      connected: () => void
-      disconnected: () => void
-    }
-  }
+  Event: {}
 }
 
-export type ClientRemoteApi = {
-  Server: import('../user/user.api').UserApi &
-    import('../groups/groups.api').Group
-}
+export type ClientRemoteApi = import('../user/user.api').UserApi &
+  import('../groups/groups.api').GroupApi

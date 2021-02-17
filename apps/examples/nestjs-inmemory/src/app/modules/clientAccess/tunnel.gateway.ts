@@ -5,6 +5,7 @@ import { Server, Socket } from 'socket.io'
 import { ExpressAdapter } from '@nestjs/platform-express'
 import { createRouter } from '@cheep/router'
 import { TransportBase } from '@cheep/transport'
+import { ClientAccessRemoteApi } from './clientAccess.api'
 
 /**
  * because of a conflicting version of Socket.io used in another demo, we're NOT using the nest socketio gateway,
@@ -12,7 +13,7 @@ import { TransportBase } from '@cheep/transport'
  */
 @Injectable()
 export class TunnelGateway implements OnModuleInit {
-  public readonly routerAddress = 'ClientAccess'
+  public readonly routerAddress = ''
   constructor(
     private adapterHost: HttpAdapterHost<ExpressAdapter>,
     private transport: TransportBase,
@@ -39,9 +40,12 @@ export class TunnelGateway implements OnModuleInit {
     )
 
     // create a cheep router
-    createRouter({
-      routerAddress: this.routerAddress,
+    createRouter<ClientAccessRemoteApi, { clientId: string }>({
+      routerId: 'SERVER',
       transport: this.transport,
+      broadcastForwardPaths: {
+        Event: true,
+      },
       nextHops: [
         {
           exampleTunnelId: { clientId: '' },
@@ -50,6 +54,8 @@ export class TunnelGateway implements OnModuleInit {
               next: x => rcv(x.tunnelId, x.message as any),
             }),
           send: (tunnelId, data) => this.send(tunnelId, data),
+          broadcast: data =>
+            this.activeTunnels.forEach(t => t.send(data)),
           type: 'TUNNEL',
         },
       ],

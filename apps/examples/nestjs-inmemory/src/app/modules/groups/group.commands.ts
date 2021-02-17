@@ -23,9 +23,9 @@ export class GroupCommands {
       members: [],
     }
     // simulate long running creation process!
-    await this.api.do.Event.Group.created(newGroup, meta)
+    await this.api.publish.Event.Group.created(newGroup, meta)
     setTimeout(
-      () => this.api.do.Event.Group.updated(newGroup, meta),
+      () => this.api.publish.Event.Group.updated(newGroup, meta),
       1000,
     )
     return newGroup.id
@@ -45,8 +45,8 @@ export class GroupCommands {
     }
 
     await Promise.all([
-      this.api.do.Event.Group.updated(updated, meta),
-      this.api.do.Event.Group.Members.changed(updated, meta),
+      this.api.publish.Event.Group.updated(updated, meta),
+      this.api.publish.Event.Group.Members.changed(updated, meta),
     ])
   }
 }
