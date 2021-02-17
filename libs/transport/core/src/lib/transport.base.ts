@@ -20,6 +20,7 @@ import {
   TransportState,
 } from './transport'
 import 'reflect-metadata'
+import { WILL_NOT_HANDLE } from './constants'
 
 export interface TransportOptions<
   TMeta extends MessageMetadata = MessageMetadata
@@ -379,8 +380,7 @@ export abstract class TransportBase implements Transport {
         })
       }
       // Process additional handlers
-      // NOTE(kb): removed `else` here, I think we should be calling additional handlers even if it was an RPC
-      if (additionalHandlers.length) {
+      else if (additionalHandlers.length) {
         const tasks = additionalHandlers.map(handler =>
           handler(
             {
@@ -390,6 +390,9 @@ export abstract class TransportBase implements Transport {
             },
             msg,
           ).catch(err => {
+            if (err === WILL_NOT_HANDLE) {
+              return
+            }
             throw { reason: err, handler: handler.name }
           }),
         )
@@ -400,7 +403,10 @@ export abstract class TransportBase implements Transport {
           )
           .then(errs => {
             if (errs.length > 0) {
-              console.warn('Multiple.RouteHandlers.Error', errs)
+              console.warn(
+                `Multiple.RouteHandlers.Error @ ${msg.route}`,
+                errs,
+              )
             }
           })
       }

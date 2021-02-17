@@ -1,5 +1,3 @@
-import { NormalizedError } from './domain/normalizeError'
-
 export interface Transport {
   readonly state: TransportState
 
