@@ -69,15 +69,13 @@ export function recursiveApiCaller(
 
           const {
             joinSymbol,
-            executablePrefixes = [],
             referrer: providedReferrer,
+            mode,
           } = options
 
           const route = path.join(joinSymbol)
 
-          const isExecutable = executablePrefixes.some(prefix =>
-            route.startsWith(prefix + joinSymbol),
-          )
+          const isExecutable = mode === 'EXECUTE'
 
           // optionally process the args to extract the referrer
           const { payload, referrer } = options.argsProcessor

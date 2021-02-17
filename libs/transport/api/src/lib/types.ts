@@ -110,8 +110,8 @@ export type RouteMapReturn<
   result: TResult
 }
 
-export interface TransportApiOptions<TPrefix> {
-  executablePrefixes?: TPrefix[]
+export type TransportApiOptions<TPrefix> = {
+  mode: 'PUBLISH' | 'EXECUTE'
   joinSymbol?: string
   referrer?: {
     route: string

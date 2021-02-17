@@ -7,4 +7,5 @@ export {
   CallableApi,
   RouteMap,
   RouteMapReturn,
+  CheepOperators,
 } from './lib/types'

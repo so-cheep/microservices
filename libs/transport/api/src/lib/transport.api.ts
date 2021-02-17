@@ -6,16 +6,10 @@ export function transportApi<TApi extends Api>(
   transport: Transport,
   options?: TransportApiOptions<keyof TApi>,
 ): CallableApi<TApi> {
-  const {
-    executablePrefixes = ['Command', 'Query'],
-    joinSymbol = '.',
-    referrer,
-  } = options ?? {}
+  const { joinSymbol = '.' } = options ?? {}
 
   return <any>recursiveApiCaller(transport, {
-    executablePrefixes: <string[]>executablePrefixes,
+    ...options,
     joinSymbol,
-    referrer,
-    argsProcessor: options.argsProcessor,
   })
 }
