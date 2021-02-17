@@ -284,7 +284,8 @@
               ]
             },
             "client": {
-              "main": "apps/examples/nestjs-inmemory/src/main.client.ts"
+              "main": "apps/examples/nestjs-inmemory/src/main.client.ts",
+              "outputPath": "dist/apps/examples/nestjs-inmemory-client"
             }
           }
         },
