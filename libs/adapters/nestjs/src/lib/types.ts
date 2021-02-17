@@ -3,6 +3,7 @@ import type {
   TransportApi,
 } from '@cheep/transport-api'
 import type { Transport } from '@cheep/transport'
+import type { DeepPartial, ReplaceLeaves } from '@cheep/utils'
 
 export interface CheepMicroservicesRootConfig
   extends CheepHandlerOptions<string> {
@@ -57,42 +58,3 @@ type check = Classifyed extends {
 //#endregion
 
 /////////
-
-export type DeepPartial<T> = {
-  [P in keyof T]?: DeepPartial<T[P]>
-}
-
-export type CollectPaths<
-  T extends TransportApi,
-  P extends string[] = []
-> = {
-  [K in keyof T]: T[K] extends TransportApi
-    ? CollectPaths<T[K], [...P, K extends string ? K : string]>
-    : [...P, K]
-}[keyof T]
-
-// replaces all leaves of an api with a different type, and making each node a union of the leaf as well, to allow for partial paths
-export type ReplaceLeaves<TApi extends TransportApi, TLeaf> = {
-  [K in keyof TApi]: TApi[K] extends TransportApi
-    ? ReplaceLeaves<TApi[K], TLeaf> | TLeaf
-    : TLeaf
-}
-
-//#endregion Utility Types
-
-//#region  OLD TYPES THAT MIGHT BE USEFUL IN THE FUTURE
-
-type ArrayToIntersection<T extends unknown[]> = UnionToIntersection<
-  ArrayToUnion<T>
->
-type ArrayToUnion<A extends Array<unknown>> = A[number]
-type UnionToIntersection<U> = (
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  U extends any
-    ? (k: U) => void
-    : never
-) extends (k: infer I) => void
-  ? I
-  : never
-
-//#endregion

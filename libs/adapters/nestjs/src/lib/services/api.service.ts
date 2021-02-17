@@ -19,6 +19,7 @@ import {
   CheepHandlerOptions,
   RouteMap,
   RouteMapReturn,
+  CheepOperators,
 } from '@cheep/transport-api'
 import {
   CheepMicroservicesModuleConfig,
@@ -26,8 +27,8 @@ import {
 } from '../types'
 import { processArgsSafely } from '../util/processArgsSafely'
 import { Observable, Subject } from 'rxjs'
-import { getLeafAddresses } from '../util/getLeafAddresses'
-import { makeReferrer } from '../util/makeSafeArgs'
+import { ArrayToUnion, getLeafAddresses } from '@cheep/utils'
+
 import { filter, share } from 'rxjs/operators'
 
 @Injectable()
@@ -38,7 +39,10 @@ export class CheepApi<
   // eslint-disable-next-line @typescript-eslint/ban-types
   TLocalApi extends TransportApi = {},
   /** the type of the metadata object *optional* */
-  TMeta extends MessageMetadata = MessageMetadata
+  TMeta extends MessageMetadata = MessageMetadata,
+  TExecutablePrefixes extends keyof (TRemoteApi | TLocalApi) =
+    | 'Query'
+    | 'Command'
 > implements OnModuleInit {
   private mergedConfig: CheepMicroservicesRootConfig &
     Pick<
@@ -46,10 +50,21 @@ export class CheepApi<
       keyof CheepHandlerOptions<string>
     >
 
-  /** call remote api */
-  get do(): CallableApi<TRemoteApi & TLocalApi> {
+  /** call remote api and receive responses */
+  get do(): CallableApi<
+    Pick<TRemoteApi & TLocalApi, TExecutablePrefixes | CheepOperators>
+  > {
     return transportApi(this.transport, {
-      executablePrefixes: this.mergedConfig.executablePrefixes,
+      mode: 'EXECUTE',
+      joinSymbol: this.mergedConfig.joinSymbol,
+      argsProcessor: processArgsSafely,
+    })
+  }
+
+  /** publish remote api, will resolve once message is successfully sent */
+  get publish(): CallableApi<TRemoteApi & TLocalApi> {
+    return transportApi(this.transport, {
+      mode: 'PUBLISH',
       joinSymbol: this.mergedConfig.joinSymbol,
       argsProcessor: processArgsSafely,
     })
@@ -130,7 +145,7 @@ export class CheepApi<
     ).map(([path]) => path.join(this.getMergedOptions().joinSymbol))
 
     function handler(item: TransportCompactMessage<unknown[]>) {
-      const processed = processArgsSafely(item.payload)
+      const processed = processArgsSafely(item.payload ?? [])
       this.event$.next({
         metadata: item.metadata,
         // the event function type requires a single arg, so this is safe
