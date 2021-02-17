@@ -8,5 +8,6 @@ module.exports = {
     '<rootDir>/apps/examples/nestjs-inmemory',
     '<rootDir>/libs/transport/api',
     '<rootDir>/libs/router',
+    '<rootDir>/libs/utils',
   ],
 }

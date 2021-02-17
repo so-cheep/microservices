@@ -32,7 +32,8 @@
       "@cheep/microservices": ["libs/microservices/src/index.ts"],
       "@cheep/nestjs": ["libs/adapters/nestjs/src/index.ts"],
       "@cheep/transport-api": ["libs/transport/api/src/index.ts"],
-      "@cheep/router": ["libs/router/src/index.ts"]
+      "@cheep/router": ["libs/router/src/index.ts"],
+      "@cheep/utils": ["libs/utils/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
