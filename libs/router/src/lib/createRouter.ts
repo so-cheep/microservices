@@ -41,8 +41,9 @@ export function createRouter<
         outstandingRpcs.set(msg.correlationId, resolve)
         setTimeout(() => {
           outstandingRpcs.delete(msg.correlationId)
-          reject('Router RPC Timeout')
-        }, rpcTimeout)
+          reject(Error('Router RPC Timeout'))
+          // TODO: improve RPC timeout story, pass rpc timeout along with message data
+        }, rpcTimeout ?? 5000)
       })
       return rpcPromise
     }
