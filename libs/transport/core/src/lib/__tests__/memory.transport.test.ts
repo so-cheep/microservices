@@ -82,7 +82,7 @@ describe('memory.transport', () => {
     return transport
       .execute({
         route: 'User.Create',
-        message: {
+        payload: {
           userId: 'u1',
         },
         metadata: {
@@ -104,7 +104,7 @@ describe('memory.transport', () => {
 
     const result = await transport.execute({
       route: 'Return.Undefined',
-      message: {},
+      payload: {},
     })
 
     expect(result).toBeUndefined()
@@ -119,7 +119,7 @@ describe('memory.transport', () => {
 
     const result = await transport.execute({
       route: 'Return.Null',
-      message: {},
+      payload: {},
     })
 
     expect(result).toBeNull()
@@ -134,7 +134,7 @@ describe('memory.transport', () => {
 
     const result = await transport.execute({
       route: 'Return.Null',
-      message: {},
+      payload: {},
     })
 
     expect(result).toBeUndefined()
