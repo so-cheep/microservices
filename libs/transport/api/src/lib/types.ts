@@ -167,26 +167,21 @@ export type TransportApiOptions = {
   ) => { payload: unknown; referrer?: Referrer }
 }
 
-export interface TransportApi<
+export type TransportApi<
   TApi extends Api = Api,
-  TExecutablePrefixes extends keyof TApi = never
-> {
+  TExecutablePrefixes extends keyof TApi = keyof TApi
+> = {
   execute: ExecutableApi<
-    TExecutablePrefixes extends never
-      ? TApi
-      : Pick<
-          TApi,
-          TExecutablePrefixes | (CheepOperators & keyof TApi)
-        >
+    Pick<TApi, TExecutablePrefixes | (CheepOperators & keyof TApi)>
   >
+
   publish: PublishableApi<TApi>
-  [ReferenceApi]: TApi
 }
 
 export interface ApiWithExecutableKeys<
   TApi extends Api = Api,
   TExecutablePrefixes extends keyof TApi = string
 > {
-  executableKeys: TExecutablePrefixes
   api: TApi
+  executableKeys: TExecutablePrefixes
 }

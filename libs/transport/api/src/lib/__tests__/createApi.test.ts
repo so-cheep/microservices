@@ -20,17 +20,17 @@ describe('createApi', () => {
       x => x.Command.login,
       async (api, x) => {
         if (x.username === x.password) {
-          return { test: '' }
+          return { test: 'none' }
         }
 
-        return { test: '123' }
+        return { test: 'ezeki' }
       },
     )
 
     handler.on(
       x => x.Command.Custom._('US').register,
       (_, x) => {
-        return { id: '123' }
+        return 'ezeki'
       },
     )
 
@@ -58,10 +58,6 @@ describe('createApi', () => {
       .$({ socketId: '123' })
       .register({ username: 'ezeki' })
 
-    await api.execute.Command.Custom.$({ meta2: '123' }).test4({
-      t: '123',
-    })
-
     await api.publish.Command.Custom._('US').test2({ t: '123' })
 
     await api.publish.Command.login({
@@ -69,11 +65,14 @@ describe('createApi', () => {
       password: '123',
     })
 
-    expect(result).toBe('token')
+    expect(result.test).toBe('none')
   })
 })
 
-type RemoteApi = ApiWithExecutableKeys<UserApi & RoleApi, 'Command'>
+type RemoteApi = ApiWithExecutableKeys<
+  UserApi & RoleApi,
+  'Command' | 'Query'
+>
 type LocalApi = ApiWithExecutableKeys<UserApi>
 
 type RoleApi = {
@@ -113,9 +112,7 @@ type UserApi = {
         $: ({
           socketId: string,
         }) => {
-          register(props: {
-            username: string
-          }): Promise<{ id: string }>
+          register(props: { username: string }): Promise<string>
         }
       }
     }
