@@ -7,11 +7,9 @@ import {
   WILL_NOT_HANDLE,
 } from '@cheep/transport'
 import { TransportApi } from '@cheep/transport-api'
-import {
-  DeepPartial,
-  getLeafAddresses,
-  ReplaceLeaves,
-} from '@cheep/utils'
+import { getLeafAddresses } from '@cheep/utils'
+import { DeepPartial } from '@cheep/utils/types'
+import { FilterMap } from './types'
 
 export function createRouter<
   TLocalApi extends TransportApi,
@@ -23,9 +21,19 @@ export function createRouter<
   nextHops: NextHop<TRouterArgs>[]
   /** RPC timeout in `ms`, if not provided will fall back to the transport default */
   rpcTimeout?: number
-  broadcastForwardPaths?: DeepPartial<
-    ReplaceLeaves<TLocalApi, boolean>
-  >
+  /**
+   * Tree of the outbound, unrouted paths, which should be forwarded by the router
+   *
+   * ### Valid leaf values:
+   *   - **function**:
+   *     will receive the original payload as an arg, and should either return:
+   *       - `true`: broadcast all messages matching this path to all available next hops
+   *       - `false`: drop the message
+   *       - `object: TRouter`: an object matching the TRouterArgs definition, which will be merged into the metadata
+   * and used for routing
+   */
+  outboundFilters?: FilterMap<TLocalApi, TRouterArgs | boolean>
+
   joinPrefix?: string
 }) {
   const outstandingRpcs = new Map<string, (...args) => unknown>()
@@ -35,11 +43,18 @@ export function createRouter<
     nextHops,
     rpcTimeout = props.transport['options']['defaultRpcTimeout'],
   } = props
+  type TFilterFunction = (...args) => boolean | TRouterArgs
 
-  const broadcastPrefixes = props.broadcastForwardPaths
-    ? getLeafAddresses(props.broadcastForwardPaths)
-        .filter(([_, include]) => include)
-        .map(([path]) => path.join(props.joinPrefix ?? '.'))
+  // flatten the outbound filter map to an array for faster processing
+  const broadcastPrefixes = props.outboundFilters
+    ? getLeafAddresses<TFilterFunction>(props.outboundFilters)
+        // remove any paths that have a falsy leaf
+        .filter(([_, leaf]) => !!leaf)
+        // stringify the remaining leaves, and ensure the return is a function
+        .map<[string, TFilterFunction]>(([path, leaf]) => [
+          path.join(props.joinPrefix ?? '.'),
+          leaf,
+        ])
     : []
 
   const onEveryHandler: RawHandler = (item, msg) => {
@@ -48,17 +63,25 @@ export function createRouter<
       return Promise.reject(WILL_NOT_HANDLE)
     }
 
+    // check to see if we match any filters
+    const routeFilter = broadcastPrefixes.find(([p]) =>
+      item.route.startsWith(p),
+    )
+
+    // TODO: make the item arg a deep copy or freeze it before passing to route filter
+    const result = routeFilter ? routeFilter[1](item) : false
+    const isBroadcast = typeof result === 'boolean' && result
+    const metadata =
+      typeof result === 'object'
+        ? { ...item.metadata, ...result }
+        : item.metadata
+
     const revisedItem = {
       ...msg,
       ...item,
-      metadata: addVisitedRouterToMeta(item.metadata, routerId),
+      metadata: addVisitedRouterToMeta(metadata, routerId),
     }
 
-    // route the message to next hops
-
-    const isBroadcast = broadcastPrefixes.some(p =>
-      item.route.startsWith(p),
-    )
     //TODO: next hop should throw if it knows it won't handle something
     nextHops.forEach(h => sendNextHop(h, isBroadcast, revisedItem))
 

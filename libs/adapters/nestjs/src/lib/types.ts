@@ -3,7 +3,7 @@ import type {
   TransportApi,
 } from '@cheep/transport-api'
 import type { Transport } from '@cheep/transport'
-import type { DeepPartial, ReplaceLeaves } from '@cheep/utils'
+import type { DeepPartial, ReplaceLeaves } from '@cheep/utils/types'
 
 export interface CheepMicroservicesRootConfig
   extends CheepHandlerOptions<string> {

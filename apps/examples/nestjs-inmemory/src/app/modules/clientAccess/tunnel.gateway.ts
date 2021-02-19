@@ -6,6 +6,8 @@ import { ExpressAdapter } from '@nestjs/platform-express'
 import { createRouter } from '@cheep/router'
 import { TransportBase } from '@cheep/transport'
 import { ClientAccessRemoteApi } from './clientAccess.api'
+import { Group } from '../groups/groups.api'
+import { User } from '../user/user.api'
 
 /**
  * because of a conflicting version of Socket.io used in another demo, we're NOT using the nest socketio gateway,
@@ -43,8 +45,20 @@ export class TunnelGateway implements OnModuleInit {
     createRouter<ClientAccessRemoteApi, { clientId: string }>({
       routerId: 'SERVER',
       transport: this.transport,
-      broadcastForwardPaths: {
-        Event: true,
+      outboundFilters: {
+        Event: {
+          // forward all blue group events
+          Group: item => item.payload[0].color === 'blue',
+          // forward all messages where the user can be extracted, otherwise false
+          User: item => {
+            if (item.route.includes('created')) {
+              const user = <User>item.payload[0]
+              return { clientId: `${user.id}` }
+            }
+          },
+        },
+        Command: () => false,
+        Query: () => false,
       },
       nextHops: [
         {

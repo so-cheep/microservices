@@ -27,7 +27,7 @@ import {
 } from '../types'
 import { processArgsSafely } from '../util/processArgsSafely'
 import { Observable, Subject } from 'rxjs'
-import { ArrayToUnion, getLeafAddresses } from '@cheep/utils'
+import { getLeafAddresses } from '@cheep/utils'
 
 import { filter, share } from 'rxjs/operators'
 
