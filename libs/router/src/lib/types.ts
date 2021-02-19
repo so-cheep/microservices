@@ -1,5 +1,5 @@
 import type { TransportCompactMessage } from '@cheep/transport'
-import type { AllFunctionArgs } from '@cheep/utils/types'
+import type { AllFunctionArgs } from '@cheep/utils'
 
 /** create a routable remote api */
 export type Router<

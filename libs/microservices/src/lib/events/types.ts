@@ -1,5 +1,5 @@
 import type { MessageMetadata, Referrer } from '@cheep/transport'
-import type { TransportApi } from '@cheep/transport-api'
+import type { Api } from '@cheep/transport-api'
 import type { Observable } from 'rxjs'
 
 export type EventPublishFunction<TPayload extends unknown> = (
@@ -11,7 +11,7 @@ export type EventMap<
   TEventMap extends EventMap<TEventMap> = any
 > = Record<string, TEventMap | EventPublishFunction<unknown>>
 
-export type EventApi = TransportApi
+export type EventApi = Api
 
 // export type EventPublisher<
 //   TEventApi extends TransportApi

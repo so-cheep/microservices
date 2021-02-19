@@ -1,18 +1,18 @@
 import type {
-  CheepHandlerOptions,
-  TransportApi,
+  TransportHandlerOptions,
+  Api,
 } from '@cheep/transport-api'
 import type { Transport } from '@cheep/transport'
-import type { DeepPartial, ReplaceLeaves } from '@cheep/utils/types'
+import type { DeepPartial, ReplaceLeaves } from '@cheep/utils'
 
 export interface CheepMicroservicesRootConfig
-  extends CheepHandlerOptions<string> {
+  extends TransportHandlerOptions {
   transport: Transport
 }
 
 export type CheepMicroservicesModuleConfig<
-  TModuleApi extends TransportApi,
-  TRemoteApi extends TransportApi
+  TModuleApi extends Api,
+  TRemoteApi extends Api
 > = {
   /**
    * this object represents all of the handlers which will be registered with the transport
@@ -27,7 +27,7 @@ export type CheepMicroservicesModuleConfig<
   listenEvery: DeepPartial<
     ReplaceLeaves<TModuleApi | TRemoteApi, boolean>
   >
-} & CheepHandlerOptions<keyof (TModuleApi | TRemoteApi)>
+} & TransportHandlerOptions
 
 //#region UTILITY TYPES
 

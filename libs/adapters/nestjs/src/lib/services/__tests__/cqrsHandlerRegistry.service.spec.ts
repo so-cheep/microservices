@@ -13,12 +13,7 @@ import {
 } from '../../types'
 import { CqrsHandlerRegistryService } from '../cqrsHandlerRegistry.service'
 import { mockTransport } from '../../__mocks__/transport'
-import { CqrsApi, handleCqrsApi } from '@cheep/microservices'
 import { mocked } from 'ts-jest/utils'
-
-jest.mock('@cheep/microservices', () => ({
-  handleCqrsApi: jest.fn(),
-}))
 
 const moduleName = 'TEST'
 const mockQueryFn = jest.fn()

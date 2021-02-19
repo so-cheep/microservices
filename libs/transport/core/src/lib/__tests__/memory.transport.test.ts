@@ -38,7 +38,7 @@ describe('memory.transport', () => {
 
     const result = await transport.execute({
       route: 'PING',
-      message: {
+      payload: {
         pingedAt: new Date(),
       },
       metadata: {
@@ -50,8 +50,8 @@ describe('memory.transport', () => {
   })
 
   it('should receve published event', async done => {
-    transport.on('User.Created', async ({ message, metadata }) => {
-      const msg = message as any
+    transport.on('User.Created', async ({ payload, metadata }) => {
+      const msg = payload as any
 
       expect(msg.userId).toBe('u1')
       expect(metadata.sessionId).toBe('s1')
@@ -63,7 +63,7 @@ describe('memory.transport', () => {
 
     const result = await transport.publish({
       route: 'User.Created',
-      message: {
+      payload: {
         userId: 'u1',
       },
       metadata: {

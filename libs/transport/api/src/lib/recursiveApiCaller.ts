@@ -7,7 +7,7 @@ import {
 
 export function recursiveApiCaller(
   transport: Transport,
-  options: TransportApiOptions<string>,
+  options: TransportApiOptions,
   /** only needed internally, **DO NOT SET** */
   path: string[] = [],
   routeMetadata: Record<string, unknown> = {},

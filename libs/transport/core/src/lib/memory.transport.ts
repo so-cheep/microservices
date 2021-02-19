@@ -22,12 +22,6 @@ export class MemoryTransport<
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   async init() {}
 
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  async start() {}
-
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  async stop() {}
-
   protected async sendMessage(props: SendMessageProps) {
     const { messageDelayTime = 0 } = this.options
 

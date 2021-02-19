@@ -1,10 +1,11 @@
-export * from './lib/transport.api'
-export * from './lib/transport.handler'
+export * from './lib/createTransportApi'
+export * from './lib/createTransportHandler'
+export { transportApi } from './lib/transport.api'
 export {
-  Api as TransportApi,
+  Api,
   TransportApiOptions,
   TransportHandler as CheepHandler,
-  CallableApi,
+  ExecutableApi as CallableApi,
   RouteMap,
   RouteMapReturn,
   CheepOperators,

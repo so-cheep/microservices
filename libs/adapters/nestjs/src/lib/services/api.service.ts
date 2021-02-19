@@ -13,10 +13,10 @@ import {
   TransportToken,
 } from '../constants'
 import {
-  TransportApi,
+  Api,
   CallableApi,
   transportApi,
-  CheepHandlerOptions,
+  TransportHandlerOptions,
   RouteMap,
   RouteMapReturn,
   CheepOperators,
@@ -34,10 +34,10 @@ import { filter, share } from 'rxjs/operators'
 @Injectable()
 export class CheepApi<
   /** remote api definition */
-  TRemoteApi extends TransportApi,
+  TRemoteApi extends Api,
   /** local api definition, *only required for publishing or handling local events* */
   // eslint-disable-next-line @typescript-eslint/ban-types
-  TLocalApi extends TransportApi = {},
+  TLocalApi extends Api = {},
   /** the type of the metadata object *optional* */
   TMeta extends MessageMetadata = MessageMetadata,
   TExecutablePrefixes extends keyof (TRemoteApi | TLocalApi) =
@@ -47,7 +47,7 @@ export class CheepApi<
   private mergedConfig: CheepMicroservicesRootConfig &
     Pick<
       CheepMicroservicesModuleConfig<TLocalApi, TRemoteApi>,
-      keyof CheepHandlerOptions<string>
+      keyof TransportHandlerOptions
     >
 
   /** call remote api and receive responses */
@@ -171,13 +171,13 @@ export class CheepApi<
   private getMergedOptions(): CheepMicroservicesRootConfig &
     Pick<
       CheepMicroservicesModuleConfig<TLocalApi, TRemoteApi>,
-      keyof CheepHandlerOptions<string>
+      keyof TransportHandlerOptions
     > {
     return {
       ...this.rootConfig,
       ...(this.moduleConfig as CheepMicroservicesModuleConfig<
-        TransportApi,
-        TransportApi
+        Api,
+        Api
       >),
     }
   }

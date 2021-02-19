@@ -6,13 +6,12 @@ import {
   TransportMessage,
   WILL_NOT_HANDLE,
 } from '@cheep/transport'
-import { TransportApi } from '@cheep/transport-api'
+import { Api } from '@cheep/transport-api'
 import { getLeafAddresses } from '@cheep/utils'
-import { DeepPartial } from '@cheep/utils/types'
 import { FilterMap } from './types'
 
 export function createRouter<
-  TLocalApi extends TransportApi,
+  TLocalApi extends Api,
   TRouterArgs extends Record<string, unknown>
 >(props: {
   /** unique id of this router, to avoid looping */

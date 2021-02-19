@@ -8,32 +8,46 @@ export type CheepOperators = MetadataOperator | RouteVariableOperator
 
 export const MetadataOperator: MetadataOperator = '$'
 export const RouteVariableOperator: RouteVariableOperator = '_'
+export const ReferenceApi = '_ReferenceApi'
 
-export type TransportHandler<TApi extends Api, TMetadata> = {
-  on: FunctionalHandlerFactory<TApi, TMetadata>
+export type TransportHandler<
+  TApiWithKeys extends ApiWithExecutableKeys,
+  TMetadata
+> = {
+  on: FunctionalHandlerFactory<TApiWithKeys, TMetadata>
 }
 
-// Commands & Queries
-// type CallWithMetadata<T> = {
-//   [P in keyof T]: T[P] extends infer TValue ? TValue : never
-// }
-
 // Events
-export type FunctionalHandlerFactory<TApi extends Api, TMetadata> = <
-  TEventSelection extends RouteMapReturn<unknown[], string[]>,
-  TPayload extends Array<
+export type FunctionalHandlerFactory<
+  TApiWithKeys extends ApiWithExecutableKeys,
+  TMetadata
+> = <
+  TEventSelection extends RouteMapReturn<
+    unknown[],
+    string[],
     unknown
-  > = TEventSelection extends RouteMapReturn<infer R, string[]>
-    ? R extends Array<unknown>
-      ? R
-      : never
-    : never
+  >,
+  TPayload extends [
+    Array<unknown>,
+    unknown,
+  ] = TEventSelection extends RouteMapReturn<
+    infer R,
+    string[],
+    infer TResult
+  >
+    ? [R extends Array<unknown> ? R : never, TResult]
+    : [[], never]
 >(
-  route: (event: RouteMap<TApi>) => TEventSelection,
+  route: (event: RouteMap<TApiWithKeys['api']>) => TEventSelection,
   handler: (
-    api: CallableApi<TApi>,
-    ...args: [...TPayload, TMetadata]
-  ) => unknown | void | Promise<unknown | void>,
+    api: TransportApi<
+      TApiWithKeys['api'],
+      TApiWithKeys['executableKeys']
+    >,
+    ...args: [...TPayload[0], TMetadata]
+  ) =>
+    | ExtractPromiseValue<TEventSelection['result']>
+    | Promise<ExtractPromiseValue<TEventSelection['result']>>,
 ) => void
 
 export type RouteMap<TRouteMap, TKey extends string[] = string[]> = {
@@ -54,8 +68,12 @@ export type RouteMap<TRouteMap, TKey extends string[] = string[]> = {
         TRouteMap[K],
         [...TKey, K extends string ? K : string]
       >
-    : TRouteMap[K] extends (...args: infer P) => unknown
-    ? RouteMapReturn<P, [...TKey, K extends string ? K : string]>
+    : TRouteMap[K] extends (...args: infer P) => infer Result
+    ? RouteMapReturn<
+        P,
+        [...TKey, K extends string ? K : string],
+        Result
+      >
     : CombineWithoutMetadataOperator<
         TRouteMap[K],
         [...TKey, K extends string ? K : string]
@@ -77,15 +95,30 @@ export type CombineWithoutMetadataOperator<
  *
  * also adds exceptions for the operator types
  */
-export type CallableApi<TApi> = {
+export type ExecutableApi<TApi> = {
   [K in keyof TApi]: TApi[K] extends Record<string, unknown>
-    ? CallableApi<TApi[K]>
+    ? ExecutableApi<TApi[K]>
     : K extends CheepOperators
-    ? TApi[K]
+    ? TApi[K] extends (...args: infer TArgs) => infer TResult
+      ? (...args: TArgs) => ExecutableApi<TResult>
+      : number
     : // add catch here if we get never from ensure promise, assume it's a class in the api definition, or something else we should be stepping into
     EnsurePromise<TApi[K]> extends never
-    ? CallableApi<TApi[K]>
+    ? ExecutableApi<TApi[K]>
     : EnsurePromise<TApi[K]>
+}
+
+export type PublishableApi<TApi> = {
+  [K in keyof TApi]: TApi[K] extends Api
+    ? PublishableApi<TApi[K]>
+    : K extends CheepOperators
+    ? TApi[K] extends (...args: infer TArgs) => infer TResult
+      ? (...args: TArgs) => PublishableApi<TResult>
+      : number
+    : // add catch here if we get never from ensure promise, assume it's a class in the api definition, or something else we should be stepping into
+    EnsurePromiseVoid<TApi[K]> extends never
+    ? TApi[K]
+    : EnsurePromiseVoid<TApi[K]>
 }
 
 type EnsurePromise<T> = T extends (...args: infer A) => infer P
@@ -94,31 +127,66 @@ type EnsurePromise<T> = T extends (...args: infer A) => infer P
     : (...args: A) => Promise<P>
   : never
 
-type UnwrapPromise<T> = T extends Promise<infer P> ? P : T
+// type EnsurePromiseOrPlain<T> = T extends (...args: infer A) => infer P
+//   ? P extends Promise<unknown>
+//     ? (...args: A) => P
+//     : (...args: A) => Promise<P>
+//   : never
 
-type RoutePublishFunction<TPayload extends unknown> = (
-  payload: TPayload,
-) => void
+type ExtractPromiseValue<T> = T extends Promise<infer TPure>
+  ? TPure
+  : T
+
+type EnsurePromiseVoid<T> = T extends (...args: infer A) => infer P
+  ? P extends Promise<void>
+    ? (...args: A) => P
+    : (...args: A) => Promise<void>
+  : never
 
 export type RouteMapReturn<
   TPayload extends unknown[],
   TPath,
-  TResult = void
+  TResult = unknown
 > = {
   payload: TPayload
   path: TPath
   result: TResult
 }
 
-export type TransportApiOptions<TPrefix> = {
+export type TransportApiOptions = {
   mode: 'PUBLISH' | 'EXECUTE'
   joinSymbol?: string
   referrer?: {
     route: string
     metadata: MessageMetadata
   }
+
   /** optional function to extract the referrer from the args array */
   argsProcessor?: (
     args: unknown[],
   ) => { payload: unknown; referrer?: Referrer }
+}
+
+export interface TransportApi<
+  TApi extends Api = Api,
+  TExecutablePrefixes extends keyof TApi = never
+> {
+  execute: ExecutableApi<
+    TExecutablePrefixes extends never
+      ? TApi
+      : Pick<
+          TApi,
+          TExecutablePrefixes | (CheepOperators & keyof TApi)
+        >
+  >
+  publish: PublishableApi<TApi>
+  [ReferenceApi]: TApi
+}
+
+export interface ApiWithExecutableKeys<
+  TApi extends Api = Api,
+  TExecutablePrefixes extends keyof TApi = string
+> {
+  executableKeys: TExecutablePrefixes
+  api: TApi
 }

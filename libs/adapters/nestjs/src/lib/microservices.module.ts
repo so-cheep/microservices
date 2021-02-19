@@ -13,7 +13,7 @@ import type {
 import { ModuleConfigToken, RootConfigToken } from './constants'
 import { CheepApi } from './services/api.service'
 import type { TransportCompactMessage } from '@cheep/transport'
-import { TransportApi } from '@cheep/transport-api'
+import { Api } from '@cheep/transport-api'
 import { getLeafAddresses } from '@cheep/utils'
 import { ModuleRef } from '@nestjs/core'
 import { getFunctionValues } from './util/getFunctionValues'
@@ -25,13 +25,10 @@ import {
 
 @Module({})
 export class CheepMicroservicesModule<
-  TModuleApi extends TransportApi,
-  TRemoteApi extends TransportApi
+  TModuleApi extends Api,
+  TRemoteApi extends Api
 > implements OnModuleInit {
-  static forModule<
-    TModuleApi extends TransportApi,
-    TRemoteApi extends TransportApi
-  >(
+  static forModule<TModuleApi extends Api, TRemoteApi extends Api>(
     config: CheepMicroservicesModuleConfig<TModuleApi, TRemoteApi>,
   ): DynamicModule {
     const registrationId = Date.now() + Math.random()

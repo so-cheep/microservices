@@ -227,6 +227,7 @@ export abstract class TransportBase implements Transport {
     const safePrefixes = Array.isArray(prefixes)
       ? prefixes
       : [prefixes]
+
     safePrefixes.forEach(p => this.registeredPrefixes.add(p))
 
     if (isRawHandler) {
