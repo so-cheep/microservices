@@ -51,7 +51,7 @@ export class CheepApi<
     >
 
   /** call remote api and receive responses */
-  get do(): CallableApi<
+  get execute(): CallableApi<
     Pick<TRemoteApi & TLocalApi, TExecutablePrefixes | CheepOperators>
   > {
     return transportApi(this.transport, {

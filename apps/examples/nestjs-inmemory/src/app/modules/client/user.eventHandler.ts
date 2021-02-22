@@ -1,10 +1,7 @@
 import { CheepApi } from '@cheep/nestjs'
 import { Referrer } from '@cheep/transport'
-import {
-  Injectable,
-  OnApplicationBootstrap,
-  OnModuleInit,
-} from '@nestjs/common'
+import { Injectable, OnApplicationBootstrap } from '@nestjs/common'
+import { Group } from '../groups/groups.api'
 import { User } from '../user/user.api'
 import { ClientRemoteApi } from './client.api'
 
@@ -15,9 +12,22 @@ export class ClientUserEventHandler
   userList: User[] = []
 
   constructor(private api: CheepApi<ClientRemoteApi>) {}
+  GroupMembership: {
+    added: (
+      group: Group,
+      user: User,
+      ref?: Referrer<Record<string, unknown>>,
+    ) => void
+    Deeper: {
+      double: (
+        x: boolean,
+        ref?: Referrer<Record<string, unknown>>,
+      ) => void
+    }
+  }
 
   async onApplicationBootstrap() {
-    this.userList = await this.api.do.Query.User.getAll()
+    this.userList = await this.api.execute.Query.User.getAll()
   }
 
   created(user: User, ref?: Referrer<Record<string, unknown>>) {

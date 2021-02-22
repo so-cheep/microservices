@@ -35,7 +35,6 @@ import { AppMetadata } from './types'
         },
         NestTransportUtils,
       ),
-      executablePrefixes: ['Command', 'Query'],
       joinSymbol: '.',
     }),
     UserModule,

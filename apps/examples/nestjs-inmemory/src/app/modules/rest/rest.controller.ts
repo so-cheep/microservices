@@ -29,37 +29,38 @@ export class RestService implements OnApplicationBootstrap {
 
   @Get('users')
   async getUsers() {
-    return this.client.do.Query.User.getAll()
+    return this.client.execute.Query.User.getAll()
   }
 
   @Get('users/create')
   async createUser() {
-    const id = await this.client.do.Command.User.create({
+    const id = await this.client.execute.Command.User.create({
       user: {
         email: faker.internet.email(),
         name: faker.name.findName(),
       },
     })
 
-    return this.client.do.Query.User.getById({ id })
+    return this.client.execute.Query.User.getById({ id })
   }
 
   @Get('groups')
   async getGroups() {
-    return this.client.do.Query.Group.getAll()
+    return this.client.execute.Query.Group.getAll()
   }
 
   @Get('groups/create')
   async createGroup() {
-    const id = await this.client.do.Command.Group.create({
+    const id = await this.client.execute.Command.Group.create({
       group: {
         name: faker.commerce.department(),
         color: faker.random.arrayElement(['red', 'blue']),
       },
     })
 
-    return this.client.do.Query.Group.getById({ id })
+    return this.client.execute.Query.Group.getById({ id })
   }
+  execute
 
   /**
    * This is to show that *private* members of remote apis may still be called,
@@ -67,7 +68,9 @@ export class RestService implements OnApplicationBootstrap {
    */
   @Get('test')
   async test() {
-    return await this.client.do.Command.User['thisIsPrivate'](true)
+    return await this.client.execute.Command.User['thisIsPrivate'](
+      true,
+    )
   }
 
   @Get('clients/:clientId')
@@ -75,7 +78,7 @@ export class RestService implements OnApplicationBootstrap {
     @Param('clientId') clientId: string,
     @Query('value') value?: string,
   ) {
-    return await this.client.do
+    return await this.client.execute
       .$({
         clientId,
       })

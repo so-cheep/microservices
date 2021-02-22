@@ -12,7 +12,7 @@ export class ClientController {
 
   @Get('users')
   async test() {
-    const result = await this.api.do.Query.User.getAll()
+    const result = await this.api.execute.Query.User.getAll()
     return result
   }
 
@@ -23,7 +23,7 @@ export class ClientController {
 
   @Get('store')
   async store(@Query('value') value?: string) {
-    return await this.api.do.Command.XuLi.storeTheThing({
+    return await this.api.execute.Command.XuLi.storeTheThing({
       num: Number(value ?? Math.round(Math.random() * 100)),
     })
   }

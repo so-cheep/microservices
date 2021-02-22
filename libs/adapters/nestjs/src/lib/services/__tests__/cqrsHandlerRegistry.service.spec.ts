@@ -4,16 +4,9 @@ import {
   TestingModule,
   TestingModuleBuilder,
 } from '@nestjs/testing'
-import { ModuleOptionsToken, TransportToken } from '../../constants'
-import {
-  CheepMicroservicesModuleConfig,
-  CheepNestApi,
-  GenericMicroserviceApi,
-  GenericNestApi,
-} from '../../types'
-import { CqrsHandlerRegistryService } from '../cqrsHandlerRegistry.service'
+import { TransportToken } from '../../constants'
+import { CheepMicroservicesModuleConfig } from '../../types'
 import { mockTransport } from '../../__mocks__/transport'
-import { mocked } from 'ts-jest/utils'
 
 const moduleName = 'TEST'
 const mockQueryFn = jest.fn()
@@ -47,7 +40,8 @@ const providers = [
       moduleName,
       commandHandlers: commandHandlers,
       queryHandlers,
-      listenEventsFrom: [],
+      listenEvery: jest.fn(),
+      handlers: [],
     },
   },
   {
