@@ -203,7 +203,7 @@ export abstract class TransportBase implements Transport {
       isRpc: true,
     })
 
-    return await resultTask
+    return resultTask
   }
 
   // this needs to allow for a fire and forget or a route handler for the router to work

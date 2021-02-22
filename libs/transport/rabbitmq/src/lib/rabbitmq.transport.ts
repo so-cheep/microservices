@@ -166,7 +166,13 @@ export class RabbitMQTransport<
   }
 
   async stop() {
-    await this.channel.removeSetup(this.bindingSetup)
+    await this.channel.removeSetup(
+      this.bindingSetup,
+      (c: ConfirmChannel, cb) => {
+        c.removeAllListeners()
+        cb(null)
+      },
+    )
 
     await super.stop()
   }
