@@ -20,6 +20,7 @@ import {
   RouteMapReturn,
   ApiWithExecutableKeys,
   createTransportApi,
+  Api,
 } from '@cheep/transport-api'
 import {
   CheepMicroservicesModuleConfig,
@@ -38,7 +39,7 @@ export class CheepApi<
   /** local api definition, *only required for publishing or handling local events* */
   // eslint-disable-next-line @typescript-eslint/ban-types
   TLocalApi extends ApiWithExecutableKeys = {
-    api: never
+    api: Api
     executableKeys: never
   },
   /** the type of the metadata object *optional* */
@@ -114,7 +115,7 @@ export class CheepApi<
       : never
   >(
     route?: (
-      eventPick: RouteMap<TRemoteApi & TLocalApi>,
+      eventPick: RouteMap<TRemoteApi['api'] & TLocalApi['api']>,
     ) => TEventSelection[],
   ): Observable<EventWithMetadata<TPayload, TPath, TMeta>> {
     if (!route) {

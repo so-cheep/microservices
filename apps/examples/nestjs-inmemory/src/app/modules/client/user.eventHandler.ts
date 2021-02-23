@@ -5,13 +5,15 @@ import { Group } from '../groups/groups.api'
 import { User } from '../user/user.api'
 import { ClientRemoteApi } from './client.api'
 
-type UserEvents = ClientRemoteApi['Event']['User']
+type UserEvents = ClientRemoteApi['api']['Event']['User']
+
 @Injectable()
 export class ClientUserEventHandler
   implements UserEvents, OnApplicationBootstrap {
   userList: User[] = []
 
   constructor(private api: CheepApi<ClientRemoteApi>) {}
+
   GroupMembership: {
     added: (
       group: Group,
