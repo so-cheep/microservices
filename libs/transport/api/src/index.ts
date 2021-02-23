@@ -4,9 +4,11 @@ export { transportApi } from './lib/transport.api'
 export {
   Api,
   TransportApiOptions,
-  TransportHandler as CheepHandler,
-  ExecutableApi as CallableApi,
+  TransportHandler,
+  ExecutableApi,
+  PublishableApi,
   RouteMap,
   RouteMapReturn,
   CheepOperators,
+  ApiWithExecutableKeys,
 } from './lib/types'
