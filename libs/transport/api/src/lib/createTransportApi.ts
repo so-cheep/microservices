@@ -1,6 +1,12 @@
 import { MessageMetadata, Transport } from '@cheep/transport'
-import { Api, ApiWithExecutableKeys, TransportApi } from './types'
-import { transportApi } from './transport.api'
+import {
+  Api,
+  ApiWithExecutableKeys,
+  TransportApi,
+  ExecutableApi,
+  TransportApiOptions,
+} from './types'
+import { recursiveApiCaller } from './recursiveApiCaller'
 
 export function createTransportApi<
   TApi extends ApiWithExecutableKeys
@@ -28,4 +34,16 @@ export function createTransportApi<
       referrer,
     }),
   }
+}
+
+function transportApi<TApi extends Api>(
+  transport: Transport,
+  options?: TransportApiOptions,
+): ExecutableApi<TApi> {
+  const { joinSymbol = '.' } = options ?? {}
+
+  return <any>recursiveApiCaller(transport, {
+    ...options,
+    joinSymbol,
+  })
 }

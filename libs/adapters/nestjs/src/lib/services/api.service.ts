@@ -13,13 +13,13 @@ import {
   TransportToken,
 } from '../constants'
 import {
-  Api,
-  CallableApi,
-  transportApi,
+  ExecutableApi,
+  PublishableApi,
   TransportHandlerOptions,
   RouteMap,
   RouteMapReturn,
-  CheepOperators,
+  ApiWithExecutableKeys,
+  createTransportApi,
 } from '@cheep/transport-api'
 import {
   CheepMicroservicesModuleConfig,
@@ -34,15 +34,15 @@ import { filter, share } from 'rxjs/operators'
 @Injectable()
 export class CheepApi<
   /** remote api definition */
-  TRemoteApi extends Api,
+  TRemoteApi extends ApiWithExecutableKeys,
   /** local api definition, *only required for publishing or handling local events* */
   // eslint-disable-next-line @typescript-eslint/ban-types
-  TLocalApi extends Api = {},
+  TLocalApi extends ApiWithExecutableKeys = {
+    api: never
+    executableKeys: never
+  },
   /** the type of the metadata object *optional* */
-  TMeta extends MessageMetadata = MessageMetadata,
-  TExecutablePrefixes extends keyof (TRemoteApi | TLocalApi) =
-    | 'Query'
-    | 'Command'
+  TMeta extends MessageMetadata = MessageMetadata
 > implements OnModuleInit {
   private mergedConfig: CheepMicroservicesRootConfig &
     Pick<
@@ -51,23 +51,24 @@ export class CheepApi<
     >
 
   /** call remote api and receive responses */
-  get execute(): CallableApi<
-    Pick<TRemoteApi & TLocalApi, TExecutablePrefixes | CheepOperators>
+  get execute(): ExecutableApi<
+    Pick<
+      TRemoteApi['api'] & TLocalApi['api'],
+      TRemoteApi['executableKeys'] | TLocalApi['executableKeys']
+    >
   > {
-    return transportApi(this.transport, {
-      mode: 'EXECUTE',
+    return createTransportApi(this.transport, {
       joinSymbol: this.mergedConfig.joinSymbol,
-      argsProcessor: processArgsSafely,
-    })
+    }).execute
   }
 
   /** publish remote api, will resolve once message is successfully sent */
-  get publish(): CallableApi<TRemoteApi & TLocalApi> {
-    return transportApi(this.transport, {
-      mode: 'PUBLISH',
+  get publish(): PublishableApi<
+    TRemoteApi['api'] & TLocalApi['api']
+  > {
+    return createTransportApi(this.transport, {
       joinSymbol: this.mergedConfig.joinSymbol,
-      argsProcessor: processArgsSafely,
-    })
+    }).publish
   }
 
   // for observable events
@@ -176,8 +177,8 @@ export class CheepApi<
     return {
       ...this.rootConfig,
       ...(this.moduleConfig as CheepMicroservicesModuleConfig<
-        Api,
-        Api
+        ApiWithExecutableKeys,
+        ApiWithExecutableKeys
       >),
     }
   }
