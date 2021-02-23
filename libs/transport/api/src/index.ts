@@ -10,4 +10,5 @@ export {
   RouteMapReturn,
   CheepOperators,
   ApiWithExecutableKeys,
+  TransportApi,
 } from './lib/types'
