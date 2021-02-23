@@ -20,7 +20,6 @@ import {
   RouteMapReturn,
   ApiWithExecutableKeys,
   createTransportApi,
-  Api,
 } from '@cheep/transport-api'
 import {
   CheepMicroservicesModuleConfig,
@@ -39,7 +38,7 @@ export class CheepApi<
   /** local api definition, *only required for publishing or handling local events* */
   // eslint-disable-next-line @typescript-eslint/ban-types
   TLocalApi extends ApiWithExecutableKeys = {
-    api: Api
+    api: Record<never, never>
     executableKeys: never
   },
   /** the type of the metadata object *optional* */
