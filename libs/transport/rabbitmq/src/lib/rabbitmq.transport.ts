@@ -1,6 +1,6 @@
 import {
-  FailedMessageError,
   MessageMetadata,
+  normalizeError,
   SendMessageProps,
   SendReplyMessageProps,
   TransportBase,
@@ -121,20 +121,25 @@ export class RabbitMQTransport<
             message,
             replyTo,
           })
-        } catch (err: unknown) {
-          if (err instanceof FailedMessageError) {
-            await this.channel.sendToQueue(
-              this.deadLetterQueueName,
-              Buffer.from(err.fullFailedMessage),
-              {
-                correlationId,
-                replyTo,
-                headers: {
-                  route,
-                },
+        } catch (err: any) {
+          const payload = this.utils.jsonDecode(message)
+
+          await this.channel.sendToQueue(
+            this.deadLetterQueueName,
+            Buffer.from(
+              this.utils.jsonEncode({
+                ...payload,
+                errorData: normalizeError(err),
+              }),
+            ),
+            {
+              correlationId,
+              replyTo,
+              headers: {
+                route,
               },
-            )
-          }
+            },
+          )
         }
 
         x.ack(msg)

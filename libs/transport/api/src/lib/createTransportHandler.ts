@@ -30,7 +30,7 @@ export function createTransportHandler<
 
     const route = proxy()
 
-    const intermediateHandler = (
+    const intermediateHandler = async (
       msg: TransportCompactMessage<unknown[]>,
     ) => {
       const api = createTransportApi(transport, options, {
@@ -38,8 +38,8 @@ export function createTransportHandler<
         metadata: msg.metadata,
       })
 
-      const result = handler(api, ...msg.payload, msg.metadata)
-      return Promise.resolve(result)
+      const result = await handler(api, ...msg.payload, msg.metadata)
+      return result
     }
 
     Object.defineProperty(intermediateHandler, 'name', {

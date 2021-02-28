@@ -21,7 +21,6 @@ import {
 } from './transport'
 import 'reflect-metadata'
 import { WILL_NOT_HANDLE } from './constants'
-import { FailedMessageError } from './failedMessage.error'
 
 export interface TransportOptions<
   TMeta extends MessageMetadata = MessageMetadata
@@ -283,13 +282,7 @@ export abstract class TransportBase implements Transport {
             return
           }
 
-          const fullFailedMessage = this.utils.jsonEncode({
-            metadata: message.metadata,
-            payload: message.payload,
-            errorData: normalizeError(err),
-          })
-
-          throw new FailedMessageError(err, fullFailedMessage)
+          throw err
         }
       }
     }
