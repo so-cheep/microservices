@@ -1,4 +1,5 @@
 import type { Referrer } from '@cheep/transport'
+import { ApiWithExecutableKeys } from '@cheep/transport-api'
 import type { GroupCommands } from './group.commands'
 import type { GroupQueries } from './group.queries'
 
@@ -14,18 +15,21 @@ export interface UserGroup {
   name: string
 }
 
-export type GroupApi = {
-  Query: { Group: GroupQueries }
-  Command: { Group: GroupCommands }
-  Event: {
-    Group: {
-      created: (group: Group, ref?: Referrer) => void
-      updated: (group: Group, ref?: Referrer) => void
-      Members: {
-        changed: (group: Group, ref?: Referrer) => void
+export type GroupApi = ApiWithExecutableKeys<
+  {
+    Query: { Group: GroupQueries }
+    Command: { Group: GroupCommands }
+    Event: {
+      Group: {
+        created: (group: Group, ref?: Referrer) => void
+        updated: (group: Group, ref?: Referrer) => void
+        Members: {
+          changed: (group: Group, ref?: Referrer) => void
+        }
       }
     }
-  }
-}
+  },
+  'Command' | 'Query'
+>
 
 export type RemoteApi = import('../user/user.api').UserApi

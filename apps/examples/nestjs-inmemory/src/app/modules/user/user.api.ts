@@ -1,4 +1,5 @@
 import { Referrer } from '@cheep/transport'
+import { ApiWithExecutableKeys } from '@cheep/transport-api'
 import { Group } from '../groups/groups.api'
 import type { UserCommands } from './user.commands'
 import type { UserQueries } from './user.query.service'
@@ -14,11 +15,14 @@ export interface UserGroup {
   name: string
 }
 
-export type UserApi = {
-  Query: { User: UserQueries }
-  Command: { User: UserCommands }
-  Event: { User: UserEvents }
-}
+export type UserApi = ApiWithExecutableKeys<
+  {
+    Query: { User: UserQueries }
+    Command: { User: UserCommands }
+    Event: { User: UserEvents }
+  },
+  'Query' | 'Command'
+>
 
 export interface UserEvents {
   created: (user: User, ref?: Referrer) => void
