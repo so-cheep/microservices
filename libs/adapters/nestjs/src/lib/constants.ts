@@ -1,9 +1,15 @@
-export const RootOptionsToken = Symbol(
-  'CheepMicroservices RootOptions',
-)
-export const TransportToken = Symbol('CheepMicroservices Transport')
+import { CheepMicroservicesRootConfig } from './types'
 
-export const ModuleNameToken = Symbol('CheepMicroservices ModuleName')
-export const ModuleOptionsToken = Symbol(
+export const TransportToken = Symbol('CheepMicroservices Transport')
+export const RootConfigToken = Symbol('CheepTransport RootConfig')
+
+export const defaultRootConfig = {
+  executablePrefixes: ['Command', 'Query'],
+  joinSymbol: '.',
+} as Partial<CheepMicroservicesRootConfig>
+
+export const ModuleConfigToken = Symbol(
   'CheepMicroservices ModuleOptions',
 )
+
+export const CheepReferrerToken = Symbol('Cheep Referrer')

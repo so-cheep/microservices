@@ -1,4 +1,5 @@
 import {
+  FailedMessageError,
   MessageMetadata,
   SendMessageProps,
   SendReplyMessageProps,
@@ -120,18 +121,20 @@ export class RabbitMQTransport<
             message,
             replyTo,
           })
-        } catch (err) {
-          await this.channel.sendToQueue(
-            this.deadLetterQueueName,
-            msg.content,
-            {
-              correlationId,
-              replyTo,
-              headers: {
-                route,
+        } catch (err: unknown) {
+          if (err instanceof FailedMessageError) {
+            await this.channel.sendToQueue(
+              this.deadLetterQueueName,
+              Buffer.from(err.fullFailedMessage),
+              {
+                correlationId,
+                replyTo,
+                headers: {
+                  route,
+                },
               },
-            },
-          )
+            )
+          }
         }
 
         x.ack(msg)
@@ -166,7 +169,13 @@ export class RabbitMQTransport<
   }
 
   async stop() {
-    await this.channel.removeSetup(this.bindingSetup)
+    await this.channel.removeSetup(
+      this.bindingSetup,
+      (c: ConfirmChannel, cb) => {
+        c.removeAllListeners()
+        cb(null)
+      },
+    )
 
     await super.stop()
   }

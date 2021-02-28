@@ -8,7 +8,7 @@ export class TransactionDurationError extends Error {
     public readonly callStack: string[],
   ) {
     super(
-      `Recursion call [${transactionId}, ${callStack
+      `Transaction Duration Error [${transactionId}, ${transactionDuration}ms, ${callStack
         .concat([route])
         .join(' -> ')}]`,
     )

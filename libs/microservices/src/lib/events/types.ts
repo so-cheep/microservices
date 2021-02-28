@@ -1,4 +1,5 @@
 import type { MessageMetadata, Referrer } from '@cheep/transport'
+import type { Api } from '@cheep/transport-api'
 import type { Observable } from 'rxjs'
 
 export type EventPublishFunction<TPayload extends unknown> = (
@@ -10,22 +11,14 @@ export type EventMap<
   TEventMap extends EventMap<TEventMap> = any
 > = Record<string, TEventMap | EventPublishFunction<unknown>>
 
-export interface EventApi<
-  TNamespace extends string,
-  TEvents extends EventMap,
-  TMeta extends MessageMetadata = MessageMetadata
-> {
-  namespace: TNamespace
-  events: TEvents
-  metadata: TMeta
-}
+export type EventApi = Api
 
-export type EventPublisher<
-  TEventApi extends EventApi<string, EventMap>
-> = Record<
-  TEventApi['namespace'],
-  EventPublishersWithMeta<TEventApi['events'], TEventApi['metadata']>
->
+// export type EventPublisher<
+//   TEventApi extends TransportApi
+// > = Record<
+//   TEventApi['namespace'],
+//   EventPublishersWithMeta<TEventApi['events'], TEventApi['metadata']>
+// >
 
 export type EventPublishersWithMeta<
   TEvents extends EventMap,
@@ -39,8 +32,6 @@ export type EventPublishersWithMeta<
       ) => Promise<void>
     : EventPublishersWithMeta<TEvents[k], TMeta>
 }
-
-export abstract class EventBase {}
 
 export type EventWithMetadata<
   TEventPayload = unknown,
@@ -77,27 +68,11 @@ type EventsFromMap<
   }
 >
 
-/** extracts all possible events from an eventApi as a union.  */
-export type AllEventsMap<
-  TEventApi extends EventApi<string, EventMap>
-> = ValuesOf<
-  {
-    [key in TEventApi['namespace']]: TEventApi extends EventApi<
-      key,
-      infer Events
-    >
-      ? EventsFromMap<Events, [key], TEventApi['metadata']>
-      : never
-  }
->
-
 type ValuesOf<T> = T[keyof T]
 
 // HANDLER TYPES
 
-export interface EventHandler<
-  TEventApi extends EventApi<string, EventMap>
-> {
+export interface EventHandler<TEventApi extends TransportApi> {
   /** provide a reliable handler for a single event */
   on: FunctionalEventHandlerFactory<TEventApi>
   /** get an observable of events (with optional, type-safe filtering) */
@@ -128,18 +103,16 @@ type EventMapToReturns<
     : unknown
 }
 
-type EventSelector<TEventApi extends EventApi<string, EventMap>> = {
-  [key in TEventApi['namespace']]: TEventApi extends EventApi<
-    key,
-    infer Events
-  >
-    ? EventMapToReturns<Events, [key]>
-    : never
-}
+// type EventSelector<TEventApi extends TransportApi> = {
+//   [key in TEventApi['namespace']]: TEventApi extends
+//     key,
+//     infer Events
+//   >
+//     ? EventMapToReturns<Events, [key]>
+//     : never
+// }
 
-type FunctionalEventHandlerFactory<
-  TEventApi extends EventApi<string, EventMap>
-> = <
+type FunctionalEventHandlerFactory<TEventApi extends TransportApi> = <
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   TEventSelection extends EventMapReturn<unknown, string[]>,
   TPayload = TEventSelection extends EventMapReturn<infer R, string[]>
@@ -150,15 +123,16 @@ type FunctionalEventHandlerFactory<
   // ? TEventSelection
   // : 'WOOT'
 >(
-  event: (event: EventSelector<TEventApi>) => TEventSelection,
+  event: (event: EventMapToReturns<TEventApi, []>) => TEventSelection,
   handler: (
     payload: TPayload,
-    referrer: Referrer<TEventApi['metadata']>,
+    referrer: Referrer,
   ) => void | Promise<void>,
 ) => void
 
 type FilteredEventObservable<
-  TEventApi extends EventApi<string, EventMap>
+  TEventApi extends TransportApi,
+  TMeta extends MessageMetadata = MessageMetadata
 > = <
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   TEventSelection extends EventMapReturn<unknown, string[]>,
@@ -172,7 +146,7 @@ type FilteredEventObservable<
     ? R
     : never
 >(
-  event?: (event: EventSelector<TEventApi>) => TEventSelection[],
-) => Observable<
-  EventWithMetadata<TPayload, TPath, TEventApi['metadata']>
->
+  event?: (
+    event: EventMapToReturns<TEventApi, []>,
+  ) => TEventSelection[],
+) => Observable<EventWithMetadata<TPayload, TPath, TMeta>>

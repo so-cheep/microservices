@@ -8,18 +8,34 @@ import {
   Logger,
 } from '@nestjs/common'
 import { Transport, TransportBase } from '@cheep/transport'
-import { TransportToken } from '../../constants'
-import { onHandlerRegistrationComplete } from '../../util/moduleRegistry'
+import {
+  defaultRootConfig,
+  RootConfigToken,
+  TransportToken,
+} from './constants'
+
+import { CheepMicroservicesRootConfig } from './types'
+import { onHandlerRegistrationComplete } from './util/handlerRegistration'
 const logger = new Logger('CheepTransport')
 /**
  * the core module is used for storing globally available config, which is just the transport for now
  */
 @Global()
-@Module({})
+@Module({
+  providers: [
+    {
+      provide: RootConfigToken,
+      useValue: defaultRootConfig,
+    },
+  ],
+})
 export class CheepTransportModule
   implements OnModuleInit, OnApplicationShutdown {
-  static forRoot(transport: Transport): DynamicModule {
-    // init the transport now
+  static forRoot(
+    options: CheepMicroservicesRootConfig,
+  ): DynamicModule {
+    const { transport } = options
+
     transport
       .init()
       .then(() =>
@@ -29,6 +45,13 @@ export class CheepTransportModule
     return {
       module: CheepTransportModule,
       providers: [
+        {
+          provide: RootConfigToken,
+          useValue: {
+            ...defaultRootConfig,
+            ...options,
+          },
+        },
         {
           provide: TransportToken,
           useValue: transport,
@@ -42,7 +65,7 @@ export class CheepTransportModule
         //   useExisting: transport,
         // },
       ],
-      exports: [TransportToken],
+      exports: [TransportToken, TransportBase, RootConfigToken],
       global: true,
     }
   }

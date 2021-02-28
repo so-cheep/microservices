@@ -1,21 +1,21 @@
-import { CheepEvents } from '@cheep/nestjs'
+import { CheepApi } from '@cheep/nestjs'
 import { Injectable } from '@nestjs/common'
 import * as faker from 'faker'
-import { AppMetadata } from '../../types'
+
 import { User, UserApi } from './user.api'
 
 @Injectable()
 export class UserCommands {
-  constructor(private events: CheepEvents<never, UserApi>) {}
+  constructor(private api: CheepApi<UserApi>) {}
   async create(
     props: { user: Omit<User, 'id'> },
-    meta?,
+    referrer?,
   ): Promise<number> {
     const newUser = {
       ...props.user,
       id: faker.random.number(),
     }
-    await this.events.publish.User.created(newUser, meta)
+    await this.api.publish.Event.User.created(newUser, referrer)
     return newUser.id
   }
 
