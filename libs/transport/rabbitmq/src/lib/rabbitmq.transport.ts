@@ -122,14 +122,14 @@ export class RabbitMQTransport<
             replyTo,
           })
         } catch (err: any) {
-          const payload = this.utils.jsonDecode(message)
+          const fullMessage = this.utils.jsonDecode(message)
 
           await this.channel.sendToQueue(
             this.deadLetterQueueName,
             Buffer.from(
-              this.utils.jsonEncode({
-                ...payload,
-                errorData: normalizeError(err),
+              this.utils.jsonEncode(<any>{
+                ...fullMessage,
+                handlingErrorData: normalizeError(err),
               }),
             ),
             {
