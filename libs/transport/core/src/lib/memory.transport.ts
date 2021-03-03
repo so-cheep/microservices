@@ -10,11 +10,18 @@ import {
 export class MemoryTransport<
   TMeta extends MessageMetadata = MessageMetadata
 > extends TransportBase {
+  private uniqueIndex = 0
+
   constructor(
     protected options: TransportOptions<TMeta> & {
       messageDelayTime?: number
+    } = {},
+    protected utils: TransportUtils = {
+      newId: () =>
+        Date.now().toString() + (++this.uniqueIndex).toString(),
+      jsonEncode: JSON.stringify,
+      jsonDecode: JSON.parse,
     },
-    protected utils: TransportUtils,
   ) {
     super(options, utils)
   }

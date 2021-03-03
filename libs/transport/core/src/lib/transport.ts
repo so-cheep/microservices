@@ -82,7 +82,7 @@ export type RawHandler = (
 
 export type RouteHandler = (
   item: TransportCompactMessage,
-) => Promise<unknown | void>
+) => Promise<unknown | void> | unknown | void
 
 export type FireAndForgetHandler = (
   item: TransportCompactMessage,

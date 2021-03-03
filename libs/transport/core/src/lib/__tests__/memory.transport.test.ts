@@ -2,32 +2,51 @@ import { MemoryTransport } from '../memory.transport'
 import { RemoteError } from '../remote.error'
 import { Transport } from '../transport'
 
-let transport: Transport
-let i = 0
+describe('memory.simpleTramsport', () => {
+  it('should work with minimal effort', async () => {
+    const transport = new MemoryTransport()
 
-// jest.setTimeout(30000) // need for aws setup
+    await transport.init()
 
-beforeEach(async () => {
-  transport = new MemoryTransport(
-    {
-      defaultRpcTimeout: 1000,
-      messageDelayTime: 0,
-    },
-    {
-      jsonDecode: JSON.parse,
-      jsonEncode: JSON.stringify,
-      newId: () => (++i).toString(),
-    },
-  )
+    transport.on('PING', () => 'PONG')
 
-  await transport.init()
-})
+    await transport.start()
 
-afterEach(async () => {
-  await transport.dispose()
+    const result = await transport.execute({
+      route: 'PING',
+      payload: {},
+    })
+
+    expect(result).toBe('PONG')
+  })
 })
 
 describe('memory.transport', () => {
+  let transport: Transport
+  let i = 0
+
+  // jest.setTimeout(30000) // need for aws setup
+
+  beforeEach(async () => {
+    transport = new MemoryTransport(
+      {
+        defaultRpcTimeout: 1000,
+        messageDelayTime: 0,
+      },
+      {
+        jsonDecode: JSON.parse,
+        jsonEncode: JSON.stringify,
+        newId: () => (++i).toString(),
+      },
+    )
+
+    await transport.init()
+  })
+
+  afterEach(async () => {
+    await transport.dispose()
+  })
+
   it('should publish and receive response', async () => {
     transport.on('PING', async ({ metadata }) => {
       expect(metadata.sessionId).toBe('s1')
