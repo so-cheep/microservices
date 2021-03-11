@@ -8,7 +8,7 @@ export type ClientApi = ApiWithExecutableKeys<
   {
     Command: {
       Ui: {
-        showBanner: (arg: { message: string }) => Promise<void>
+        showBanner: (arg: { message: string }) => Promise<string>
       }
     }
     Query: {}

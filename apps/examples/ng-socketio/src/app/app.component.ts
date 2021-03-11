@@ -24,8 +24,17 @@ export class AppComponent implements OnInit {
       e => e.Command.Ui.showBanner,
       (_, arg) => {
         this.bannerMessage = arg.message
+        return `Woo hoo!`
       },
     )
+    this.api.on(
+      e => e.Event.User.created,
+      (_, arg) => {
+        this.users = [...this.users, arg]
+      },
+    )
+
+    this.api.transport.start()
   }
 
   async addUser() {
