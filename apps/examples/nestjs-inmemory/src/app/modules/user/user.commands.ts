@@ -16,7 +16,7 @@ export class UserCommands {
       ...props.user,
       id: faker.random.number(),
     }
-    console.log(inspect(referrer))
+
     if (referrer.metadata.clientId) {
       // this was sent from a client, so let them know it was successful!
       this.api.execute.Command.$({
