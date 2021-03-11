@@ -180,9 +180,7 @@ export type TransportApi<
 
 export interface ApiWithExecutableKeys<
   TApi extends Api = Api,
-  TExecutablePrefixes extends keyof TApi | CheepOperators =
-    | string
-    | CheepOperators
+  TExecutablePrefixes extends keyof TApi = string
 > {
   api: TApi
   executableKeys: TExecutablePrefixes
