@@ -1,7 +1,6 @@
 import { CheepApi } from '@cheep/nestjs'
 import { Injectable } from '@nestjs/common'
 import * as faker from 'faker'
-import { inspect } from 'util'
 
 import { User, UserApi, UserRemoteApi } from './user.api'
 

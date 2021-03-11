@@ -20,7 +20,7 @@ export class RestService implements OnApplicationBootstrap {
       console.log('EVENT', e.type, e.payload, e.metadata),
         console.log(
           'Event span:',
-          new Date((e as any).metadata.transactionStartedAt),
+          new Date(e.metadata.transactionStartedAt as number),
           '->',
           new Date(),
         )
