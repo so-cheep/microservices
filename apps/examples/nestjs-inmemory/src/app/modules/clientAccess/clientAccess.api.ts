@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/ban-types */
 
-import { Router } from '@cheep/router'
+import type { Router } from '@cheep/router'
 
-export type ClientAccessApi = Router<
-  import('../client/client.api').ClientApi,
+type ClientRouter = Router<
+  import('../../../../../ng-socketio/src/client.api').ClientApi,
   { clientId: string }
 >
+export type ClientAccessApi = ClientRouter
 
 export type ClientAccessRemoteApi = import('../user/user.api').UserApi &
-  import('../groups/groups.api').GroupApi
+  import('../groups/groups.api').GroupsApi

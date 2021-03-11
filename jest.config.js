@@ -9,5 +9,6 @@ module.exports = {
     '<rootDir>/libs/transport/api',
     '<rootDir>/libs/router',
     '<rootDir>/libs/utils',
+    '<rootDir>/apps/examples/ng-socketio',
   ],
 }

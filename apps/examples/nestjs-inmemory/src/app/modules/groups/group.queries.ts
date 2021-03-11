@@ -1,6 +1,6 @@
 import { CheepApi } from '@cheep/nestjs'
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common'
-import { Group, GroupApi } from './groups.api'
+import { Group, GroupsApi } from './groups.api'
 
 @Injectable()
 export class GroupQueries implements OnApplicationBootstrap {
@@ -8,7 +8,7 @@ export class GroupQueries implements OnApplicationBootstrap {
     { id: 0, name: 'default', color: 'red', members: [] },
   ]
 
-  constructor(private api: CheepApi<GroupApi>) {}
+  constructor(private api: CheepApi<GroupsApi>) {}
 
   onApplicationBootstrap() {
     // update query model from events!

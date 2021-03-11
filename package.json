@@ -23,15 +23,21 @@
     "update": "nx migrate latest",
     "workspace-generator": "nx workspace-generator",
     "dep-graph": "nx dep-graph",
-    "help": "nx help"
+    "help": "nx help",
+    "postinstall": "ngcc --properties es2015 browser module main --first-only --create-ivy-entry-points"
   },
   "private": true,
   "devDependencies": {
+    "@angular-devkit/build-angular": "~0.1102.0",
+    "@angular/compiler-cli": "^11.2.0",
+    "@angular/language-service": "^11.2.0",
     "@nestjs/common": "^7.6.5",
     "@nestjs/core": "^7.6.5",
     "@nestjs/platform-express": "^7.6.5",
     "@nestjs/testing": "^7.6.5",
+    "@nrwl/angular": "^11.4.0",
     "@nrwl/cli": "11.2.9",
+    "@nrwl/cypress": "11.4.0",
     "@nrwl/eslint-plugin-nx": "11.2.9",
     "@nrwl/jest": "11.2.9",
     "@nrwl/node": "11.2.9",
@@ -51,13 +57,16 @@
     "amqp-connection-manager": "^3.2.1",
     "amqplib": "^0.6.0",
     "aws-sdk": "^2.817.0",
+    "cypress": "^6.0.1",
     "dotenv": "6.2.0",
     "eslint": "7.10.0",
     "eslint-config-prettier": "6.0.0",
+    "eslint-plugin-cypress": "^2.10.3",
     "faker": "^5.1.0",
     "flatted": "^3.1.0",
     "jest": "26.2.2",
     "jest-marbles": "^2.5.1",
+    "jest-preset-angular": "8.3.2",
     "jsonwebtoken": "^8.5.1",
     "prettier": "2.1.2",
     "redis": "^3.0.2",
@@ -71,5 +80,18 @@
     "tslint": "~6.1.0",
     "typescript": "~4.0.3",
     "uuid": "^8.3.2"
+  },
+  "dependencies": {
+    "@angular/animations": "^11.2.0",
+    "@angular/common": "^11.2.0",
+    "@angular/compiler": "^11.2.0",
+    "@angular/core": "^11.2.0",
+    "@angular/forms": "^11.2.0",
+    "@angular/platform-browser": "^11.2.0",
+    "@angular/platform-browser-dynamic": "^11.2.0",
+    "@angular/router": "^11.2.0",
+    "rxjs": "~6.6.3",
+    "tslib": "^2.0.0",
+    "zone.js": "^0.10.2"
   }
 }

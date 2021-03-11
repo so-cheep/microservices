@@ -1,12 +1,13 @@
 import { CheepApi } from '@cheep/nestjs'
 import { Injectable } from '@nestjs/common'
 import * as faker from 'faker'
+import { inspect } from 'util'
 
-import { User, UserApi } from './user.api'
+import { User, UserApi, UserRemoteApi } from './user.api'
 
 @Injectable()
 export class UserCommands {
-  constructor(private api: CheepApi<UserApi>) {}
+  constructor(private api: CheepApi<UserRemoteApi, UserApi>) {}
   async create(
     props: { user: Omit<User, 'id'> },
     referrer?,
@@ -14,6 +15,15 @@ export class UserCommands {
     const newUser = {
       ...props.user,
       id: faker.random.number(),
+    }
+    console.log(inspect(referrer))
+    if (referrer.metadata.clientId) {
+      // this was sent from a client, so let them know it was successful!
+      this.api.execute.Command.$({
+        clientId: referrer.metadata.clientId,
+      }).Ui.showBanner({
+        message: `Thanks for creating user id ${newUser.id}`,
+      })
     }
     await this.api.publish.Event.User.created(newUser, referrer)
     return newUser.id

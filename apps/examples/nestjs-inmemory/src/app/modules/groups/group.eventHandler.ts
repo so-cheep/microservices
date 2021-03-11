@@ -1,12 +1,12 @@
 import { CheepApi } from '@cheep/nestjs'
 import { Injectable } from '@nestjs/common'
-import { Group, GroupApi, RemoteApi } from './groups.api'
+import { Group, GroupsApi, GroupsRemoteApi } from './groups.api'
 
-type events = GroupApi['Event']['Group']
+type events = GroupsApi['api']['Event']['Group']
 @Injectable()
 export class GroupEventHandler
   implements Partial<Record<keyof events, unknown>> {
-  constructor(private api: CheepApi<RemoteApi, GroupApi>) {}
+  constructor(private api: CheepApi<GroupsRemoteApi, GroupsApi>) {}
 
   updated(group: Group, referrer: never) {
     this.api.execute.Command.Group.addUser(

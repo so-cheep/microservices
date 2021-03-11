@@ -1,0 +1,7 @@
+<div class="banner-message" *ngIf="bannerMessage">
+  {{ bannerMessage }}
+</div>
+
+<button (click)="addUser()">Add User</button>
+
+<pre>{{ users | json }}</pre>
