@@ -383,13 +383,15 @@ export abstract class TransportBase implements Transport {
       // Process additional handlers
       if (additionalHandlers.length) {
         const tasks = additionalHandlers.map(handler =>
-          handler(
-            {
-              route: msg.route,
-              payload: message.payload,
-              metadata: message.metadata,
-            },
-            msg,
+          Promise.resolve(
+            handler(
+              {
+                route: msg.route,
+                payload: message.payload,
+                metadata: message.metadata,
+              },
+              msg,
+            ),
           ).catch(err => {
             if (err === WILL_NOT_HANDLE) {
               return
