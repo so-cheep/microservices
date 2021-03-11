@@ -20,9 +20,11 @@ export class UserCommands {
       // this was sent from a client, so let them know it was successful!
       this.api.execute.Command.$({
         clientId: referrer.metadata.clientId,
-      }).Ui.showBanner({
-        message: `Thanks for creating user id ${newUser.id}`,
       })
+        .Ui.showBanner({
+          message: `Thanks for creating user id ${newUser.id}`,
+        })
+        .catch()
     }
     await this.api.publish.Event.User.created(newUser, referrer)
     return newUser.id
