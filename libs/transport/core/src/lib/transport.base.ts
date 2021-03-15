@@ -19,7 +19,6 @@ import {
   TransportMessage,
   TransportState,
 } from './transport'
-import 'reflect-metadata'
 import { WILL_NOT_HANDLE } from './constants'
 
 export interface TransportOptions<
@@ -37,7 +36,7 @@ export interface TransportUtils {
   jsonDecode: (s: string) => PureMessage
 }
 
-const HANDLER_META = Symbol('ROUTE_HANDLER')
+// const HANDLER_META = Symbol('ROUTE_HANDLER')
 export abstract class TransportBase implements Transport {
   private routeHandlers = new Map<string, RouteHandler[]>()
   private prefixHandlers = new Map<
@@ -232,7 +231,7 @@ export abstract class TransportBase implements Transport {
 
     if (isRawHandler) {
       const prefix = prefixes as string
-      Reflect.defineMetadata(HANDLER_META, true, action)
+      // Reflect.defineMetadata(HANDLER_META, true, action)
       const handlers = this.rawHandlers.get(prefix) ?? new Set()
       handlers.add(<RawHandler>action)
       this.rawHandlers.set(prefix, handlers)
@@ -296,29 +295,31 @@ export abstract class TransportBase implements Transport {
       const handlers = registeredPrefixes.flatMap(prefix => {
         const handlerSet = this.prefixHandlers.get(prefix) ?? []
 
-        return [...handlerSet]
-          .filter(
-            handler =>
-              // only fire for handlers who DO NOT have the metadata
-              !Reflect.hasMetadata(HANDLER_META, handler),
-          )
-          .map(handler => {
-            return new Promise((resolve, reject) => {
-              try {
-                handler({
-                  route: msg.route,
-                  payload: message.payload,
-                  metadata: message.metadata,
-                })
+        return (
+          [...handlerSet]
+            // .filter(
+            //   handler =>
+            //     // only fire for handlers who DO NOT have the metadata
+            //     !Reflect.hasMetadata(HANDLER_META, handler),
+            // )
+            .map(handler => {
+              return new Promise((resolve, reject) => {
+                try {
+                  handler({
+                    route: msg.route,
+                    payload: message.payload,
+                    metadata: message.metadata,
+                  })
 
-                resolve(true)
-              } catch (err) {
-                reject(err)
-              }
-            }).catch(err => {
-              console.warn('onEveryAction.Error', prefix, err)
+                  resolve(true)
+                } catch (err) {
+                  reject(err)
+                }
+              }).catch(err => {
+                console.warn('onEveryAction.Error', prefix, err)
+              })
             })
-          })
+        )
       })
     }
 
@@ -382,7 +383,7 @@ export abstract class TransportBase implements Transport {
       }
       // Process additional handlers
       if (additionalHandlers.length) {
-        const tasks = additionalHandlers.map(handler =>
+        const tasks = additionalHandlers.map((handler: any) =>
           handler(
             {
               route: msg.route,
