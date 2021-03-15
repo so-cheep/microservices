@@ -361,8 +361,6 @@ export abstract class TransportBase implements Transport {
               errorData: normalizeError(err),
             }),
           })
-
-          return
         }
 
         throw err
