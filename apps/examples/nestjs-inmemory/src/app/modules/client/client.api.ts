@@ -1,4 +1,4 @@
-import { ApiWithExecutableKeys } from '@cheep/transport-api'
+import { ApiWithExecutableKeys } from '@cheep/transport'
 import { ClientCommands } from './client.commands'
 
 /* eslint-disable @typescript-eslint/ban-types */

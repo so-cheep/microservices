@@ -20,7 +20,7 @@ import {
   RouteMapReturn,
   ApiWithExecutableKeys,
   createTransportApi,
-} from '@cheep/transport-api'
+} from '@cheep/transport'
 import {
   CheepMicroservicesModuleConfig,
   CheepMicroservicesRootConfig,

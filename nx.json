@@ -27,7 +27,6 @@
     "microservices": { "tags": ["cqrs"] },
     "adapters-nestjs": { "tags": [] },
     "examples-nestjs-inmemory": { "tags": [] },
-    "transport-api": { "tags": [] },
     "router": { "tags": [] },
     "utils": { "tags": [] }
   }

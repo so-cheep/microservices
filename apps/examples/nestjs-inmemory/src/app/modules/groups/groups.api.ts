@@ -1,5 +1,5 @@
 import type { Referrer } from '@cheep/transport'
-import { ApiWithExecutableKeys } from '@cheep/transport-api'
+import { ApiWithExecutableKeys } from '@cheep/transport'
 import type { GroupCommands } from './group.commands'
 import type { GroupQueries } from './group.queries'
 

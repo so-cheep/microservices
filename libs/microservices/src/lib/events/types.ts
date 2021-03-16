@@ -1,5 +1,5 @@
 import type { MessageMetadata, Referrer } from '@cheep/transport'
-import type { Api } from '@cheep/transport-api'
+import type { Api } from '@cheep/transport'
 import type { Observable } from 'rxjs'
 
 export type EventPublishFunction<TPayload extends unknown> = (
