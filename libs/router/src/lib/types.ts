@@ -1,13 +1,19 @@
 import type { TransportCompactMessage } from '@cheep/transport'
+import { ApiWithExecutableKeys } from '@cheep/transport'
 import type { AllFunctionArgs } from '@cheep/utils'
 
 /** create a routable remote api */
 export type Router<
-  TRemoteApi,
+  TRemoteApi extends ApiWithExecutableKeys,
   TRouterArgs extends Record<string, unknown>
-> = {
-  $: (arg: TRouterArgs) => TRemoteApi
-}
+> = ApiWithExecutableKeys<
+  {
+    [k in TRemoteApi['executableKeys']]: {
+      $: (arg: TRouterArgs) => TRemoteApi['api'][k]
+    }
+  },
+  TRemoteApi['executableKeys']
+>
 
 /**
  * A deep replacement across an api, allowing for functions at any node in the tree,

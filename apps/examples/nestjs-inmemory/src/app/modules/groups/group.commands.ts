@@ -1,6 +1,6 @@
 import { CheepApi } from '@cheep/nestjs'
 import { Injectable } from '@nestjs/common'
-import { Group, GroupApi } from './groups.api'
+import { Group, GroupsApi } from './groups.api'
 import * as faker from 'faker'
 import { AppMetadata } from '../../types'
 import { GroupQueries } from './group.queries'
@@ -9,7 +9,7 @@ import { Referrer } from '@cheep/transport'
 @Injectable()
 export class GroupCommands {
   constructor(
-    private api: CheepApi<GroupApi>,
+    private api: CheepApi<GroupsApi>,
     private query: GroupQueries,
   ) {}
 

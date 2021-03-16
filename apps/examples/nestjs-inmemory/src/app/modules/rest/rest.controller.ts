@@ -20,7 +20,7 @@ export class RestService implements OnApplicationBootstrap {
       console.log('EVENT', e.type, e.payload, e.metadata),
         console.log(
           'Event span:',
-          new Date((e as any).metadata.transactionStartedAt),
+          new Date(e.metadata.transactionStartedAt as number),
           '->',
           new Date(),
         )
@@ -57,7 +57,6 @@ export class RestService implements OnApplicationBootstrap {
         color: faker.random.arrayElement(['red', 'blue']),
       },
     })
-
     return this.client.execute.Query.Group.getById({ id })
   }
   execute
@@ -78,10 +77,8 @@ export class RestService implements OnApplicationBootstrap {
     @Param('clientId') clientId: string,
     @Query('value') value?: string,
   ) {
-    return await this.client.execute
-      .$({
-        clientId,
-      })
-      .Command.XuLi.doTheThing({ num: Number(value) })
+    return await this.client.execute.Command.$({
+      clientId,
+    }).Ui.showBanner({ message: value ?? 'Rest call' })
   }
 }

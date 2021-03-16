@@ -15,7 +15,7 @@ export interface UserGroup {
   name: string
 }
 
-export type GroupApi = ApiWithExecutableKeys<
+export type GroupsApi = ApiWithExecutableKeys<
   {
     Query: { Group: GroupQueries }
     Command: { Group: GroupCommands }
@@ -32,4 +32,4 @@ export type GroupApi = ApiWithExecutableKeys<
   'Command' | 'Query'
 >
 
-export type RemoteApi = import('../user/user.api').UserApi
+export type GroupsRemoteApi = import('../user/user.api').UserApi

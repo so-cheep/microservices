@@ -5,7 +5,6 @@ Build Realtime, Event Driven application
 ## Libraries:
 
 - [@cheep/transport](libs/transport/core/README.md)
-- [@cheep/transport-api](libs/transport/api/README.md)
 - [@cheep/transport-rabbitmq](libs/transport/rabbitmq/README.md)
 - [@cheep/transport-aws](libs/transport/aws/README.md)
 - [@cheep/adapters/nestjs](libs/transport/adapters/nestjs/README.md)

@@ -28,6 +28,11 @@
     "adapters-nestjs": { "tags": [] },
     "examples-nestjs-inmemory": { "tags": [] },
     "router": { "tags": [] },
-    "utils": { "tags": [] }
+    "utils": { "tags": [] },
+    "examples-ng-socketio": { "tags": ["example"] },
+    "examples-ng-socketio-e2e": {
+      "tags": [],
+      "implicitDependencies": ["examples-ng-socketio"]
+    }
   }
 }

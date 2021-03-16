@@ -1,0 +1,40 @@
+/*
+ * Remove template code below
+ */
+:host {
+  display: block;
+  font-family: sans-serif;
+  min-width: 300px;
+  max-width: 600px;
+  margin: 50px auto;
+  border-radius: 4px;
+}
+
+.banner-message {
+  display: block;
+  padding: 9px;
+  margin: 9px 0;
+  border: 1px solid #e76f51;
+  border-radius: 4px;
+  text-align: center;
+}
+
+main {
+  padding: 0 36px;
+}
+
+button {
+  padding: 9px;
+  border: 1px solid #2a9d8f;
+  border-radius: 4px;
+
+  color: #2a9d8f;
+  background: none;
+}
+
+pre {
+  padding: 9px;
+  border-radius: 4px;
+  background-color: #264653;
+  color: #eee;
+}

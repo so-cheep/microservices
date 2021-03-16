@@ -8,5 +8,6 @@ module.exports = {
     '<rootDir>/apps/examples/nestjs-inmemory',
     '<rootDir>/libs/router',
     '<rootDir>/libs/utils',
+    '<rootDir>/apps/examples/ng-socketio',
   ],
 }

@@ -33,3 +33,5 @@ export interface UserEvents {
     }
   }
 }
+
+export type UserRemoteApi = import('../clientAccess/clientAccess.api').ClientAccessApi
