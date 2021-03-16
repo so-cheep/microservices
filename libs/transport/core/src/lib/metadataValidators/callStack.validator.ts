@@ -1,6 +1,6 @@
 import { CallStackMetadata } from '../metadataReducers/callStack.reducer'
 import { TransactionMetadata } from '../metadataReducers/transaction.reducer'
-import { RecursionCallError } from '../recursion.error'
+import { RecursionCallError } from '../errors/recursion.error'
 import { ValidatorMessage } from '../transport'
 
 export function callStackValidator(

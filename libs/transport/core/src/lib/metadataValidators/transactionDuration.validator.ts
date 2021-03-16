@@ -1,5 +1,5 @@
 import { TransactionMetadata } from '../metadataReducers/transaction.reducer'
-import { TransactionDurationError } from '../transactionDuration.error'
+import { TransactionDurationError } from '../errors/transactionDuration.error'
 import { MetadataValidator, ValidatorMessage } from '../transport'
 
 export function transactionDurationValidator(

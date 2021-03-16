@@ -2,8 +2,8 @@ import {
   NormalizedError,
   normalizeError,
 } from './domain/normalizeError'
-import { RemoteError } from './remote.error'
-import { RpcTimeoutError } from './rpcTimeout.error'
+import { RemoteError } from './errors/remote.error'
+import { RpcTimeoutError } from './errors/rpcTimeout.error'
 import {
   ExecuteProps,
   FireAndForgetHandler,
@@ -231,7 +231,6 @@ export abstract class TransportBase implements Transport {
 
     if (isRawHandler) {
       const prefix = prefixes as string
-      // Reflect.defineMetadata(HANDLER_META, true, action)
       const handlers = this.rawHandlers.get(prefix) ?? new Set()
       handlers.add(<RawHandler>action)
       this.rawHandlers.set(prefix, handlers)
@@ -295,31 +294,23 @@ export abstract class TransportBase implements Transport {
       const handlers = registeredPrefixes.flatMap(prefix => {
         const handlerSet = this.prefixHandlers.get(prefix) ?? []
 
-        return (
-          [...handlerSet]
-            // .filter(
-            //   handler =>
-            //     // only fire for handlers who DO NOT have the metadata
-            //     !Reflect.hasMetadata(HANDLER_META, handler),
-            // )
-            .map(handler => {
-              return new Promise((resolve, reject) => {
-                try {
-                  handler({
-                    route: msg.route,
-                    payload: message.payload,
-                    metadata: message.metadata,
-                  })
-
-                  resolve(true)
-                } catch (err) {
-                  reject(err)
-                }
-              }).catch(err => {
-                console.warn('onEveryAction.Error', prefix, err)
+        return [...handlerSet].map(handler => {
+          return new Promise((resolve, reject) => {
+            try {
+              handler({
+                route: msg.route,
+                payload: message.payload,
+                metadata: message.metadata,
               })
-            })
-        )
+
+              resolve(true)
+            } catch (err) {
+              reject(err)
+            }
+          }).catch(err => {
+            console.warn('onEveryAction.Error', prefix, err)
+          })
+        })
       })
     }
 
@@ -327,7 +318,6 @@ export abstract class TransportBase implements Transport {
     const rawPrefixHandlers = registeredPrefixes.flatMap(p => [
       ...(this.rawHandlers.get(p) ?? []),
     ])
-    // .filter(handler => Reflect.hasMetadata(HANDLER_META, handler))
 
     // put the route prefix handlers last, so if there are more specific handlers provided, they will be the RPC call
     const routeHandlers = [
@@ -379,6 +369,7 @@ export abstract class TransportBase implements Transport {
           }),
         })
       }
+
       // Process additional handlers
       if (additionalHandlers.length) {
         const tasks = additionalHandlers.map((handler: any) =>
