@@ -9,6 +9,7 @@ export class GroupEventHandler
   constructor(private api: CheepApi<GroupsRemoteApi, GroupsApi>) {}
 
   updated(group: Group, referrer: never) {
+    console.log('group event handler')
     this.api.execute.Command.Group.addUser(
       { groupId: group.id, userId: 1 },
       referrer,
