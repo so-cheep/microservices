@@ -5,7 +5,7 @@ import {
   TransportApi,
   createTransportApi,
   createTransportHandler,
-} from '@cheep/transport-api'
+} from '@cheep/transport'
 import { parse, stringify } from 'flatted'
 import { v4 } from 'uuid'
 

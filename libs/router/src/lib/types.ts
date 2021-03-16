@@ -1,5 +1,5 @@
 import type { TransportCompactMessage } from '@cheep/transport'
-import { ApiWithExecutableKeys } from '@cheep/transport-api'
+import { ApiWithExecutableKeys } from '@cheep/transport'
 import type { AllFunctionArgs } from '@cheep/utils'
 
 /** create a routable remote api */
