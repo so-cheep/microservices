@@ -6,13 +6,13 @@ npm run build router -- --with-deps
 npm run build adapters-nestjs -- --with-deps
 
 cd dist/libs/transport/core
-npm publish --access public --tag beta
+npm publish --access public
 
 # cd ../aws
 # npm publish --access public --tag beta
 
 cd ../rabbitmq
-# npm publish --access public --tag beta
+npm publish --access public
 
 # cd ../../router
 # npm publish --access public --tag beta
