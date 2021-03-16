@@ -5,8 +5,8 @@ import {
   TransportCompactMessage,
   TransportMessage,
   WILL_NOT_HANDLE,
+  Api,
 } from '@cheep/transport'
-import { Api } from '@cheep/transport-api'
 import { getLeafAddresses } from '@cheep/utils'
 import { FilterMap } from './types'
 

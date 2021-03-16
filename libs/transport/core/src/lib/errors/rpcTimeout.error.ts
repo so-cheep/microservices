@@ -1,4 +1,4 @@
-import { PublishProps } from './transport'
+import { PublishProps } from '../transport'
 
 export class RpcTimeoutError extends Error {
   public readonly code = 'RPC_TIMEOUT_ERROR'

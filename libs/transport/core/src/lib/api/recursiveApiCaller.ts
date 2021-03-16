@@ -1,4 +1,4 @@
-import { MessageMetadata, Transport } from '@cheep/transport'
+import { MessageMetadata, Transport } from '../transport'
 import {
   MetadataOperator,
   RouteVariableOperator,

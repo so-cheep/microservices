@@ -2,7 +2,7 @@ import {
   MessageMetadata,
   Transport,
   TransportCompactMessage,
-} from '@cheep/transport'
+} from '../transport'
 import { createRouteBuilderProxy } from './createRouteBuilderProxy'
 import { ApiWithExecutableKeys, TransportHandler } from './types'
 import { createTransportApi } from './createTransportApi'

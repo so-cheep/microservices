@@ -13,7 +13,7 @@ import type {
 import { ModuleConfigToken, RootConfigToken } from './constants'
 import { CheepApi } from './services/api.service'
 import type { TransportCompactMessage } from '@cheep/transport'
-import { ApiWithExecutableKeys } from '@cheep/transport-api'
+import { ApiWithExecutableKeys } from '@cheep/transport'
 import { getLeafAddresses } from '@cheep/utils'
 import { ModuleRef } from '@nestjs/core'
 import { getFunctionValues } from './util/getFunctionValues'

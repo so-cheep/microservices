@@ -1,8 +1,7 @@
 import type {
   TransportHandlerOptions,
-  Api,
   ApiWithExecutableKeys,
-} from '@cheep/transport-api'
+} from '@cheep/transport'
 import type { Transport } from '@cheep/transport'
 import type { DeepPartial, ReplaceLeaves } from '@cheep/utils'
 

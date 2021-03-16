@@ -1,4 +1,4 @@
-import type { MessageMetadata, Referrer } from '@cheep/transport'
+import type { MessageMetadata, Referrer } from '../transport'
 
 export type Api = Record<string, unknown>
 
@@ -180,8 +180,8 @@ export type TransportApi<
 
 export interface ApiWithExecutableKeys<
   TApi extends Api = Api,
-  TExecutablePrefixes extends keyof TApi = string
+  TExecutableKeys extends keyof TApi = string
 > {
   api: TApi
-  executableKeys: TExecutablePrefixes
+  executableKeys: TExecutableKeys
 }
