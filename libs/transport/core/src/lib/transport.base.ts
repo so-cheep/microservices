@@ -21,10 +21,12 @@ import {
 } from './transport'
 import { WILL_NOT_HANDLE } from './constants'
 
-export interface TransportOptions {
+export interface TransportOptions<
+  TMeta extends MessageMetadata = any
+> {
   defaultRpcTimeout?: number
-  metadataReducers?: MetadataReducer<MessageMetadata>[]
-  metadataValidator?: MetadataValidator<MessageMetadata>[]
+  metadataReducers?: MetadataReducer<TMeta>[]
+  metadataValidator?: MetadataValidator<TMeta>[]
   failedMessagesQueueName?: string
 }
 
