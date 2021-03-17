@@ -1,6 +1,24 @@
 {
   "name": "@cheep/transport-rabbitmq",
-  "version": "1.0.2",
+  "version": "1.0.3",
+  "contributors": [
+    "Ezeki",
+    "Kyle"
+  ],
+  "keywords": [
+    "transport",
+    "microservices",
+    "cqrs",
+    "events",
+    "eventdriven",
+    "cheep",
+    "rabbitmq"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/so-cheep/microservices",
+    "directory": "libs/transport/rabbitmq"
+  },
   "peerDependencies": {
     "amqp-connection-manager": "3.2.2",
     "amqplib": "0.7.1"

@@ -1,4 +1,22 @@
 {
   "name": "@cheep/transport-aws",
-  "version": "1.0.0-beta.16"
+  "version": "1.0.0",
+  "contributors": [
+    "Ezeki",
+    "Kyle"
+  ],
+  "keywords": [
+    "transport",
+    "microservices",
+    "cqrs",
+    "events",
+    "eventdriven",
+    "cheep",
+    "aws"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/so-cheep/microservices",
+    "directory": "libs/transport/aws"
+  }
 }

@@ -1,4 +1,17 @@
 {
   "name": "@cheep/utils",
-  "version": "0.0.1"
+  "version": "1.0.0",
+  "contributors": [
+    "Ezeki",
+    "Kyle"
+  ],
+  "keywords": [
+    "utils",
+    "cheep"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/so-cheep/microservices",
+    "directory": "libs/utils"
+  }
 }

@@ -1,4 +1,21 @@
 {
   "name": "@cheep/transport",
-  "version": "1.0.1"
+  "version": "1.0.2",
+  "contributors": [
+    "Ezeki",
+    "Kyle"
+  ],
+  "keywords": [
+    "transport",
+    "microservices",
+    "cqrs",
+    "events",
+    "eventdriven",
+    "cheep"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/so-cheep/microservices",
+    "directory": "libs/transport/core"
+  }
 }
