@@ -3,8 +3,11 @@
 Basic example:
 
 ```ts
+import { NatsTransport } from '@cheep/transport-nats'
+
 const transport = new NatsTransport({
   moduleName: 'Test',
+  natsServerUrls: ['nats://127.0.0.1:1222'],
 })
 
 await transport.init()

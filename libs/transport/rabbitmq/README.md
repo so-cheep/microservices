@@ -1,7 +1,28 @@
-# transport-rabbitmq
+# RabbitMQ transport for Cheep
 
-This library was generated with [Nx](https://nx.dev).
+Basic example:
 
-## Running unit tests
+```ts
+import { RabbitMQTransport } from '@cheep/transport-rabbitmq'
 
-Run `nx test transport-rabbitmq` to execute the unit tests via [Jest](https://jestjs.io).
+const transport = new RabbitMQTransport({
+  moduleName: 'Test',
+  amqpConnectionString: 'amqp://localhost:5672',
+  publishExchangeName: 'Hub',
+})
+
+await transport.init()
+
+transport.on('PING', async () => 'PONG')
+
+await transport.start()
+
+const result = await transport.execute({
+  route: 'PING',
+  payload: {},
+})
+
+expect(result).toBe('PONG')
+
+await transport.dispose()
+```
