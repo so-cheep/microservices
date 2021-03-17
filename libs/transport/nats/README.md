@@ -1,9 +1,24 @@
-# @cheep/nats
+# NATS transport for Cheep
 
-A [nats](https://nats.io/) transport for the Cheep infrastructure
+Basic example:
 
-> This is built with the `nats@beta` version of the JS library, so use it with a grain of salt until they release v2
+```ts
+const transport = new NatsTransport({
+  moduleName: 'Test',
+})
 
-## Running unit tests
+await transport.init()
 
-Run `nx test transport-nats` to execute the unit tests via [Jest](https://jestjs.io).
+transport.on('PING', async () => 'PONG')
+
+await transport.start()
+
+const result = await transport.execute({
+  route: 'PING',
+  payload: {},
+})
+
+expect(result).toBe('PONG')
+
+await transport.dispose()
+```

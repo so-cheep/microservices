@@ -21,7 +21,7 @@ describe('nats.transport', () => {
       payload: {},
     })
 
-    expect(result).toBe(true)
+    expect(result).toBe('PONG')
 
     await transport.dispose()
   })
