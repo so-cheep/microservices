@@ -1,6 +1,8 @@
 # Cheep Microservices
 
-Build Realtime, Event Driven application
+Build Event Driven application.
+
+Simple. Safe.
 
 ## Libraries:
 
