@@ -15,6 +15,7 @@ export class RabbitMQTransport extends TransportBase {
   private responseQueueName: string
   private deadLetterQueueName: string
   private bindingSetup: any
+  private i = 0
 
   constructor(
     protected options: TransportOptions & {
@@ -23,11 +24,18 @@ export class RabbitMQTransport extends TransportBase {
       publishExchangeName: string
       isTestMode?: boolean
     },
-    protected utils: TransportUtils,
+    protected utils: TransportUtils = {
+      newId: () => Date.now().toString() + (this.i++).toString(),
+      jsonDecode: JSON.parse,
+      jsonEncode: JSON.stringify,
+    },
   ) {
     super(options, utils)
   }
 
+  /**
+   * Ensures necessary queues and exchange exists in RabbitMQ
+   */
   async init() {
     const {
       moduleName,
@@ -79,6 +87,9 @@ export class RabbitMQTransport extends TransportBase {
     await this.channel.waitForConnect()
   }
 
+  /**
+   * Registers bindings for each route and starts listening queues
+   */
   async start() {
     await super.start()
 
@@ -170,6 +181,9 @@ export class RabbitMQTransport extends TransportBase {
     await this.channel.addSetup(this.bindingSetup)
   }
 
+  /**
+   * Stops listening queues
+   */
   async stop() {
     await this.channel.removeSetup(
       this.bindingSetup,
@@ -182,6 +196,9 @@ export class RabbitMQTransport extends TransportBase {
     await super.stop()
   }
 
+  /**
+   * Disposes allocated resources and closes RabbitMQ connection
+   */
   async dispose() {
     await super.dispose()
 

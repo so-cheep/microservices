@@ -7,7 +7,7 @@ npm run build router -- --with-deps
 npm run build adapters-nestjs -- --with-deps
 
 cd dist/libs/transport/core
-# npm publish --access public
+npm publish --access public
 
 # cd ../aws
 # npm publish --access public

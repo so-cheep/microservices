@@ -59,10 +59,16 @@ export abstract class TransportBase implements Transport {
 
   abstract init(): Promise<void>
 
+  /**
+   * Starts listening to the transport
+   */
   async start() {
     this._state = TransportState.STARTED
   }
 
+  /**
+   * Stops listening to the transport
+   */
   async stop() {
     this._state = TransportState.STOPPED
   }
@@ -78,6 +84,12 @@ export abstract class TransportBase implements Transport {
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   protected newRpcCallRegistered(activeRpcCallsCount: number) {}
 
+  /**
+   * Registers handler for the specific route
+   * @param route you want to listen
+   * @param action registered handler
+   * @returns
+   */
   on(route: string, action: RouteHandler) {
     const handlers = this.routeHandlers.get(route)
     if (handlers) {
@@ -104,12 +116,20 @@ export abstract class TransportBase implements Transport {
     }
   }
 
+  /**
+   * Unregisteres all handlers for the specific route
+   * @param route
+   */
   off(route: string) {
     if (this.routeHandlers.has(route)) {
       this.routeHandlers.delete(route)
     }
   }
 
+  /**
+   * Publishes message to the specific route
+   * @returns Promise and it's recommended to wait it, to make sure that message was received by the broker
+   */
   async publish(props: PublishProps<MessageMetadata>) {
     const { route, payload: message, metadata = {}, referrer } = props
 
@@ -129,6 +149,11 @@ export abstract class TransportBase implements Transport {
     })
   }
 
+  /**
+   * Executes route and returns resolved value from the remote route handler
+   *
+   * throws RPC Timeout Error
+   */
   async execute(
     props: ExecuteProps<MessageMetadata>,
   ): Promise<unknown> {
@@ -243,7 +268,12 @@ export abstract class TransportBase implements Transport {
     }
   }
 
+  /**
+   * Clears all allocated resources and stops the transport
+   */
   async dispose() {
+    await this.stop()
+
     this.routeHandlers.clear()
     this.prefixHandlers.clear()
     this.listenCallbacks.clear()

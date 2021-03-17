@@ -44,6 +44,9 @@ export class NatsTransport extends TransportBase {
     super(options, utils)
   }
 
+  /**
+   * Initializes NATS Transport
+   */
   async init(): Promise<void> {
     this.nc = await connect({
       servers: this.options.natsServerUrls,
@@ -58,6 +61,9 @@ export class NatsTransport extends TransportBase {
     })
   }
 
+  /**
+   * Starts connection to the NATS server
+   */
   async start() {
     if (!this.nc || this.nc?.isClosed()) {
       await this.init()
@@ -118,6 +124,9 @@ export class NatsTransport extends TransportBase {
     await super.start()
   }
 
+  /**
+   * Stops connection to the NATS server
+   */
   async stop() {
     // ensure all messages have been sent
     await this.nc.flush()
@@ -127,16 +136,10 @@ export class NatsTransport extends TransportBase {
     await super.stop()
   }
 
+  /**
+   * Disposes allocated resources and Stops connection to the NATS server
+   */
   async dispose() {
-    if (!this.nc.isClosed()) {
-      // ensure all messages have been sent
-      await this.nc.flush()
-      // ensure all messages in flight have been processed
-      await this.nc.drain()
-
-      await this.nc.close()
-    }
-
     await super.dispose()
   }
 

@@ -23,8 +23,12 @@ export class MemoryTransport extends TransportBase {
     super(options, utils)
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  async init() {}
+  /**
+   * Initializes Memory Transport
+   */
+  async init() {
+    /**/
+  }
 
   protected async sendMessage(props: SendMessageProps) {
     const { messageDelayTime = 0 } = this.options

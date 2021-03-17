@@ -1,5 +1,5 @@
 import { MemoryTransport } from '../memory.transport'
-import { RemoteError } from '../remote.error'
+import { RemoteError } from '../errors/remote.error'
 import { Transport } from '../transport'
 
 describe('memory.simpleTramsport', () => {
