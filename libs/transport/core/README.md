@@ -36,7 +36,7 @@ await transport.dispose()
 ```
 
 
-Basic (safe) Example:
+Basic (Type Safed) Example:
 
 ```ts
 import { 
@@ -81,7 +81,6 @@ handler.on(
   },
 )
 
-// start listening messages
 await transport.start()
 
 // RPC call on the PING route
@@ -90,12 +89,7 @@ const result = await api.execute.Command.User.login({
   password: 'Me',
 })
 
-// result will be 'PONG'
 expect(result).toBe('PONG')
 
-// stop listening messages
-await transport.stop()
-
-// dispose will call stop as well if necessary
 await transport.dispose()
 ```
