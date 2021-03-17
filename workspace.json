@@ -242,7 +242,7 @@
             "outputPath": "dist/libs/adapters/nestjs",
             "tsConfig": "libs/adapters/nestjs/tsconfig.lib.json",
             "packageJson": "libs/adapters/nestjs/package.json",
-            "buildableProjectDepsInPackageJsonType": "peerDependencies",
+            "buildableProjectDepsInPackageJsonType": "dependencies",
             "main": "libs/adapters/nestjs/src/index.ts",
             "assets": ["libs/adapters/nestjs/*.md"]
           }
@@ -346,7 +346,8 @@
             "tsConfig": "libs/router/tsconfig.lib.json",
             "packageJson": "libs/router/package.json",
             "main": "libs/router/src/index.ts",
-            "assets": ["libs/router/*.md"]
+            "assets": ["libs/router/*.md"],
+            "externalDependencies": []
           }
         }
       }
