@@ -1,5 +1,4 @@
 import {
-  MessageMetadata,
   SendMessageProps,
   SendReplyMessageProps,
   TransportBase,
@@ -20,9 +19,7 @@ import { purgeQueue } from './app/purgeQueue'
 import { sendMessageToSns } from './app/sendMessageToSns'
 import { sendMessageToSqs } from './app/sendMessageToSqs'
 
-export class SnsSqsTransport<
-  TMeta extends MessageMetadata = MessageMetadata
-> extends TransportBase {
+export class SnsSqsTransport extends TransportBase {
   private topicArn: string
   private queueArn: string
   private queueUrl: string
@@ -31,7 +28,7 @@ export class SnsSqsTransport<
   private responseQueueUrl: string
 
   constructor(
-    protected options: TransportOptions<TMeta> & {
+    protected options: TransportOptions & {
       config:
         | {
             type: 'AUTO'

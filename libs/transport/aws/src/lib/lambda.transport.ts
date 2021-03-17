@@ -1,5 +1,4 @@
 import {
-  MessageMetadata,
   SendMessageProps,
   SendReplyMessageProps,
   TransportBase,
@@ -12,11 +11,9 @@ import { processTriggeredLambdaMessages } from './app/processTriggeredLambdaMess
 import { sendMessageToSns } from './app/sendMessageToSns'
 import { sendMessageToSqs } from './app/sendMessageToSqs'
 
-export class LambdaTransport<
-  TMeta extends MessageMetadata = MessageMetadata
-> extends TransportBase {
+export class LambdaTransport extends TransportBase {
   constructor(
-    protected options: TransportOptions<TMeta> & {
+    protected options: TransportOptions & {
       initialMessages: AWS.SQS.Message[]
       topicArn: string
       responseQueueUrl: string

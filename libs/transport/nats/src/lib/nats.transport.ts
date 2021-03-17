@@ -1,4 +1,5 @@
 import {
+  MessageMetadata,
   SendMessageProps,
   SendReplyMessageProps,
   TransportBase,
