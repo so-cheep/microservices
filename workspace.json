@@ -423,6 +423,7 @@
             "outputPath": "dist/libs/transport/nats",
             "tsConfig": "libs/transport/nats/tsconfig.lib.json",
             "packageJson": "libs/transport/nats/package.json",
+            "buildableProjectDepsInPackageJsonType": "peerDependencies",
             "main": "libs/transport/nats/src/index.ts",
             "assets": ["libs/transport/nats/*.md"]
           }

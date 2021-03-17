@@ -8306,7 +8306,7 @@ nanomatch@^1.2.9:
     snapdragon "^0.8.1"
     to-regex "^3.0.1"
 
-nats@^2.0.0-216:
+nats@2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/nats/-/nats-2.0.0.tgz#35b302bf483f3fa1774f3b5366beffd492e09252"
   integrity sha512-colGvaVKDVDa4uLs+qPv+KYNV2t1cHmRnRTY18rzy7AdxPuy+ZWivKzCw+9f1kOl+E6NAu1Ad2RIetL9j5omeQ==

@@ -43,7 +43,7 @@
     "@nrwl/node": "11.2.9",
     "@nrwl/tao": "11.2.9",
     "@nrwl/workspace": "11.2.9",
-    "@types/amqp-connection-manager": "^2.0.10",
+    "@types/amqp-connection-manager": "2.0.10",
     "@types/amqplib": "^0.5.17",
     "@types/faker": "^5.1.5",
     "@types/jest": "26.0.8",
@@ -54,8 +54,8 @@
     "@types/uuid": "^8.3.0",
     "@typescript-eslint/eslint-plugin": "4.3.0",
     "@typescript-eslint/parser": "4.3.0",
-    "amqp-connection-manager": "^3.2.1",
-    "amqplib": "^0.6.0",
+    "amqp-connection-manager": "3.2.2",
+    "amqplib": "0.7.1",
     "aws-sdk": "^2.817.0",
     "cypress": "^6.0.1",
     "dotenv": "6.2.0",
@@ -80,7 +80,7 @@
     "ts-node": "~9.1.1",
     "tslint": "~6.1.0",
     "typescript": "~4.0.3",
-    "nats": "^2.0.0-216",
+    "nats": "2.0.0",
     "uuid": "^8.3.2"
   },
   "dependencies": {
