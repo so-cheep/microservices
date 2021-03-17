@@ -1,11 +1,8 @@
 ## Transport
+[@cheep/transport](https://www.npmjs.com/package/@cheep/transport) will help you to build Event Driven applications with 💯 type safety.
 
-[@cheep/transport](https://www.npmjs.com/package/@cheep/transport) will help you to build Realtime, Event Driven application. Keep in mind that there is difference between Event Driven and Event Sourcing and they aren't same, [read more about it](https://pablo-iorio.medium.com/event-driven-architectures-vs-event-sourcing-patterns-23d328289bf9).
 
-1. [Naming](docs/naming.md)
-2. [Microservices - Big Picture](docs/microservices.md)
-
-## Example
+Basic (dynamic) example:
 
 ```ts
 import { MemoryTransport } from '@cheep/transport'
@@ -17,7 +14,7 @@ const transport = new MemoryTransport()
 await transport.init()
 
 // register listeners for specific routes
-transport.on('PING', () => 'PONG')
+transport.on('PING', async () => 'PONG')
 
 // start listening messages
 await transport.start()
@@ -29,4 +26,76 @@ const result = await transport.execute({
 })
 
 // result will be 'PONG'
+expect(result).toBe('PONG')
+
+// stop listening messages
+await transport.stop()
+
+// dispose will call stop as well if necessary
+await transport.dispose()
+```
+
+
+Basic (safe) Example:
+
+```ts
+import { 
+  MemoryTransport, 
+  createTransportHandler,
+  createTransportApi,
+  ApiWithExecutableKeys,
+} from '@cheep/transport'
+
+/**
+ * Define api type
+ */
+type Api = {
+  Command: {
+    User: {
+      login: (props: {
+        username: string
+        password: string
+      }): Promise<boolean>
+    }
+  }
+}
+
+type UserApi = ApiWithExecutableKeys<Api, 'Command'>
+
+
+/**
+ * Use UserApi for type safety
+ */
+const transport = new MemoryTransport()
+
+const handler = createTransportHandler<UserApi>(transport)
+const api = createTransportApi<UserApi>(transport)
+
+await transport.init()
+
+// register listeners
+handler.on(
+  x => x.Command.User.login,
+  (_, payload) => {
+    return payload.username === payload.password
+  },
+)
+
+// start listening messages
+await transport.start()
+
+// RPC call on the PING route
+const result = await api.execute.Command.User.login({
+  username: 'Me',
+  password: 'Me',
+})
+
+// result will be 'PONG'
+expect(result).toBe('PONG')
+
+// stop listening messages
+await transport.stop()
+
+// dispose will call stop as well if necessary
+await transport.dispose()
 ```
