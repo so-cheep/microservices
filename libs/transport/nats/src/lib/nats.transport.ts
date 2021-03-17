@@ -1,30 +1,29 @@
 import {
-  MessageMetadata,
   SendMessageProps,
   SendReplyMessageProps,
   TransportBase,
   TransportOptions,
   TransportUtils,
 } from '@cheep/transport'
-import { connect, NatsConnection, Subscription, headers } from 'nats'
+import { connect, NatsConnection, Subscription } from 'nats'
 
 // TODO: support chunking large messages over the wire
 // TODO: support NKey authentication
 // TODO: support Certificat authentication
 // TODO: implement dead letter queue
 
-export class NatsTransport<
-  TMeta extends MessageMetadata = MessageMetadata
-> extends TransportBase {
+export class NatsTransport extends TransportBase {
   protected nc: NatsConnection
   protected subscriptions: Subscription[]
   protected correlationIdHeader = 'X-CHEEP-CORRELATION-ID'
 
+  private i = 0
+
   constructor(
-    protected options: TransportOptions<TMeta> & {
+    protected options: TransportOptions & {
       moduleName: string
       /** array of urls to connect to, may optionally contain username and password or token encoded in the url */
-      natsServerUrls: string[] | string
+      natsServerUrls?: string[] | string
       isTestMode?: boolean
       maxPingOut?: number
 
@@ -36,7 +35,11 @@ export class NatsTransport<
       /** optional authentication method */
       token?: string
     },
-    protected utils: TransportUtils,
+    protected utils: TransportUtils = {
+      newId: () => Date.now().toString() + (this.i++).toString(),
+      jsonDecode: JSON.parse,
+      jsonEncode: JSON.stringify,
+    },
   ) {
     super(options, utils)
   }
