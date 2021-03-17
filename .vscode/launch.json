@@ -5,8 +5,18 @@
 	"version": "0.2.0",
 	"configurations": [
 	{
-    "name": "Attach",
+    "name": "Attach Example Server",
     "port": 9229,
+    "request": "attach",
+    "restart": true,
+    "skipFiles": [
+      "<node_internals>/**"
+    ],
+    "type": "pwa-node"
+  },
+  {
+    "name": "Attach Example Client",
+    "port": 9228,
     "request": "attach",
     "restart": true,
     "skipFiles": [

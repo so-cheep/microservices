@@ -1,20 +1,19 @@
-# Microservices Prototype
+# Cheep Microservices
 
-Event-driven architecture
+Build Realtime, Event Driven application
 
-## Naming
+## Libraries:
 
-- `Command` (RPC) - Always in imperative form. Shouldn't return data back, but can return unique message id.
-- `Query` (RPC) - Request to query data. Always returns data back
-- `Event` - Always in past. Usually it's a result of the Command. One Command can create multiple Events as well. Not awaitable.
+- [@cheep/transport](libs/transport/core/README.md)
+- [@cheep/transport-rabbitmq](libs/transport/rabbitmq/README.md)
+- [@cheep/transport-aws](libs/transport/aws/README.md)
+- [@cheep/adapters/nestjs](libs/transport/adapters/nestjs/README.md)
 
-- `Message` - All of them are called messages
+## Features:
 
-## Transports
+- Powered by Typescript, which means you can have typesafety in whole solution
+- Works out of the box
 
-- `MemoryTransport` - `Ready` In-memory rxjs implementation
-- `RabbitMQTransport` -
-- `SnsSqsTransport` -
-- `SocketIoServerTransport` -
-- `SocketIoClientTransport` -
-- `WebSocketTransport` -
+## Benchmarks:
+
+- Transport Performance: SQS+SNS vs RabbitMQ _(coming soon...)_

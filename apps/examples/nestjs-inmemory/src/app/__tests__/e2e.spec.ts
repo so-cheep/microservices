@@ -30,9 +30,9 @@ describe('example e2e test', () => {
       .expect(userQuery['users'])
   })
 
-  it('POST /user/create', async () => {
+  it('POST /users/create', async () => {
     const { body: newUser } = await request(app.getHttpServer())
-      .get('/user/create')
+      .get('/users/create')
       .expect(200)
 
     expect(newUser).toMatchObject(
@@ -59,9 +59,9 @@ describe('example e2e test', () => {
       .expect(groupQuery['groups'])
   })
 
-  it('POST /group/create', async () => {
+  it('POST /groups/create', async () => {
     const { body: newgroup } = await request(app.getHttpServer())
-      .get('/group/create')
+      .get('/groups/create')
       .expect(200)
 
     expect(newgroup).toMatchObject(
@@ -69,6 +69,7 @@ describe('example e2e test', () => {
         id: expect.any(Number),
         name: expect.any(String),
         color: expect.any(String),
+        members: expect.any(Array),
       }),
     )
 

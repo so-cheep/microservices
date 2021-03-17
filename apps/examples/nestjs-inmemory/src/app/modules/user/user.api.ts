@@ -1,5 +1,5 @@
-import { CheepNestApi } from '@cheep/nestjs'
-import { AppMetadata } from '../../types'
+import { Referrer, ApiWithExecutableKeys } from '@cheep/transport'
+import { Group } from '../groups/groups.api'
 import type { UserCommands } from './user.commands'
 import type { UserQueries } from './user.query.service'
 
@@ -14,21 +14,24 @@ export interface UserGroup {
   name: string
 }
 
-export type UserApi = CheepNestApi<
-  'User',
-  { Test: UserQueries },
-  UserCommands,
-  UserEvents,
-  AppMetadata
+export type UserApi = ApiWithExecutableKeys<
+  {
+    Query: { User: UserQueries }
+    Command: { User: UserCommands }
+    Event: { User: UserEvents }
+  },
+  'Query' | 'Command'
 >
 
 export interface UserEvents {
-  created: (user: User) => void
-  deleted: (user: User) => void
-  Nested: {
-    single: (x: number) => void
+  created: (user: User, ref?: Referrer) => void
+  deleted: (user: User, ref?: Referrer) => void
+  GroupMembership: {
+    added: (group: Group, user: User, ref?: Referrer) => void
     Deeper: {
-      double: (x: boolean) => void
+      double: (x: boolean, ref?: Referrer) => void
     }
   }
 }
+
+export type UserRemoteApi = import('../clientAccess/clientAccess.api').ClientAccessApi

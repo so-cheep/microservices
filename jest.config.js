@@ -6,7 +6,9 @@ module.exports = {
     '<rootDir>/libs/transport/aws',
     '<rootDir>/libs/adapters/nest',
     '<rootDir>/apps/examples/nestjs-inmemory',
-    '<rootDir>/libs/transport/api',
     '<rootDir>/libs/transport/nats',
+    '<rootDir>/libs/router',
+    '<rootDir>/libs/utils',
+    '<rootDir>/apps/examples/ng-socketio',
   ],
 }

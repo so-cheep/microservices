@@ -1,4 +1,8 @@
-import { Transport } from '@cheep/transport'
+import {
+  Transport,
+  TransportCompactMessage,
+  TransportMessage,
+} from '@cheep/transport'
 import { Subject } from 'rxjs'
 import { filter, share } from 'rxjs/operators'
 import { constructRouteKey } from '../utils/constructRouteKey'
@@ -34,12 +38,12 @@ export function handleEvents<
   const event$ = new Subject<EventWithMetadata & { route: string }>()
   event$['closure'] = listenModules.join('|')
 
-  function handler(item) {
+  function handler(item: TransportCompactMessage) {
     if (!item.route.startsWith(EventRouteKey)) return
     event$.next({
       metadata: item.metadata,
       // the event function type requires a single arg, so this is safe
-      payload: (item.message as unknown[]).slice(0, 1).shift(),
+      payload: (item.payload as unknown[]).slice(0, 1).shift(),
       // split by `.` then remove the first, which is the EventRouteKey (Event)
       type: item.route.split('.').slice(1),
       route: item.route,

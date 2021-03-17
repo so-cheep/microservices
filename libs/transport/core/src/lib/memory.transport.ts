@@ -1,4 +1,3 @@
-import { MessageMetadata } from './transport'
 import {
   SendMessageProps,
   SendReplyMessageProps,
@@ -7,26 +6,25 @@ import {
   TransportUtils,
 } from './transport.base'
 
-export class MemoryTransport<
-  TMeta extends MessageMetadata = MessageMetadata
-> extends TransportBase {
+export class MemoryTransport extends TransportBase {
+  private uniqueIndex = 0
+
   constructor(
-    protected options: TransportOptions<TMeta> & {
+    protected options: TransportOptions & {
       messageDelayTime?: number
+    } = {},
+    protected utils: TransportUtils = {
+      newId: () =>
+        Date.now().toString() + (++this.uniqueIndex).toString(),
+      jsonEncode: JSON.stringify,
+      jsonDecode: JSON.parse,
     },
-    protected utils: TransportUtils,
   ) {
     super(options, utils)
   }
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   async init() {}
-
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  async start() {}
-
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  async stop() {}
 
   protected async sendMessage(props: SendMessageProps) {
     const { messageDelayTime = 0 } = this.options

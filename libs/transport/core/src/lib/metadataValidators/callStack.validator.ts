@@ -1,11 +1,14 @@
 import { CallStackMetadata } from '../metadataReducers/callStack.reducer'
-import { RecursionCallError } from '../recursion.error'
+import { TransactionMetadata } from '../metadataReducers/transaction.reducer'
+import { RecursionCallError } from '../errors/recursion.error'
 import { ValidatorMessage } from '../transport'
 
 export function callStackValidator(
   prefixesToCheck: string[] | 'all',
 ) {
-  return (msg: ValidatorMessage<CallStackMetadata>) => {
+  return (
+    msg: ValidatorMessage<CallStackMetadata & TransactionMetadata>,
+  ) => {
     const callStack = <string[]>msg.metadata.callStack ?? []
 
     if (

@@ -1,5 +1,6 @@
 import {
   MessageMetadata,
+  normalizeError,
   SendMessageProps,
   SendReplyMessageProps,
   TransportBase,
@@ -36,16 +37,19 @@ export class RabbitMQTransport<
       amqpConnectionString,
       publishExchangeName,
       isTestMode,
+      failedMessagesQueueName,
     } = this.options
 
     this.queueName = moduleName
-    this.responseQueueName = `${moduleName}Response-${this.utils.newId()}`
+    this.responseQueueName = `${moduleName}-response-${this.utils.newId()}`
 
-    this.deadLetterQueueName = `${moduleName}-DLQ`
+    this.deadLetterQueueName =
+      failedMessagesQueueName || `${moduleName}-failed-messages`
 
     const connection = amqp.connect([amqpConnectionString])
 
     this.channel = connection.createChannel({
+      name: moduleName,
       setup: async (x: ConfirmChannel) => {
         await Promise.all([
           // Hub Exchange
@@ -117,14 +121,23 @@ export class RabbitMQTransport<
             message,
             replyTo,
           })
-        } catch (err) {
+        } catch (err: any) {
+          const fullMessage = this.utils.jsonDecode(message)
+
           await this.channel.sendToQueue(
             this.deadLetterQueueName,
-            msg.content,
+            Buffer.from(
+              this.utils.jsonEncode(<any>{
+                ...fullMessage,
+                handlingErrorData: normalizeError(err),
+              }),
+            ),
             {
               correlationId,
               replyTo,
-              CC: route,
+              headers: {
+                route,
+              },
             },
           )
         }
@@ -161,7 +174,13 @@ export class RabbitMQTransport<
   }
 
   async stop() {
-    await this.channel.removeSetup(this.bindingSetup)
+    await this.channel.removeSetup(
+      this.bindingSetup,
+      (c: ConfirmChannel, cb) => {
+        c.removeAllListeners()
+        cb(null)
+      },
+    )
 
     await super.stop()
   }

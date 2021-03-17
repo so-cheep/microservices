@@ -242,7 +242,7 @@
             "outputPath": "dist/libs/adapters/nestjs",
             "tsConfig": "libs/adapters/nestjs/tsconfig.lib.json",
             "packageJson": "libs/adapters/nestjs/package.json",
-            "buildableProjectDepsInPackageJsonType": "peerDependencies",
+            "buildableProjectDepsInPackageJsonType": "dependencies",
             "main": "libs/adapters/nestjs/src/index.ts",
             "assets": ["libs/adapters/nestjs/*.md"]
           }
@@ -285,6 +285,10 @@
                   "with": "apps/examples/nestjs-inmemory/src/environments/environment.prod.ts"
                 }
               ]
+            },
+            "client": {
+              "main": "apps/examples/nestjs-inmemory/src/main.client.ts",
+              "outputPath": "dist/apps/examples/nestjs-inmemory-client"
             }
           }
         },
@@ -295,11 +299,10 @@
             "port": 9229
           },
           "configurations": {
-            "debug": {
-              "inspect": "inspect-brk"
-            },
-            "nats": {
-              "buildTarget": "examples-nestjs-inmemory:build:nats"
+            "debug": { "inspect": "inspect-brk" },
+            "client": {
+              "port": 9228,
+              "buildTarget": "examples-nestjs-inmemory:build:client"
             }
           }
         },
@@ -321,22 +324,20 @@
         }
       }
     },
-    "transport-api": {
-      "root": "libs/transport/api",
-      "sourceRoot": "libs/transport/api/src",
+    "router": {
+      "root": "libs/router",
+      "sourceRoot": "libs/router/src",
       "projectType": "library",
       "targets": {
         "lint": {
           "executor": "@nrwl/linter:eslint",
-          "options": {
-            "lintFilePatterns": ["libs/transport/api/**/*.ts"]
-          }
+          "options": { "lintFilePatterns": ["libs/router/**/*.ts"] }
         },
         "test": {
           "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/libs/transport/api"],
+          "outputs": ["coverage/libs/router"],
           "options": {
-            "jestConfig": "libs/transport/api/jest.config.js",
+            "jestConfig": "libs/router/jest.config.js",
             "passWithNoTests": true
           }
         },
@@ -344,11 +345,159 @@
           "executor": "@nrwl/node:package",
           "outputs": ["{options.outputPath}"],
           "options": {
-            "outputPath": "dist/libs/transport/api",
-            "tsConfig": "libs/transport/api/tsconfig.lib.json",
-            "packageJson": "libs/transport/api/package.json",
-            "main": "libs/transport/api/src/index.ts",
-            "assets": ["libs/transport/api/*.md"]
+            "outputPath": "dist/libs/router",
+            "tsConfig": "libs/router/tsconfig.lib.json",
+            "packageJson": "libs/router/package.json",
+            "main": "libs/router/src/index.ts",
+            "assets": ["libs/router/*.md"],
+            "externalDependencies": []
+          }
+        }
+      }
+    },
+    "utils": {
+      "root": "libs/utils",
+      "sourceRoot": "libs/utils/src",
+      "projectType": "library",
+      "targets": {
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": { "lintFilePatterns": ["libs/utils/**/*.ts"] }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/libs/utils"],
+          "options": {
+            "jestConfig": "libs/utils/jest.config.js",
+            "passWithNoTests": true
+          }
+        },
+        "build": {
+          "executor": "@nrwl/node:package",
+          "outputs": ["{options.outputPath}"],
+          "options": {
+            "outputPath": "dist/libs/utils",
+            "tsConfig": "libs/utils/tsconfig.lib.json",
+            "packageJson": "libs/utils/package.json",
+            "main": "libs/utils/src/index.ts",
+            "assets": ["libs/utils/*.md"]
+          }
+        }
+      }
+    },
+    "examples-ng-socketio": {
+      "projectType": "application",
+      "root": "apps/examples/ng-socketio",
+      "sourceRoot": "apps/examples/ng-socketio/src",
+      "prefix": "cheep",
+      "targets": {
+        "build": {
+          "executor": "@angular-devkit/build-angular:browser",
+          "options": {
+            "outputPath": "dist/apps/examples/ng-socketio",
+            "index": "apps/examples/ng-socketio/src/index.html",
+            "main": "apps/examples/ng-socketio/src/main.ts",
+            "polyfills": "apps/examples/ng-socketio/src/polyfills.ts",
+            "tsConfig": "apps/examples/ng-socketio/tsconfig.app.json",
+            "aot": true,
+            "assets": [
+              "apps/examples/ng-socketio/src/favicon.ico",
+              "apps/examples/ng-socketio/src/assets"
+            ],
+            "styles": ["apps/examples/ng-socketio/src/styles.scss"],
+            "scripts": []
+          },
+          "configurations": {
+            "production": {
+              "fileReplacements": [
+                {
+                  "replace": "apps/examples/ng-socketio/src/environments/environment.ts",
+                  "with": "apps/examples/ng-socketio/src/environments/environment.prod.ts"
+                }
+              ],
+              "optimization": true,
+              "outputHashing": "all",
+              "sourceMap": false,
+              "namedChunks": false,
+              "extractLicenses": true,
+              "vendorChunk": false,
+              "buildOptimizer": true,
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "2mb",
+                  "maximumError": "5mb"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "6kb",
+                  "maximumError": "10kb"
+                }
+              ]
+            }
+          }
+        },
+        "serve": {
+          "executor": "@angular-devkit/build-angular:dev-server",
+          "options": {
+            "browserTarget": "examples-ng-socketio:build",
+            "proxyConfig": "apps/examples/ng-socketio/proxy.conf.json"
+          },
+          "configurations": {
+            "production": {
+              "browserTarget": "examples-ng-socketio:build:production"
+            }
+          }
+        },
+        "extract-i18n": {
+          "executor": "@angular-devkit/build-angular:extract-i18n",
+          "options": {
+            "browserTarget": "examples-ng-socketio:build"
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "apps/examples/ng-socketio/src/**/*.ts",
+              "apps/examples/ng-socketio/src/**/*.html"
+            ]
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/apps/examples/ng-socketio"],
+          "options": {
+            "jestConfig": "apps/examples/ng-socketio/jest.config.js",
+            "passWithNoTests": true
+          }
+        }
+      }
+    },
+    "examples-ng-socketio-e2e": {
+      "root": "apps/examples/ng-socketio-e2e",
+      "sourceRoot": "apps/examples/ng-socketio-e2e/src",
+      "projectType": "application",
+      "targets": {
+        "e2e": {
+          "executor": "@nrwl/cypress:cypress",
+          "options": {
+            "cypressConfig": "apps/examples/ng-socketio-e2e/cypress.json",
+            "tsConfig": "apps/examples/ng-socketio-e2e/tsconfig.e2e.json",
+            "devServerTarget": "examples-ng-socketio:serve"
+          },
+          "configurations": {
+            "production": {
+              "devServerTarget": "examples-ng-socketio:serve:production"
+            }
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "apps/examples/ng-socketio-e2e/**/*.{js,ts}"
+            ]
           }
         }
       }
@@ -389,5 +538,22 @@
   "cli": {
     "defaultCollection": "@nrwl/node"
   },
-  "defaultProject": "examples-nestjs-inmemory"
+  "defaultProject": "examples-nestjs-inmemory",
+  "generators": {
+    "@nrwl/angular:application": {
+      "style": "scss",
+      "linter": "eslint",
+      "unitTestRunner": "jest",
+      "e2eTestRunner": "cypress",
+      "strict": true
+    },
+    "@nrwl/angular:library": {
+      "style": "scss",
+      "linter": "eslint",
+      "unitTestRunner": "jest"
+    },
+    "@nrwl/angular:component": {
+      "style": "scss"
+    }
+  }
 }

@@ -19,12 +19,9 @@ export type {
 // Event Exports
 export { getEventPublisher, handleEvents } from './lib/events'
 export type {
-  AllEventsMap,
   EventApi,
-  EventBase,
   EventHandler,
   EventMap,
-  EventPublisher,
   EventWithMetadata,
 } from './lib/events/types'
 

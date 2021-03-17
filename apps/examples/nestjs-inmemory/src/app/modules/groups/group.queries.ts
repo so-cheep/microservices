@@ -1,6 +1,6 @@
-import { CheepEvents } from '@cheep/nestjs'
+import { CheepApi } from '@cheep/nestjs'
 import { Injectable, OnApplicationBootstrap } from '@nestjs/common'
-import { Group, GroupApi } from './groups.api'
+import { Group, GroupsApi } from './groups.api'
 
 @Injectable()
 export class GroupQueries implements OnApplicationBootstrap {
@@ -8,16 +8,15 @@ export class GroupQueries implements OnApplicationBootstrap {
     { id: 0, name: 'default', color: 'red', members: [] },
   ]
 
-  constructor(private events: CheepEvents<GroupApi>) {}
+  constructor(private api: CheepApi<GroupsApi>) {}
 
   onApplicationBootstrap() {
     // update query model from events!
-    this.events.on(
-      e => e.Group.created,
-      group => {
-        this.groups.push(group)
-      },
-    )
+    this.api
+      .observe(e => [e.Event.Group.created])
+      .subscribe(({ payload }) => {
+        this.groups.push(payload[0])
+      })
   }
 
   async getById(props: { id: number }): Promise<Group> {

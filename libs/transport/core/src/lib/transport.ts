@@ -1,5 +1,3 @@
-import { NormalizedError } from './domain/normalizeError'
-
 export interface Transport {
   readonly state: TransportState
 
@@ -12,7 +10,23 @@ export interface Transport {
 
   off(route: string): void
 
-  onEvery(prefixes: string[], action: FireAndForgetHandler): void
+  /** provide a fire-and-forget handler for an array of prefixes*/
+  onEvery(
+    prefixes: string[],
+    action: FireAndForgetHandler,
+    isRawHandler?: false,
+  ): void
+  /** provide raw handler for a specific prefix */
+  onEvery(
+    prefix: string,
+    action: RawHandler,
+    isRawHandler: true,
+  ): void
+  onEvery(
+    prefixes: string[] | string,
+    action: RawHandler | FireAndForgetHandler,
+    isRawHandler?: boolean,
+  ): void
 
   /**
    * At this point all handlers are registered and we can
@@ -47,14 +61,13 @@ export interface Transport {
 export interface TransportMessage {
   route: string
   message: string
-
   correlationId: string
   replyTo?: string
 }
 
-export interface TransportCompactMessage {
+export interface TransportCompactMessage<TPayload = unknown> {
   route: string
-  message: unknown
+  payload: TPayload
   metadata: MessageMetadata
 }
 
@@ -62,9 +75,14 @@ export type ListenResponseCallback = (item: TransportMessage) => void
 
 export type MessageMetadata = Record<string, unknown>
 
+export type RawHandler = (
+  item: TransportCompactMessage,
+  raw: TransportMessage,
+) => Promise<unknown | void>
+
 export type RouteHandler = (
   item: TransportCompactMessage,
-) => Promise<unknown | void>
+) => Promise<unknown | void> | unknown | void
 
 export type FireAndForgetHandler = (
   item: TransportCompactMessage,
@@ -72,14 +90,14 @@ export type FireAndForgetHandler = (
 
 export interface PublishProps<TMetadata extends MessageMetadata> {
   route: string
-  message: unknown
+  payload: unknown
   metadata?: Partial<TMetadata>
   referrer?: Referrer<TMetadata>
 }
 
 export interface ExecuteProps<TMetadata extends MessageMetadata> {
   route: string
-  message: unknown
+  payload: unknown
   metadata?: TMetadata
   referrer?: Referrer<TMetadata>
   rpcTimeout?: number
@@ -103,7 +121,7 @@ export type MetadataReducer<
   referrer: Referrer<TMeta>
   currentMetadata: Partial<TMeta>
   currentRoute: string
-  currentMessage: unknown
+  currentPayload: unknown
 }) => Partial<TMeta>
 
 export type MetadataValidator<
@@ -114,6 +132,6 @@ export interface ValidatorMessage<
   TMeta extends MessageMetadata = MessageMetadata
 > {
   route: string
-  message: unknown
+  payload: unknown
   metadata: TMeta
 }

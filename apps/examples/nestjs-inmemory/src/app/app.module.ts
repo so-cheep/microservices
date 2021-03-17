@@ -1,5 +1,7 @@
-import { MicroserviceTransportUtils } from '@cheep/microservices'
-import { CheepMicroservicesModule } from '@cheep/nestjs'
+import {
+  CheepTransportModule,
+  NestTransportUtils,
+} from '@cheep/nestjs'
 import {
   callStackReducer,
   callStackValidator,
@@ -9,22 +11,21 @@ import {
   transactionReducer,
 } from '@cheep/transport'
 import { Module } from '@nestjs/common'
-import { GatewayModule } from './modules/gateway/gateway.module'
+import { ClientAccessModule } from './modules/clientAccess/clientAccess.module'
 import { GroupModule } from './modules/groups/group.module'
+import { RestModule } from './modules/rest/rest.module'
 import { UserModule } from './modules/user/user.module'
 import { AppMetadata } from './types'
 
 @Module({
   imports: [
-    CheepMicroservicesModule.forRoot({
+    CheepTransportModule.forRoot({
       transport: new MemoryTransport<AppMetadata>(
         {
+          // defaultRpcTimeout: 99999,
           metadataReducers: [
             callStackReducer(),
-            transactionReducer(
-              MicroserviceTransportUtils.newId,
-              Date.now,
-            ),
+            transactionReducer(NestTransportUtils.newId, Date.now),
             createdAtReducer(Date.now),
           ],
           metadataValidator: [
@@ -32,12 +33,14 @@ import { AppMetadata } from './types'
             transactionDurationValidator(9999, Date.parse, Date.now),
           ],
         },
-        MicroserviceTransportUtils,
+        NestTransportUtils,
       ),
+      joinSymbol: '.',
     }),
     UserModule,
     GroupModule,
-    GatewayModule,
+    RestModule,
+    ClientAccessModule,
   ],
 })
 export class AppModule {}

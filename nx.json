@@ -1,14 +1,9 @@
 {
   "npmScope": "cheep",
-  "affected": {
-    "defaultBase": "main"
-  },
+  "affected": { "defaultBase": "main" },
   "implicitDependencies": {
     "workspace.json": "*",
-    "package.json": {
-      "dependencies": "*",
-      "devDependencies": "*"
-    },
+    "package.json": { "dependencies": "*", "devDependencies": "*" },
     "tsconfig.base.json": "*",
     "tslint.json": "*",
     ".eslintrc.json": "*",
@@ -23,38 +18,22 @@
     }
   },
   "projects": {
-    "example-pusher-api": {
-      "tags": []
-    },
-    "example-user-api": {
-      "tags": []
-    },
-    "example-user-core": {
-      "tags": []
-    },
-    "transport-core": {
-      "tags": []
-    },
-    "transport-rabbitmq": {
-      "tags": []
-    },
-    "transport-aws": {
-      "tags": []
-    },
-    "microservices": {
-      "tags": ["cqrs"]
-    },
-    "adapters-nestjs": {
-      "tags": []
-    },
-    "examples-nestjs-inmemory": {
-      "tags": []
-    },
-    "transport-api": {
-      "tags": []
-    },
-    "transport-nats": {
-      "tags": []
+    "example-pusher-api": { "tags": [] },
+    "example-user-api": { "tags": [] },
+    "example-user-core": { "tags": [] },
+    "transport-core": { "tags": [] },
+    "transport-rabbitmq": { "tags": [] },
+    "transport-aws": { "tags": [] },
+    "transport-nats": { "tags": [] },
+    "microservices": { "tags": ["cqrs"] },
+    "adapters-nestjs": { "tags": [] },
+    "examples-nestjs-inmemory": { "tags": [] },
+    "router": { "tags": [] },
+    "utils": { "tags": [] },
+    "examples-ng-socketio": { "tags": ["example"] },
+    "examples-ng-socketio-e2e": {
+      "tags": [],
+      "implicitDependencies": ["examples-ng-socketio"]
     }
   }
 }

@@ -1,5 +1,5 @@
-import { CheepNestApi } from '@cheep/nestjs'
-import { AppMetadata } from '../../types'
+import type { Referrer } from '@cheep/transport'
+import { ApiWithExecutableKeys } from '@cheep/transport'
 import type { GroupCommands } from './group.commands'
 import type { GroupQueries } from './group.queries'
 
@@ -15,16 +15,21 @@ export interface UserGroup {
   name: string
 }
 
-export type GroupApi = CheepNestApi<
-  'Group',
-  GroupQueries,
-  GroupCommands,
+export type GroupsApi = ApiWithExecutableKeys<
   {
-    created: (user: Group) => void
-    updated: (user: Group) => void
-    Members: {
-      changed: (group: Group) => void
+    Query: { Group: GroupQueries }
+    Command: { Group: GroupCommands }
+    Event: {
+      Group: {
+        created: (group: Group, ref?: Referrer) => void
+        updated: (group: Group, ref?: Referrer) => void
+        Members: {
+          changed: (group: Group, ref?: Referrer) => void
+        }
+      }
     }
   },
-  AppMetadata
+  'Command' | 'Query'
 >
+
+export type GroupsRemoteApi = import('../user/user.api').UserApi
