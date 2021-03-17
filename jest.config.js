@@ -1,6 +1,6 @@
 module.exports = {
   projects: [
-    '<rootDir>/libs/microservice',
+    ,
     '<rootDir>/libs/transport/core',
     '<rootDir>/libs/transport/rabbitmq',
     '<rootDir>/libs/transport/aws',

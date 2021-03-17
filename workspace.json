@@ -1,69 +1,6 @@
 {
   "version": 2,
   "projects": {
-    "example-pusher-api": {
-      "root": "libs/example/pusher/api",
-      "sourceRoot": "libs/example/pusher/api/src",
-      "projectType": "library",
-      "targets": {
-        "lint": {
-          "executor": "@nrwl/linter:eslint",
-          "options": {
-            "lintFilePatterns": ["libs/example/pusher/api/**/*.ts"]
-          }
-        },
-        "test": {
-          "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/libs/example/pusher/api"],
-          "options": {
-            "jestConfig": "libs/example/pusher/api/jest.config.js",
-            "passWithNoTests": true
-          }
-        }
-      }
-    },
-    "example-user-api": {
-      "root": "libs/example/user/api",
-      "sourceRoot": "libs/example/user/api/src",
-      "projectType": "library",
-      "targets": {
-        "lint": {
-          "executor": "@nrwl/linter:eslint",
-          "options": {
-            "lintFilePatterns": ["libs/example/user/api/**/*.ts"]
-          }
-        },
-        "test": {
-          "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/libs/example/user/api"],
-          "options": {
-            "jestConfig": "libs/example/user/api/jest.config.js",
-            "passWithNoTests": true
-          }
-        }
-      }
-    },
-    "example-user-core": {
-      "root": "libs/example/user/core",
-      "sourceRoot": "libs/example/user/core/src",
-      "projectType": "library",
-      "targets": {
-        "lint": {
-          "executor": "@nrwl/linter:eslint",
-          "options": {
-            "lintFilePatterns": ["libs/example/user/core/**/*.ts"]
-          }
-        },
-        "test": {
-          "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/libs/example/user/core"],
-          "options": {
-            "jestConfig": "libs/example/user/core/jest.config.js",
-            "passWithNoTests": true
-          }
-        }
-      }
-    },
     "transport-core": {
       "root": "libs/transport/core",
       "sourceRoot": "libs/transport/core/src",
@@ -172,46 +109,6 @@
           "options": {
             "commands": ["npm publish --access=public"],
             "cwd": "dist/libs/transport/aws"
-          }
-        }
-      }
-    },
-    "microservices": {
-      "root": "libs/microservices",
-      "sourceRoot": "libs/microservices/src",
-      "projectType": "library",
-      "targets": {
-        "lint": {
-          "executor": "@nrwl/linter:eslint",
-          "options": {
-            "lintFilePatterns": ["libs/microservices/**/*.ts"]
-          }
-        },
-        "test": {
-          "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/libs/microservices"],
-          "options": {
-            "jestConfig": "libs/microservices/jest.config.js",
-            "passWithNoTests": true
-          }
-        },
-        "build": {
-          "executor": "@nrwl/node:package",
-          "outputs": ["{options.outputPath}"],
-          "options": {
-            "outputPath": "dist/libs/microservices",
-            "tsConfig": "libs/microservices/tsconfig.lib.json",
-            "packageJson": "libs/microservices/package.json",
-            "buildableProjectDepsInPackageJsonType": "peerDependencies",
-            "main": "libs/microservices/src/index.ts",
-            "assets": ["libs/microservices/*.md"]
-          }
-        },
-        "publish": {
-          "executor": "@nrwl/workspace:run-commands",
-          "options": {
-            "commands": ["npm publish --access=public"],
-            "cwd": "dist/libs/microservices"
           }
         }
       }
@@ -451,9 +348,7 @@
         },
         "extract-i18n": {
           "executor": "@angular-devkit/build-angular:extract-i18n",
-          "options": {
-            "browserTarget": "examples-ng-socketio:build"
-          }
+          "options": { "browserTarget": "examples-ng-socketio:build" }
         },
         "lint": {
           "executor": "@nrwl/linter:eslint",
@@ -535,9 +430,7 @@
       }
     }
   },
-  "cli": {
-    "defaultCollection": "@nrwl/node"
-  },
+  "cli": { "defaultCollection": "@nrwl/node" },
   "defaultProject": "examples-nestjs-inmemory",
   "generators": {
     "@nrwl/angular:application": {
@@ -552,8 +445,6 @@
       "linter": "eslint",
       "unitTestRunner": "jest"
     },
-    "@nrwl/angular:component": {
-      "style": "scss"
-    }
+    "@nrwl/angular:component": { "style": "scss" }
   }
 }

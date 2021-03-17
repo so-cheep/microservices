@@ -18,14 +18,10 @@
     }
   },
   "projects": {
-    "example-pusher-api": { "tags": [] },
-    "example-user-api": { "tags": [] },
-    "example-user-core": { "tags": [] },
     "transport-core": { "tags": [] },
     "transport-rabbitmq": { "tags": [] },
     "transport-aws": { "tags": [] },
     "transport-nats": { "tags": [] },
-    "microservices": { "tags": ["cqrs"] },
     "adapters-nestjs": { "tags": [] },
     "examples-nestjs-inmemory": { "tags": [] },
     "router": { "tags": [] },

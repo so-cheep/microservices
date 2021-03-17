@@ -1,4 +1,3 @@
-import { MicroserviceTransportUtils } from '@cheep/microservices'
 import { CheepMicroservicesModule } from '@cheep/nestjs'
 import {
   callStackReducer,
