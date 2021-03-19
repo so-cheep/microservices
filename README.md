@@ -10,7 +10,7 @@ Simple. Safe.
 - [@cheep/transport-rabbitmq](libs/transport/rabbitmq/README.md)
 - [@cheep/transport-nats](libs/transport/nats/README.md)
 - [@cheep/transport-aws](libs/transport/aws/README.md)
-- [@cheep/adapters/nestjs](libs/adapters/nestjs/README.md)
+- [@cheep/nestjs](libs/adapters/nestjs/README.md)
 
 ## Features:
 
