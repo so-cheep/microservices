@@ -19,12 +19,13 @@ import {
     CheepMicroservicesModule.forRoot({
       // MemoryTransport is included by default in @cheep/transport,
       // others are also available!
-      transport: new MemoryTransport({
-        // optional metadata config goes here
-      },
-      // this is the set of external plugins / functional callbacks cheep will utilise
-      // we provide a default object for your convenience, but you can override it
-      NestTransportUtils,
+      transport: new MemoryTransport(
+        {
+          // optional metadata config goes here
+        },
+        // this is the set of external plugins / functional callbacks cheep will utilise
+        // we provide a default object for your convenience, but you can override it
+        NestTransportUtils,
       ),
     }),
     /* ...other providers */
@@ -59,22 +60,22 @@ import type { UserQueryService } from './user.query.service'
  * are adequately provided in this module
  */
 export type UserApi = ApiWithExecutableKeys<
-// this is the shape of the api itself, can be either imported classes 
-// or function definitions
-{
-  Query: {
-    User: UserQueryService
+  // this is the shape of the api itself, can be either imported classes
+  // or function definitions
+  {
+    Query: {
+      User: UserQueryService
+    }
+    Command: {
+      User: UserCommandService
+    }
+    Event: {
+      created: (user: User) => void
+    }
   },
-  Command:{
-    User: UserCommandService
-  }
-  Event: {
-    created: (user: User) => void
-  }
-},
-// this is a union of the top level keys from the object which can be "executed",
-// meaning they can be awaited for a response
-"Query" | "Command"
+  // this is a union of the top level keys from the object which can be "executed",
+  // meaning they can be awaited for a response
+  'Query' | 'Command'
 >
 
 /**
@@ -99,7 +100,7 @@ With those types defined, import the `CheepMicroservicesModule.forModule` in you
     // call for module with this module's api, and the remote api union to be consumed
     CheepMicroservicesModule.forModule<UserApi, UserRemoteApi>({
       // this registers your services as handlers of the various API routes available from
-      // the intersection of remote and local api types 
+      // the intersection of remote and local api types
       handlers:{
         Query: {
           User: UserQueryService
@@ -143,7 +144,7 @@ remote module.
 export class GatewayService implements OnApplicationBootstrap {
   constructor(
     // ConsumedApis is an intersection type = UserApi & GroupApi
-    private api.execute: CheepApi<ConsumedApis>,
+    private api: CheepApi<ConsumedApis>,
   ) {}
 
   @Get('users')
@@ -195,4 +196,3 @@ export class GatewayService implements OnApplicationBootstrap {
   }
 }
 ```
-
