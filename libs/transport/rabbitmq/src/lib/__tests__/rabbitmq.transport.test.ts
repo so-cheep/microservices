@@ -208,7 +208,7 @@ describe('rabbitmq.transport.lifecycle', () => {
 })
 
 describe.only('rabbitmq.transport.failedMessages', () => {
-  let transport: RabbitMQTransport
+  let transport: Transport
   let i = 0
 
   beforeAll(async () => {
