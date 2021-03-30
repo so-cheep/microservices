@@ -1,4 +1,5 @@
 import {
+  FailedMessage,
   SendMessageProps,
   SendReplyMessageProps,
   TransportBase,
@@ -50,6 +51,14 @@ export class LambdaTransport extends TransportBase {
     )
 
     await super.stop()
+  }
+
+  async subscribeFailedMessages(
+    action: (failedMessage: FailedMessage) => Promise<void> | void,
+  ) {
+    throw Error(
+      'Lambda Transport: subscribeFailedMessages not implemented',
+    )
   }
 
   protected newRpcCallRegistered(activeCount: number) {

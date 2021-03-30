@@ -1,5 +1,5 @@
-import { MemoryTransport } from '../memory.transport'
 import { RemoteError } from '../errors/remote.error'
+import { MemoryTransport } from '../memory.transport'
 import { Transport } from '../transport'
 
 describe('memory.simpleTramsport', () => {
@@ -157,5 +157,51 @@ describe('memory.transport', () => {
     })
 
     expect(result).toBeUndefined()
+  })
+})
+
+describe('rabbitmq.transport.failedMessages', () => {
+  let transport: Transport
+  let i = 0
+
+  beforeAll(async () => {
+    transport = new MemoryTransport(
+      {
+        defaultRpcTimeout: 3000,
+      },
+      {
+        jsonDecode: JSON.parse,
+        jsonEncode: JSON.stringify,
+        newId: () => (++i).toString(),
+      },
+    )
+
+    await transport.init()
+
+    transport.on('PROBLEMATIC', async ({ metadata }) => {
+      throw new Error('PROBLEM')
+    })
+
+    await transport.start()
+  })
+
+  afterAll(async () => {
+    await transport.dispose()
+  })
+
+  it('should receive failed messages', async done => {
+    transport.subscribeFailedMessages(x => {
+      console.log(x)
+      expect(x).toBeTruthy()
+      expect(x.message.handlingErrorData.errorMessage).toBe('PROBLEM')
+
+      done()
+    })
+
+    transport
+      .publish({ route: 'PROBLEMATIC', payload: {} })
+      .catch(() => {
+        /* DO NOTHING */
+      })
   })
 })

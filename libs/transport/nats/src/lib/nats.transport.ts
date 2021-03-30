@@ -1,5 +1,5 @@
 import {
-  MessageMetadata,
+  FailedMessage,
   SendMessageProps,
   SendReplyMessageProps,
   TransportBase,
@@ -142,6 +142,14 @@ export class NatsTransport extends TransportBase {
    */
   async dispose() {
     await super.dispose()
+  }
+
+  async subscribeFailedMessages(
+    action: (failedMessage: FailedMessage) => Promise<void> | void,
+  ) {
+    throw Error(
+      'Nats Transport: subscribeFailedMessages not implemented',
+    )
   }
 
   protected async sendMessage(
