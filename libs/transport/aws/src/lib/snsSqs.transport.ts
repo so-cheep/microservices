@@ -1,4 +1,5 @@
 import {
+  FailedMessage,
   SendMessageProps,
   SendReplyMessageProps,
   TransportBase,
@@ -190,6 +191,14 @@ export class SnsSqsTransport extends TransportBase {
       sqs: this.utils.getSqs(),
       queueUrl: this.responseQueueUrl,
     })
+  }
+
+  async subscribeFailedMessages(
+    action: (failedMessage: FailedMessage) => Promise<void> | void,
+  ) {
+    throw Error(
+      'SnsSqs Transport: subscribeFailedMessages not implemented',
+    )
   }
 
   protected async sendMessage(props: SendMessageProps) {

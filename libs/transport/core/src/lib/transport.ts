@@ -1,3 +1,5 @@
+import { NormalizedError } from './domain/normalizeError'
+
 export interface Transport {
   readonly state: TransportState
 
@@ -56,6 +58,13 @@ export interface Transport {
    * Temp queues should be deleted
    */
   dispose(): Promise<void>
+
+  /**
+   * Subscribes to the failed messages
+   */
+  subscribeFailedMessages(
+    action: (failedMessage: FailedMessage) => Promise<void> | void,
+  ): Promise<void>
 }
 
 export interface TransportMessage {
@@ -134,4 +143,15 @@ export interface ValidatorMessage<
   route: string
   payload: unknown
   metadata: TMeta
+}
+
+export interface FailedMessage {
+  route: string
+  correlationId?: string
+  replyTo?: string
+  message: {
+    metadata: MessageMetadata
+    payload: unknown
+    handlingErrorData: NormalizedError
+  }
 }

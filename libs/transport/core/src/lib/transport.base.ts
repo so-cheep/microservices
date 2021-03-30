@@ -1,3 +1,4 @@
+import { WILL_NOT_HANDLE } from './constants'
 import {
   NormalizedError,
   normalizeError,
@@ -6,6 +7,7 @@ import { RemoteError } from './errors/remote.error'
 import { RpcTimeoutError } from './errors/rpcTimeout.error'
 import {
   ExecuteProps,
+  FailedMessage,
   FireAndForgetHandler,
   ListenResponseCallback,
   MessageMetadata,
@@ -19,7 +21,6 @@ import {
   TransportMessage,
   TransportState,
 } from './transport'
-import { WILL_NOT_HANDLE } from './constants'
 
 export interface TransportOptions<
   TMeta extends MessageMetadata = any
@@ -58,6 +59,10 @@ export abstract class TransportBase implements Transport {
   ) {}
 
   abstract init(): Promise<void>
+
+  abstract subscribeFailedMessages(
+    action: (failedMessage: FailedMessage) => Promise<void> | void,
+  ): Promise<void>
 
   /**
    * Starts listening to the transport

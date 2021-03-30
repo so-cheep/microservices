@@ -1,3 +1,5 @@
+import { normalizeError } from './domain/normalizeError'
+import { FailedMessage } from './transport'
 import {
   SendMessageProps,
   SendReplyMessageProps,
@@ -8,6 +10,9 @@ import {
 
 export class MemoryTransport extends TransportBase {
   private uniqueIndex = 0
+  private failedMessagesAction:
+    | ((failedMessage: FailedMessage) => Promise<void> | void)
+    | null = null
 
   constructor(
     protected options: TransportOptions & {
@@ -30,20 +35,55 @@ export class MemoryTransport extends TransportBase {
     /**/
   }
 
+  async subscribeFailedMessages(
+    action: (failedMessage: FailedMessage) => Promise<void> | void,
+  ) {
+    this.failedMessagesAction = action
+  }
+
   protected async sendMessage(props: SendMessageProps) {
     const { messageDelayTime = 0 } = this.options
 
     const { route, message, correlationId, isRpc } = props
 
     const processAction = async () => {
+      const replyTo = isRpc ? 'REPLY' : undefined
+
       try {
         await this.processMessage({
           route,
           message,
           correlationId,
-          replyTo: isRpc ? 'REPLY' : undefined,
+          replyTo,
         })
       } catch (err) {
+        const parsedMessage = this.utils.jsonDecode(message)
+
+        /**
+         * Check if failed messages action is defined
+         * and run it in async mode
+         */
+        if (this.failedMessagesAction) {
+          new Promise(resolve => {
+            try {
+              this.failedMessagesAction({
+                route,
+                correlationId,
+                replyTo,
+                message: {
+                  metadata: parsedMessage.metadata,
+                  payload: parsedMessage.payload,
+                  handlingErrorData: normalizeError(err),
+                },
+              })
+            } catch (err) {
+              console.log('Error on processing failled message', err)
+            } finally {
+              resolve(null)
+            }
+          })
+        }
+
         if (isRpc) {
           throw err
         } else {

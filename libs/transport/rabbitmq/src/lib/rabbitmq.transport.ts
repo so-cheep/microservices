@@ -1,4 +1,5 @@
 import {
+  FailedMessage,
   normalizeError,
   SendMessageProps,
   SendReplyMessageProps,
@@ -15,6 +16,7 @@ export class RabbitMQTransport extends TransportBase {
   private responseQueueName: string
   private deadLetterQueueName: string
   private bindingSetup: any
+  private failedMessagesSetup: any
   private i = 0
 
   constructor(
@@ -193,6 +195,18 @@ export class RabbitMQTransport extends TransportBase {
       },
     )
 
+    if (this.failedMessagesSetup) {
+      await this.channel.removeSetup(
+        this.failedMessagesSetup,
+        (c: ConfirmChannel, cb) => {
+          c.removeAllListeners()
+          cb(null)
+        },
+      )
+
+      this.failedMessagesSetup = null
+    }
+
     await super.stop()
   }
 
@@ -203,6 +217,50 @@ export class RabbitMQTransport extends TransportBase {
     await super.dispose()
 
     await this.channel.close()
+  }
+
+  async subscribeFailedMessages(
+    action: (failedMessage: FailedMessage) => Promise<void> | void,
+  ) {
+    this.failedMessagesSetup = async (x: ConfirmChannel) => {
+      x.consume(this.options.failedMessagesQueueName, async msg => {
+        if (!msg) {
+          return
+        }
+
+        const route = msg.properties?.headers?.route
+        const correlationId = msg.properties.correlationId
+        const replyTo = msg.properties.replyTo
+
+        const messageString = msg.content
+          ? msg.content.toString()
+          : null
+
+        // try to parse it as a JSON
+        let message
+
+        if (messageString) {
+          try {
+            message = JSON.parse(messageString)
+          } catch (err) {}
+        }
+
+        try {
+          await action({
+            route,
+            correlationId,
+            replyTo,
+            message,
+          })
+
+          x.ack(msg)
+        } catch (err) {
+          console.log('Error on processing failled message', err)
+        }
+      })
+    }
+
+    await this.channel.addSetup(this.failedMessagesSetup)
   }
 
   protected async sendMessage(props: SendMessageProps) {

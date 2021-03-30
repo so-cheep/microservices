@@ -132,7 +132,7 @@ describe('rabbitmq.transport', () => {
   })
 })
 
-describe.only('rabbitmq.transport.lifecycle', () => {
+describe('rabbitmq.transport.lifecycle', () => {
   let transport: Transport
   let i = 0
 
@@ -163,30 +163,30 @@ describe.only('rabbitmq.transport.lifecycle', () => {
 
   it('should start and stop transport successfully', async () => {
     await transport.start()
-    try {
-      const r1 = await transport.execute({
-        route: 'PING',
-        payload: '',
-      })
-      expect(r1).toBe('PONG')
-    } catch (err) {
-      console.log('err received1', err.code, err.message)
-    }
+    // try {
+    const r1 = await transport.execute({
+      route: 'PING',
+      payload: '',
+    })
+    expect(r1).toBe('PONG')
+    // } catch (err) {
+    //   console.log('err received1', err.code, err.message)
+    // }
 
     await transport.stop()
 
-    try {
-      const r2 = await transport.execute({
-        route: 'PING',
-        payload: '',
-      })
+    // try {
+    //   const r2 = await transport.execute({
+    //     route: 'PING',
+    //     payload: '',
+    //   })
 
-      throw new Error('It should never happen')
-    } catch (err) {
-      expect(err.message).toBe(
-        'EXECUTE_FAILED_CONNECTION_NOT_STARTED',
-      )
-    }
+    //   throw new Error('It should never happen')
+    // } catch (err) {
+    //   expect(err.message).toBe(
+    //     'EXECUTE_FAILED_CONNECTION_NOT_STARTED',
+    //   )
+    // }
 
     // try {
     //   const task = await transport.execute({
@@ -204,5 +204,50 @@ describe.only('rabbitmq.transport.lifecycle', () => {
     //     expect(err.message).toEqual('OOPS')
     //     expect(err.className).toEqual('RemoteError')
     //   })
+  })
+})
+
+describe.only('rabbitmq.transport.failedMessages', () => {
+  let transport: RabbitMQTransport
+  let i = 0
+
+  beforeAll(async () => {
+    transport = new RabbitMQTransport(
+      {
+        defaultRpcTimeout: 3000,
+        amqpConnectionString: 'amqp://guest:guest@localhost',
+        publishExchangeName: 'HubExchange',
+        moduleName: 'TestModule',
+        isTestMode: true,
+      },
+      {
+        jsonDecode: JSON.parse,
+        jsonEncode: JSON.stringify,
+        newId: () => (++i).toString(),
+      },
+    )
+
+    await transport.init()
+
+    transport.on('PROBLEMATIC', async ({ metadata }) => {
+      throw new Error('PROBLEM')
+    })
+
+    await transport.start()
+  })
+
+  afterAll(async () => {
+    await transport.dispose()
+  })
+
+  it('should receive failed messages', async done => {
+    transport.subscribeFailedMessages((x: any) => {
+      expect(x).toBeTruthy()
+      expect(x.message.handlingErrorData.errorMessage).toBe('PROBLEM')
+
+      done()
+    })
+
+    await transport.publish({ route: 'PROBLEMATIC', payload: {} })
   })
 })
