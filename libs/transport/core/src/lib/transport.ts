@@ -32,7 +32,7 @@ export interface Transport {
 
   /**
    * At this point all handlers are registered and we can
-   * configure Exchange->Queue bindings
+   * configure Exchange->Queue bindings by calling `start()`
    */
   start(): Promise<void>
 
