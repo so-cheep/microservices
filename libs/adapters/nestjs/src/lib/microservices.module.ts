@@ -68,8 +68,10 @@ export class CheepMicroservicesModule<
   async onModuleInit() {
     if (this.config?.handlers) {
       this.registerHandlers()
-      await completeModuleRegistration(this.registrationId)
     }
+
+    await completeModuleRegistration(this.registrationId)
+
     // const handler = transportHandler<TModuleApi | TRemoteApi>(
     //   this.transport,
     //   this.config,
