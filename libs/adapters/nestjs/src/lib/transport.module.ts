@@ -36,21 +36,15 @@ export class CheepTransportModule
   ): DynamicModule {
     const { transport } = options
 
-    transport
-      .init()
-      .then(() =>
-        logger.log(
-          `${transport.constructor.name} Initialized!`,
-          'Init',
-        ),
-      )
-      .catch(err =>
-        logger.error(
-          `${transport.constructor.name} encountered an error: ${err}`,
-          err,
-          'Init',
-        ),
-      )
+    onHandlerRegistrationComplete(async () => {
+      await transport.init()
+
+      logger.log(`${transport.constructor.name} Initialized!`)
+
+      await transport.start()
+
+      logger.log(`${transport.constructor.name} Started!`)
+    })
 
     return {
       module: CheepTransportModule,
@@ -84,13 +78,6 @@ export class CheepTransportModule
 
   async onModuleInit() {
     // setup listener for when handers are complete
-    onHandlerRegistrationComplete(() =>
-      this.transport
-        .start()
-        .then(() =>
-          logger.log(`${this.transport.constructor.name} Started!`),
-        ),
-    )
   }
 
   async onApplicationShutdown() {
