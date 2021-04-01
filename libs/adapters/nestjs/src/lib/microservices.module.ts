@@ -35,6 +35,7 @@ export class CheepMicroservicesModule<
   ): DynamicModule {
     const registrationId = Date.now() + Math.random()
     addModuleRegistrationRequired(registrationId)
+
     return {
       module: CheepMicroservicesModule,
       providers: [
@@ -45,7 +46,7 @@ export class CheepMicroservicesModule<
         },
         {
           provide: 'PRIVATE_REGISTRATION_ID',
-          useValue: Date.now() + Math.random(),
+          useValue: registrationId,
         },
       ],
       exports: [CheepApi],
