@@ -1,27 +1,26 @@
+import type { TransportCompactMessage } from '@cheep/transport'
+import { ApiWithExecutableKeys } from '@cheep/transport'
+import { getLeafAddresses } from '@cheep/utils'
 import {
-  Module,
   DynamicModule,
-  OnModuleInit,
   Inject,
+  Module,
+  OnModuleInit,
   Type,
 } from '@nestjs/common'
-
+import { ModuleRef } from '@nestjs/core'
+import { ModuleConfigToken, RootConfigToken } from './constants'
+import { CheepApi } from './services/api.service'
 import type {
   CheepMicroservicesModuleConfig,
   CheepMicroservicesRootConfig,
 } from './types'
-import { ModuleConfigToken, RootConfigToken } from './constants'
-import { CheepApi } from './services/api.service'
-import type { TransportCompactMessage } from '@cheep/transport'
-import { ApiWithExecutableKeys } from '@cheep/transport'
-import { getLeafAddresses } from '@cheep/utils'
-import { ModuleRef } from '@nestjs/core'
 import { getFunctionValues } from './util/getFunctionValues'
-import { makeSafeArgs } from './util/makeSafeArgs'
 import {
   addModuleRegistrationRequired,
   completeModuleRegistration,
 } from './util/handlerRegistration'
+import { makeSafeArgs } from './util/makeSafeArgs'
 
 @Module({})
 export class CheepMicroservicesModule<
@@ -65,10 +64,10 @@ export class CheepMicroservicesModule<
     @Inject('PRIVATE_REGISTRATION_ID') private registrationId: number,
   ) {}
 
-  onModuleInit() {
+  async onModuleInit() {
     if (this.config?.handlers) {
       this.registerHandlers()
-      completeModuleRegistration(this.registrationId)
+      await completeModuleRegistration(this.registrationId)
     }
     // const handler = transportHandler<TModuleApi | TRemoteApi>(
     //   this.transport,

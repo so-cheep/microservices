@@ -1,21 +1,21 @@
+import { Transport, TransportBase } from '@cheep/transport'
 import {
   DynamicModule,
   Global,
   Inject,
-  Module,
-  OnModuleInit,
-  OnApplicationShutdown,
   Logger,
+  Module,
+  OnApplicationShutdown,
+  OnModuleInit,
 } from '@nestjs/common'
-import { Transport, TransportBase } from '@cheep/transport'
 import {
   defaultRootConfig,
   RootConfigToken,
   TransportToken,
 } from './constants'
-
 import { CheepMicroservicesRootConfig } from './types'
 import { onHandlerRegistrationComplete } from './util/handlerRegistration'
+
 const logger = new Logger('CheepTransport')
 /**
  * the core module is used for storing globally available config, which is just the transport for now
