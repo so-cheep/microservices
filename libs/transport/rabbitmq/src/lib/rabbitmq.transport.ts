@@ -98,7 +98,7 @@ export class RabbitMQTransport extends TransportBase {
     const routes = this.getRegisteredRoutes()
     const prefixes = this.getRegisteredPrefixes()
 
-    const patterns = prefixes.map(x => `${x}#`).concat(routes)
+    const patterns = prefixes.map(x => `${x}.#`).concat(routes)
 
     this.bindingSetup = async (x: ConfirmChannel) => {
       await Promise.all(
