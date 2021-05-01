@@ -7,8 +7,8 @@ import {
 } from '@cheep/transport'
 import { performance } from 'perf_hooks'
 import { createTransportApi } from '../createTransportApi'
-import { recursiveApiCaller } from '../recursiveApiCaller'
 import { createTransportHandler } from '../createTransportHandler'
+import { recursiveApiCaller } from '../recursiveApiCaller'
 import { ApiWithExecutableKeys } from '../types'
 
 type T = {
@@ -309,7 +309,7 @@ describe('cheep.api', () => {
   it('check recursion and fire error', done => {
     const newId = () => Date.now().toString()
 
-    const transport = new MemoryTransport<any>(
+    const transport = new MemoryTransport(
       {
         metadataReducers: [
           createdAtReducer(Date.now),

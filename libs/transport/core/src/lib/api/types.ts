@@ -156,6 +156,7 @@ export type RouteMapReturn<
 export type TransportApiOptions = {
   mode: 'PUBLISH' | 'EXECUTE'
   joinSymbol?: string
+  metadata?: MessageMetadata
   referrer?: {
     route: string
     metadata: MessageMetadata

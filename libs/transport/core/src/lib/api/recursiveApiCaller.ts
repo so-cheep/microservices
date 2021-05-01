@@ -69,6 +69,7 @@ export function recursiveApiCaller(
 
           const {
             joinSymbol,
+            metadata: appendMetadata,
             referrer: providedReferrer,
             mode,
           } = options
@@ -86,7 +87,7 @@ export function recursiveApiCaller(
             return transport.execute({
               route,
               payload,
-              metadata: routeMetadata,
+              metadata: { ...appendMetadata, ...routeMetadata },
               referrer,
             })
           }
@@ -94,7 +95,7 @@ export function recursiveApiCaller(
           return transport.publish({
             route,
             payload,
-            metadata: routeMetadata,
+            metadata: { ...appendMetadata, ...routeMetadata },
             referrer,
           })
         }
