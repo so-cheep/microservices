@@ -6,12 +6,15 @@ import { ApiWithExecutableKeys } from '../types'
 describe('createTransportHandler', () => {
   type Api = ApiWithExecutableKeys<
     {
+      Command: {
+        create(): Promise<string>
+      }
       Event: {
-        userCreated(e: { username: string })
-        userUpdated(e: { username: string; name: string })
+        userCreated(e: { username: string }): void
+        userUpdated(e: { username: string; name: string }): void
       }
     },
-    never
+    'Command'
   >
 
   it('should subscribe just one handler', async done => {
@@ -30,5 +33,26 @@ describe('createTransportHandler', () => {
     )
 
     await api.publish.Event.userCreated({ username: 'ez' })
+  })
+
+  it('should remove handler and have timeout', async () => {
+    const transport = new MemoryTransport()
+
+    const api = createTransportApi<Api>(transport)
+    const handler = createTransportHandler<Api>(transport)
+
+    const unsubscribe = handler.on(
+      x => x.Command.create,
+      () => {
+        expect('NEVER').toBe('HERE')
+        return 'ez'
+      },
+    )
+
+    unsubscribe()
+
+    await api.execute.Command.create().catch(err => {
+      expect(err).toBeTruthy()
+    })
   })
 })

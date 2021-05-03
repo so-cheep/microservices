@@ -8,7 +8,7 @@ export interface Transport {
    */
   init(): Promise<void>
 
-  on(route: string, action: RouteHandler): void
+  on(route: string, action: RouteHandler): () => void
 
   off(route: string): void
 

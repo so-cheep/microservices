@@ -6,7 +6,12 @@ import {
   TransportOptions,
   TransportUtils,
 } from '@cheep/transport'
-import { connect, NatsConnection, Subscription } from 'nats'
+import {
+  AckPolicy,
+  connect,
+  NatsConnection,
+  Subscription,
+} from 'nats'
 
 // TODO: support chunking large messages over the wire
 // TODO: support NKey authentication
@@ -69,6 +74,7 @@ export class NatsTransport extends TransportBase {
     if (!this.nc || this.nc?.isClosed()) {
       await this.init()
     }
+
     // specific route handlers
     const routes = this.getRegisteredRoutes()
     // wildcard ending routes
@@ -84,6 +90,30 @@ export class NatsTransport extends TransportBase {
       )
 
     console.log(`NATS subscriptions:`, patterns)
+
+    const manager = await this.nc.jetstreamManager({})
+
+    const stream = await manager.streams.add({
+      name: 'Events',
+      subjects: ['Event.>'],
+    })
+
+    const consumer = await manager.consumers.add('Events', {
+      name: 'Events',
+      ack_policy: AckPolicy.Explicit,
+    })
+
+    const sub = await this.nc
+      .jetstream()
+      .subscribe('>', { stream: 'Events' })
+
+    const done = (async () => {
+      for await (const m of sub) {
+        m.ack()
+      }
+    })()
+
+    await sub.drain()
 
     this.subscriptions = patterns.map(p =>
       this.nc.subscribe(p, {

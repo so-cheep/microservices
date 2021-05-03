@@ -5,6 +5,7 @@ import {
   SendReplyMessageProps,
   TransportBase,
   TransportOptions,
+  TransportState,
   TransportUtils,
 } from '@cheep/transport'
 import * as amqp from 'amqp-connection-manager'
@@ -242,7 +243,9 @@ export class RabbitMQTransport extends TransportBase {
         if (messageString) {
           try {
             message = JSON.parse(messageString)
-          } catch (err) {}
+          } catch (err) {
+            /**/
+          }
         }
 
         try {
@@ -289,5 +292,17 @@ export class RabbitMQTransport extends TransportBase {
     await this.channel.sendToQueue(replyTo, Buffer.from(message), {
       correlationId,
     })
+  }
+
+  protected onRouteHandlerAdd(route: string) {
+    if (this.state !== TransportState.STARTED) {
+      return
+    }
+  }
+
+  protected onRouteHandlerRemove(route: string) {
+    if (this.state !== TransportState.STARTED) {
+      return
+    }
   }
 }

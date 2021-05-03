@@ -89,6 +89,12 @@ export abstract class TransportBase implements Transport {
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   protected newRpcCallRegistered(activeRpcCallsCount: number) {}
 
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  protected onRouteHandlerAdd(route: string, action: RouteHandler) {}
+
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  protected onRouteHandlerRemove(route: string) {}
+
   /**
    * Registers handler for the specific route
    * @param route you want to listen
@@ -102,6 +108,8 @@ export abstract class TransportBase implements Transport {
     } else {
       this.routeHandlers.set(route, [action])
     }
+
+    this.onRouteHandlerAdd(route, action)
 
     return () => {
       let handlers = this.routeHandlers.get(route)
@@ -117,6 +125,8 @@ export abstract class TransportBase implements Transport {
         this.routeHandlers.set(route, handlers)
       } else {
         this.routeHandlers.delete(route)
+
+        this.onRouteHandlerRemove(route)
       }
     }
   }
@@ -128,6 +138,8 @@ export abstract class TransportBase implements Transport {
   off(route: string) {
     if (this.routeHandlers.has(route)) {
       this.routeHandlers.delete(route)
+
+      this.onRouteHandlerRemove(route)
     }
   }
 
