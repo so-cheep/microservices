@@ -48,7 +48,7 @@ export type FunctionalHandlerFactory<
   ) =>
     | ExtractPromiseValue<TEventSelection['result']>
     | Promise<ExtractPromiseValue<TEventSelection['result']>>,
-) => void
+) => () => void
 
 export type RouteMap<TRouteMap, TKey extends string[] = string[]> = {
   [K in keyof Omit<
@@ -156,6 +156,7 @@ export type RouteMapReturn<
 export type TransportApiOptions = {
   mode: 'PUBLISH' | 'EXECUTE'
   joinSymbol?: string
+  metadata?: MessageMetadata
   referrer?: {
     route: string
     metadata: MessageMetadata
