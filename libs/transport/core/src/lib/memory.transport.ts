@@ -84,11 +84,7 @@ export class MemoryTransport extends TransportBase {
           })
         }
 
-        if (isRpc) {
-          throw err
-        } else {
-          console.error('err', err)
-        }
+        console.error('err', err)
       }
     }
 
