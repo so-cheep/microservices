@@ -2,11 +2,9 @@
 
 An adapter to use the @cheep/microservices library in the NestJS framework.
 
-# Setup
+# Transport Module (once per application)
 
-## App Level
-
-Import the `CheepMicroservicesModule.forRoot` in a top-level module, **once** per application/microservice. This establishes the primary transport for all feature modules in this process.
+Import `CheepTransportModule.forRoot()` in a top-level module, **once** per application/microservice. This establishes the primary transport for all feature modules in this process.
 
 ```ts
 import {
@@ -14,9 +12,10 @@ import {
   NestTransportUtils,
 } from '@cheep/nestjs'
 // ... more imports!
+
 @Module({
   imports: [
-    CheepMicroservicesModule.forRoot({
+    CheepTransportModule.forRoot({
       // MemoryTransport is included by default in @cheep/transport,
       // others are also available!
       transport: new MemoryTransport(
@@ -28,18 +27,19 @@ import {
         NestTransportUtils,
       ),
     }),
-    /* ...other providers */
+    /* ...other imports, providers, etc. */
   ],
 })
 export class AppModule {}
 ```
 
-## Feature module
+# Feature module
 
-Defines an individual microservice API namespace.
+## Declare the exposed API
 
-First, create some services which you would like to expose functions from,
-then, delcare your API in pure Typescript (this file will disappear after compilation)
+First, create some services which you would like to expose functions from
+(UserCommandService and UserQueryService, in this example)
+then delcare your API in pure Typescript (this file will disappear after compilation)
 
 ```ts
 // user.api.ts
@@ -64,7 +64,7 @@ export type UserApi = ApiWithExecutableKeys<
   // or function definitions
   {
     Query: {
-      User: UserQueryService
+      User: UserQueryService //<-- This must be an @Injectable() decorated class!
     }
     Command: {
       User: UserCommandService
@@ -80,15 +80,16 @@ export type UserApi = ApiWithExecutableKeys<
 
 /**
  * UserRemoteApi
- * a union type of the api types that are consumed by this module
+ * an intersection type of the api types that are consumed by this module
  * it's helpful to use import(...) syntax here to allow tools like NX
  * to differentiate the dependencies, as these dependencies will disappear
  * after typescript compilation (keeping your bundle size small!)
  */
-export type UserRemoteApi =
-  | import('../groups/group.api.ts').GroupApi
-  | import('../accounts/account.api.ts').AccountApi
+export type UserRemoteApi = import('../groups/group.api.ts').GroupApi & // <-- Note the use of intersection (&) here and not union (|)!
+  import('../accounts/account.api.ts').AccountApi
 ```
+
+## Module setup
 
 With those types defined, import the `CheepMicroservicesModule.forModule` in your module
 
