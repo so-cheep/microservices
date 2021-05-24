@@ -1,11 +1,11 @@
 import {
+  Api,
   MessageMetadata,
   RawHandler,
   Transport,
   TransportCompactMessage,
   TransportMessage,
   WILL_NOT_HANDLE,
-  Api,
 } from '@cheep/transport'
 import { getLeafAddresses } from '@cheep/utils'
 import { FilterMap } from './types'
@@ -35,7 +35,10 @@ export function createRouter<
 
   joinPrefix?: string
 }) {
-  const outstandingRpcs = new Map<string, (...args) => unknown>()
+  const outstandingRpcs = new Map<
+    string,
+    { timeout: NodeJS.Timeout; resolve: (...args) => unknown }
+  >()
   const {
     routerId,
     transport,
@@ -86,12 +89,13 @@ export function createRouter<
 
     if (msg.replyTo && !isBroadcast) {
       const rpcPromise = new Promise((resolve, reject) => {
-        outstandingRpcs.set(msg.correlationId, resolve)
-        setTimeout(() => {
+        const timeout = setTimeout(() => {
           outstandingRpcs.delete(msg.correlationId)
           reject(Error('Router RPC Timeout'))
           // TODO: improve RPC timeout story, pass rpc timeout along with message data
         }, rpcTimeout ?? 5000)
+
+        outstandingRpcs.set(msg.correlationId, { resolve, timeout })
       })
       return rpcPromise
     }
@@ -117,10 +121,12 @@ export function createRouter<
             return
           }
           // TODO: cover edge case where corelation ids collide across tunnels
-          const rpcPromise = outstandingRpcs.get(item.correlationId)
-          if (rpcPromise) {
+          const rpcItem = outstandingRpcs.get(item.correlationId)
+          if (rpcItem) {
+            const { resolve, timeout } = rpcItem
             // resolve the outstanding promise
-            rpcPromise(item.payload)
+            clearTimeout(timeout)
+            resolve(item.payload)
             outstandingRpcs.delete(item.correlationId)
           } else {
             const props = {
