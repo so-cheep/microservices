@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core'
-import { io, Socket } from 'socket.io-client'
-import { ApiService } from '../api/api.service'
 import { createRouter } from '@cheep/router'
+import { io, Socket } from 'socket.io-client'
 import { ClientRemoteApi } from '../../client.api'
+import { ApiService } from '../api/api.service'
 
 @Injectable({
   providedIn: 'root',
@@ -20,8 +20,10 @@ export class SocketService {
         {
           exampleTunnelId: {},
           type: 'TUNNEL',
+
           registerReceiver: rcv =>
             this.socket.onAny((event, data) => rcv({ event }, data)),
+
           send: (_, data) => {
             this.socket.send(data)
           },

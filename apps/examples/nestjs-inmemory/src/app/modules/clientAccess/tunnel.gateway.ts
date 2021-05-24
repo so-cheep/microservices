@@ -1,12 +1,11 @@
-import { Injectable, OnModuleInit } from '@nestjs/common'
-import { HttpAdapterHost } from '@nestjs/core'
-import { Subject } from 'rxjs'
-import { Server, Socket } from 'socket.io'
-import { ExpressAdapter } from '@nestjs/platform-express'
 import { createRouter } from '@cheep/router'
 import { TransportBase } from '@cheep/transport'
+import { Injectable, OnModuleInit } from '@nestjs/common'
+import { HttpAdapterHost } from '@nestjs/core'
+import { ExpressAdapter } from '@nestjs/platform-express'
+import { Subject } from 'rxjs'
+import { Server, Socket } from 'socket.io'
 import { ClientAccessRemoteApi } from './clientAccess.api'
-import { User } from '../user/user.api'
 
 /**
  * because of a conflicting version of Socket.io used in another demo, we're NOT using the nest socketio gateway,
