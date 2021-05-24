@@ -474,7 +474,7 @@ export abstract class TransportBase implements Transport {
   }
 
   protected getRegisteredPrefixes(): string[] {
-    return [...this.prefixHandlers.keys()]
+    return [...this.registeredPrefixes.values()]
   }
 
   private mergeMetadata(context: {
