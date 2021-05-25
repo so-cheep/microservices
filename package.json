@@ -66,11 +66,12 @@
     "flatted": "^3.1.0",
     "jest": "26.2.2",
     "jest-marbles": "^2.5.1",
-    "reflect-metadata": "^0.1.13",
     "jest-preset-angular": "8.3.2",
     "jsonwebtoken": "^8.5.1",
+    "nats": "2.0.0",
     "prettier": "2.1.2",
     "redis": "^3.0.2",
+    "reflect-metadata": "^0.1.13",
     "rxjs": "^6.6.3",
     "socket.io": "^3.0.4",
     "socket.io-client": "^3.0.4",
@@ -79,8 +80,7 @@
     "ts-jest": "26.4.0",
     "ts-node": "~9.1.1",
     "tslint": "~6.1.0",
-    "typescript": "~4.0.3",
-    "nats": "2.0.0",
+    "typescript": "~4.2.4",
     "uuid": "^8.3.2"
   },
   "dependencies": {

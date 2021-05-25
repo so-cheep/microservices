@@ -7,8 +7,13 @@ import {
   TransportMessage,
   WILL_NOT_HANDLE,
 } from '@cheep/transport'
-import { getLeafAddresses } from '@cheep/utils'
-import { FilterMap } from './types'
+
+import {
+  InboundRouterFilter,
+  OutboundRouterFilter,
+} from './filtering/types'
+import { preprocessFilterMap } from './filtering/preprocessFilterMap'
+import { routeFilter } from './filtering/routeFilter'
 
 export function createRouter<
   TLocalApi extends Api,
@@ -25,19 +30,33 @@ export function createRouter<
    *
    * ### Valid leaf values:
    *   - **function**:
-   *     will receive the original payload as an arg, and should either return:
-   *       - `true`: broadcast all messages matching this path to all available next hops
+   *     will receive the original transport item as an arg, and should either return:
+   *       - `true`: pass all messages matching this path to all available next hops
    *       - `false`: drop the message
    *       - `object: TRouter`: an object matching the TRouterArgs definition, which will be merged into the metadata
    * and used for routing
    */
-  outboundFilters?: FilterMap<TLocalApi, TRouterArgs | boolean>
+  inboundFilters?: InboundRouterFilter<TLocalApi, TRouterArgs>
+  /**
+   * Tree of the outbound, unrouted paths, which should be forwarded by the router
+   *
+   * ### Valid leaf values:
+   *   - **function**:
+   *     will receive the original transport item as an arg, and should either return:
+   *       - `true`: broadcast all messages matching this path to all available next hops
+   *       - `false`: drop the message
+   *       - `object: TRouter`: an object matching the TRouterArgs definition, which will be merged into the metadata
+   *       - `BROADCAST` (symbol imported from @cheep/router): broadcast this item to ALL connected sockets
+   * and used for routing
+   */
+  outboundFilters?: OutboundRouterFilter<TLocalApi, TRouterArgs>
 
+  /** provide this if you're using a non-standard (`.`) join prefix so that the tunnels use the same */
   joinPrefix?: string
 }) {
   const outstandingRpcs = new Map<
     string,
-    { timeout: NodeJS.Timeout; resolve: (...args) => unknown }
+    { timeout: number; resolve: (...args) => unknown }
   >()
   const {
     routerId,
@@ -45,19 +64,16 @@ export function createRouter<
     nextHops,
     rpcTimeout = props.transport['options']['defaultRpcTimeout'],
   } = props
-  type TFilterFunction = (...args) => boolean | TRouterArgs
 
-  // flatten the outbound filter map to an array for faster processing
-  const broadcastPrefixes = props.outboundFilters
-    ? getLeafAddresses<TFilterFunction>(props.outboundFilters)
-        // remove any paths that have a falsy leaf
-        .filter(([_, leaf]) => !!leaf)
-        // stringify the remaining leaves, and ensure the return is a function
-        .map<[string, TFilterFunction]>(([path, leaf]) => [
-          path.join(props.joinPrefix ?? '.'),
-          leaf,
-        ])
-    : []
+  // flatten the filter maps to an array for faster processing
+  const inboundFilters = preprocessFilterMap({
+    filterMap: props.inboundFilters,
+    joinPrefix: props.joinPrefix,
+  })
+  const outboundFilters = preprocessFilterMap({
+    filterMap: props.outboundFilters,
+    joinPrefix: props.joinPrefix,
+  })
 
   const onEveryHandler: RawHandler = (item, msg) => {
     // remove the routerAddress from the route
@@ -65,35 +81,35 @@ export function createRouter<
       return Promise.reject(WILL_NOT_HANDLE)
     }
 
-    // check to see if we match any filters
-    const routeFilter = broadcastPrefixes.find(([p]) =>
-      item.route.startsWith(p),
-    )
-
-    // TODO: make the item arg a deep copy or freeze it before passing to route filter
-    const result = routeFilter ? routeFilter[1](item) : false
-    const isBroadcast = typeof result === 'boolean' && result
-    const metadata =
-      typeof result === 'object'
-        ? { ...item.metadata, ...result }
-        : item.metadata
+    const routerResult = routeFilter({
+      filters: outboundFilters,
+      item,
+    })
+    if (!routerResult) {
+      return
+    }
 
     const revisedItem = {
       ...msg,
       ...item,
-      metadata: addVisitedRouterToMeta(metadata, routerId),
+      metadata: addVisitedRouterToMeta(
+        routerResult.metadata,
+        routerId,
+      ),
     }
 
     //TODO: next hop should throw if it knows it won't handle something
-    nextHops.forEach(h => sendNextHop(h, isBroadcast, revisedItem))
+    nextHops.forEach(h =>
+      sendNextHop(h, routerResult.isBroadcast, revisedItem),
+    )
 
-    if (msg.replyTo && !isBroadcast) {
+    if (msg.replyTo && !routerResult.isBroadcast) {
       const rpcPromise = new Promise((resolve, reject) => {
-        const timeout = setTimeout(() => {
+        const timeout = (setTimeout(() => {
           outstandingRpcs.delete(msg.correlationId)
-          reject(Error('Router RPC Timeout'))
+          reject(Error(`Router RPC Timeout [${msg.route}] `))
           // TODO: improve RPC timeout story, pass rpc timeout along with message data
-        }, rpcTimeout ?? 5000)
+        }, rpcTimeout ?? 5000) as unknown) as number
 
         outstandingRpcs.set(msg.correlationId, { resolve, timeout })
       })
@@ -123,24 +139,34 @@ export function createRouter<
           // TODO: cover edge case where corelation ids collide across tunnels
           const rpcItem = outstandingRpcs.get(item.correlationId)
           if (rpcItem) {
+            // this message is a response to an outstanding RPC
             const { resolve, timeout } = rpcItem
             // resolve the outstanding promise
             clearTimeout(timeout)
             resolve(item.payload)
             outstandingRpcs.delete(item.correlationId)
           } else {
+            // this message is a new incoming message
+            // check with inbound filters first
+            const filterResult = routeFilter({
+              item,
+              filters: inboundFilters,
+            })
+            if (!filterResult) {
+              return
+            }
             const props = {
               route: item.route,
               payload: item.payload,
               metadata: addVisitedRouterToMeta(
                 {
-                  ...item.metadata,
+                  ...filterResult.metadata,
                   ...tunnelId,
                 },
                 routerId,
               ),
               referrer: {
-                metadata: item.metadata,
+                metadata: filterResult.metadata,
                 route: routerId,
               },
             }
@@ -155,7 +181,7 @@ export function createRouter<
                 correlationId: item.correlationId,
                 replyTo: null,
                 metadata: addVisitedRouterToMeta(
-                  item.metadata,
+                  filterResult.metadata,
                   routerId,
                 ),
                 route: item.route,

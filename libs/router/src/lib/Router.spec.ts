@@ -15,27 +15,30 @@ type Meta = CreatedAtMetadata &
   CallStackMetadata &
   TransactionMetadata
 
-const transport = new MemoryTransport<Meta>(
-  {
-    metadataReducers: [
-      callStackReducer(),
-      createdAtReducer(Date.now),
-      transactionReducer(v4, Date.now),
-    ],
-  },
-  { newId: v4, jsonDecode: parse, jsonEncode: stringify },
-)
-const routerAddress = 'Remote'
+let transport: MemoryTransport
+
 const deviceId = '123456'
 const mockSend = jest.fn()
 let receiver: Parameters<TunnelNextHop['registerReceiver']>[0]
 const mockListener = jest.fn()
+const mockHandler = jest.fn()
 describe('router with tunnel next hop', () => {
   beforeEach(async () => {
+    // be sure to recreate memory transport each time!
+    transport = new MemoryTransport(
+      {
+        metadataReducers: [
+          callStackReducer(),
+          createdAtReducer(Date.now),
+          transactionReducer(v4, Date.now),
+        ],
+      },
+      { newId: v4, jsonDecode: parse, jsonEncode: stringify },
+    )
     await transport.init()
     jest.clearAllMocks()
     createRouter({
-      routerAddress: 'Remote',
+      routerId: 'ROUTER',
       transport,
       nextHops: [
         {
@@ -46,7 +49,7 @@ describe('router with tunnel next hop', () => {
         },
       ],
     })
-    transport.on('Command.server', mockListener)
+    transport.on('Event.server', mockListener)
     await transport.start()
   })
   afterEach(async () => await transport.dispose())
@@ -55,7 +58,7 @@ describe('router with tunnel next hop', () => {
     it('should route publish messages from the transport to the tunnel', async () => {
       await transport.publish({
         payload: [{}],
-        route: [routerAddress, 'Command', 'create'].join('.'),
+        route: ['Event', 'create'].join('.'),
         metadata: {
           deviceId: deviceId,
           otherThing: ['xyzx'],
@@ -64,7 +67,7 @@ describe('router with tunnel next hop', () => {
 
       expect(mockSend).toHaveBeenCalledTimes(1)
       const args = mockSend.mock.calls[0]
-      expect(args[1].route).toMatch('Command.create')
+      expect(args[1].route).toMatch('Event.create')
       expect(args[0]).toMatchObject({ deviceId })
     })
 
@@ -72,7 +75,7 @@ describe('router with tunnel next hop', () => {
       await receiver(
         { deviceId },
         {
-          route: 'Command.server',
+          route: 'Event.server',
           payload: {},
           metadata: { original: 1234 },
           correlationId: '',
@@ -81,7 +84,7 @@ describe('router with tunnel next hop', () => {
 
       expect(mockListener).toHaveBeenCalledTimes(1)
       const args = mockListener.mock.calls[0]
-      expect(args[0].route).toMatch('Command.server')
+      expect(args[0].route).toMatch('Event.server')
       expect(args[0].metadata).toMatchObject({
         deviceId,
         original: 1234,
@@ -94,7 +97,7 @@ describe('router with tunnel next hop', () => {
       const mockResult = 'pony'
       const result = transport.execute({
         payload: [{}],
-        route: [routerAddress, 'Command', 'create'].join('.'),
+        route: 'Command.fromServer',
         metadata: {
           deviceId: deviceId,
           otherThing: ['xyzx'],
@@ -103,7 +106,7 @@ describe('router with tunnel next hop', () => {
 
       expect(mockSend).toHaveBeenCalledTimes(1)
       const args = mockSend.mock.calls[0]
-      expect(args[1].route).toMatch('Command.create')
+      expect(args[1].route).toMatch('Command.fromServer')
       expect(args[0]).toMatchObject({ deviceId })
 
       // mock the return value through the tunnel
@@ -124,9 +127,10 @@ describe('router with tunnel next hop', () => {
     it('should reply to rpc messages sent by the client', async () => {
       const correlationId = 'correlate'
       const mockResult = 'puppydog'
-      mockListener.mockResolvedValueOnce(mockResult)
+      transport.on('Command.server', mockHandler)
+      mockHandler.mockResolvedValueOnce(mockResult)
       const tunnelId = { deviceId }
-      const complete = await receiver(tunnelId, {
+      await receiver(tunnelId, {
         route: 'Command.server',
         payload: {},
         metadata: { original: 1234 },
@@ -134,8 +138,8 @@ describe('router with tunnel next hop', () => {
         replyTo: 'replymessagething',
       })
 
-      expect(mockListener).toHaveBeenCalledTimes(1)
-      const args = mockListener.mock.calls[0]
+      expect(mockHandler).toHaveBeenCalledTimes(1)
+      const args = mockHandler.mock.calls[0]
       expect(args[0].route).toMatch('Command.server')
       expect(args[0].metadata).toMatchObject({
         deviceId,
