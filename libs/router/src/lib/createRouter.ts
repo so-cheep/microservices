@@ -26,7 +26,9 @@ export function createRouter<
   /** RPC timeout in `ms`, if not provided will fall back to the transport default */
   rpcTimeout?: number
   /**
-   * Tree of the outbound, unrouted paths, which should be forwarded by the router
+   * **Next Hop -> Transport**
+   *
+   * Tree of the inbound, unrouted paths, which should be forwarded by the router **to** the transport
    *
    * ### Valid leaf values:
    *   - **function**:
@@ -34,11 +36,12 @@ export function createRouter<
    *       - `true`: pass all messages matching this path to all available next hops
    *       - `false`: drop the message
    *       - `object: TRouter`: an object matching the TRouterArgs definition, which will be merged into the metadata
-   * and used for routing
    */
   inboundFilters?: InboundRouterFilter<TLocalApi, TRouterArgs>
   /**
-   * Tree of the outbound, unrouted paths, which should be forwarded by the router
+   * **Transport -> Next Hop**
+   *
+   * Tree of the outbound, unrouted paths, which should be forwarded by the router **from** the transport
    *
    * ### Valid leaf values:
    *   - **function**:
@@ -46,8 +49,9 @@ export function createRouter<
    *       - `true`: broadcast all messages matching this path to all available next hops
    *       - `false`: drop the message
    *       - `object: TRouter`: an object matching the TRouterArgs definition, which will be merged into the metadata
-   *       - `BROADCAST` (symbol imported from @cheep/router): broadcast this item to ALL connected sockets
    * and used for routing
+   *       - `BROADCAST` _(symbol imported from `@cheep/router`)_: broadcast this item to ALL members of each Next Hop
+   *
    */
   outboundFilters?: OutboundRouterFilter<TLocalApi, TRouterArgs>
 
