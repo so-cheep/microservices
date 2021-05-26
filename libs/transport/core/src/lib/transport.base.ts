@@ -29,6 +29,9 @@ export interface TransportOptions<
   metadataReducers?: MetadataReducer<TMeta>[]
   metadataValidator?: MetadataValidator<TMeta>[]
   failedMessagesQueueName?: string
+  onAdditionalHandlerResults?: (
+    results: PromiseSettledResult<any>[],
+  ) => void
 }
 
 export interface TransportUtils {
@@ -435,18 +438,11 @@ export abstract class TransportBase implements Transport {
           }),
         )
 
-        Promise.allSettled(tasks)
-          .then(results =>
-            results.filter(r => r.status === 'rejected'),
-          )
-          .then(errs => {
-            if (errs.length > 0) {
-              console.warn(
-                `Multiple.RouteHandlers.Error @ ${msg.route}`,
-                errs,
-              )
-            }
-          })
+        Promise.allSettled(tasks).then(results => {
+          if (this.options.onAdditionalHandlerResults) {
+            this.options.onAdditionalHandlerResults(results)
+          }
+        })
       }
     }
   }
