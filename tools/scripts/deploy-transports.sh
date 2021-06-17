@@ -7,7 +7,7 @@ npm run build router -- --with-deps
 npm run build adapters-nestjs -- --with-deps
 
 cd dist/libs/transport/core
-# npm publish --access public
+npm publish --access public
 
 # cd ../aws
 # npm publish --access public
@@ -19,11 +19,11 @@ cd dist/libs/transport/core
 # npm publish --access public
 
 
-# cd ../../utils
+cd ../../utils
 # npm publish --access public
 
-# cd ../router
+cd ../router
 # npm publish --access public
 
-cd ../../adapters/nestjs
-npm publish --access public
+# cd ../../adapters/nestjs
+# npm publish --access public
