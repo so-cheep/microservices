@@ -1,6 +1,6 @@
-import { v4 } from 'uuid'
+import { TransportUtils } from '@cheep/transport'
 import * as flatted from 'flatted'
-import { TransportUtils } from '@cheep/transport/core2'
+import { v4 } from 'uuid'
 
 export const NestTransportUtils = <TransportUtils>{
   jsonEncode: flatted.stringify,

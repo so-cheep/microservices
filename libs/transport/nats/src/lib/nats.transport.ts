@@ -5,7 +5,7 @@ import {
   TransportBase,
   TransportOptions,
   TransportUtils,
-} from '@cheep/transport/core2'
+} from '@cheep/transport'
 import {
   AckPolicy,
   connect,

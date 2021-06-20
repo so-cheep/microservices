@@ -1,4 +1,4 @@
-import { Transport } from '@cheep/transport/core2'
+import { Transport } from '@cheep/transport'
 import * as AWS from 'aws-sdk'
 import { LambdaTransport } from '../lambda.transport'
 

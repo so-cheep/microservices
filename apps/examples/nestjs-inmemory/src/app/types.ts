@@ -2,7 +2,7 @@ import {
   CallStackMetadata,
   CreatedAtMetadata,
   TransactionMetadata,
-} from '@cheep/transport/core2'
+} from '@cheep/transport'
 
 export type AppMetadata = CallStackMetadata &
   TransactionMetadata &

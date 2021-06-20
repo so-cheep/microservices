@@ -1,7 +1,4 @@
-import {
-  Referrer,
-  ApiWithExecutableKeys,
-} from '@cheep/transport/core2'
+import { ApiWithExecutableKeys, Referrer } from '@cheep/transport'
 import { Group } from '../groups/groups.api'
 import type { UserCommands } from './user.commands'
 import type { UserQueries } from './user.query.service'

@@ -7,7 +7,7 @@ import {
   TransportOptions,
   TransportState,
   TransportUtils,
-} from '@cheep/transport/core2'
+} from '@cheep/transport'
 import * as amqp from 'amqp-connection-manager'
 import { ConfirmChannel } from 'amqplib'
 

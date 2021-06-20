@@ -1,5 +1,5 @@
-import type { TransportCompactMessage } from '@cheep/transport/core2'
-import { ApiWithExecutableKeys } from '@cheep/transport/core2'
+import type { TransportCompactMessage } from '@cheep/transport'
+import { ApiWithExecutableKeys } from '@cheep/transport'
 import { getLeafAddresses } from '@cheep/utils'
 import {
   DynamicModule,

@@ -30,7 +30,6 @@
       "tags": [],
       "implicitDependencies": ["examples-ng-socketio"]
     },
-    "transport-core2": { "tags": [] },
     "transport-core": { "tags": [] }
   }
 }

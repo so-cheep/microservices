@@ -6,10 +6,10 @@ import {
   MemoryTransport,
   TransactionMetadata,
   transactionReducer,
-} from '@cheep/transport/core2'
-import { createRouter, TunnelNextHop } from './createRouter'
-import { v4 } from 'uuid'
+} from '@cheep/transport'
 import { parse, stringify } from 'flatted'
+import { v4 } from 'uuid'
+import { createRouter, TunnelNextHop } from './createRouter'
 
 type Meta = CreatedAtMetadata &
   CallStackMetadata &

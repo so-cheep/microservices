@@ -1,4 +1,4 @@
-import { NormalizedError } from '@cheep/transport/core2'
+import { NormalizedError } from '@cheep/transport'
 import type { SQS } from 'aws-sdk'
 
 export async function sendMessageToSqs(props: {

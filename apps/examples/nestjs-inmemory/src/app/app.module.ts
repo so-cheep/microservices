@@ -9,7 +9,7 @@ import {
   MemoryTransport,
   transactionDurationValidator,
   transactionReducer,
-} from '@cheep/transport/core2'
+} from '@cheep/transport'
 import { Module } from '@nestjs/common'
 import { ClientAccessModule } from './modules/clientAccess/clientAccess.module'
 import { GroupModule } from './modules/groups/group.module'

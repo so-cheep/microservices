@@ -33,7 +33,6 @@
       "@cheep/utils": ["libs/utils/src/index.ts"],
       "@cheep/utils/types": ["libs/utils/src/lib/types.ts"],
       "@cheep/nats": ["libs/transport/nats/src/index.ts"],
-      "@cheep/transport/core2": ["libs/transport/core2/src/index.ts"],
       "@cheep/transport": ["libs/transport/core/src/index.ts"]
     }
   },

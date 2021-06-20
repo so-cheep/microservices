@@ -2,7 +2,7 @@ import {
   MessageMetadata,
   Referrer,
   TransportCompactMessage,
-} from '@cheep/transport/core2'
+} from '@cheep/transport'
 import { CheepReferrerToken } from '../constants'
 
 /** make an args-safe array out of a transport compact message */
