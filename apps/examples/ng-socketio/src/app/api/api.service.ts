@@ -1,11 +1,11 @@
 import { Injectable } from '@angular/core'
-import { MemoryTransport } from '@cheep/transport'
+import { MemoryTransport } from '@cheep/transport/core2'
 import {
   ApiWithExecutableKeys,
   TransportApi,
   createTransportApi,
   createTransportHandler,
-} from '@cheep/transport'
+} from '@cheep/transport/core2'
 import { parse, stringify } from 'flatted'
 import { v4 } from 'uuid'
 

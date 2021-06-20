@@ -1,6 +1,6 @@
 import type { UserApi } from '../../nestjs-inmemory/src/app/modules/user/user.api'
 import type { GroupsApi } from '../../nestjs-inmemory/src/app/modules/groups/groups.api'
-import { ApiWithExecutableKeys } from '@cheep/transport'
+import { ApiWithExecutableKeys } from '@cheep/transport/core2'
 
 export type ClientRemoteApi = UserApi & GroupsApi
 

@@ -4,7 +4,7 @@ import { Group, GroupsApi } from './groups.api'
 import * as faker from 'faker'
 import { AppMetadata } from '../../types'
 import { GroupQueries } from './group.queries'
-import { Referrer } from '@cheep/transport'
+import { Referrer } from '@cheep/transport/core2'
 
 @Injectable()
 export class GroupCommands {

@@ -6,7 +6,7 @@ import {
   MemoryTransport,
   TransactionMetadata,
   transactionReducer,
-} from '@cheep/transport'
+} from '@cheep/transport/core2'
 import { createRouter, TunnelNextHop } from './createRouter'
 import { v4 } from 'uuid'
 import { parse, stringify } from 'flatted'

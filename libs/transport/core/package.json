@@ -1,11 +1,10 @@
 {
   "name": "@cheep/transport",
-  "version": "1.3.6",
+  "version": "1.3.7",
   "contributors": [
     "Ezeki",
     "Kyle"
   ],
-  "module": "esm/index.js",
   "keywords": [
     "transport",
     "microservices",

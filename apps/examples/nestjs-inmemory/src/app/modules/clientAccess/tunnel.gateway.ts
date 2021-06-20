@@ -1,5 +1,5 @@
 import { createRouter } from '@cheep/router'
-import { TransportBase } from '@cheep/transport'
+import { TransportBase } from '@cheep/transport/core2'
 import { Injectable, OnModuleInit } from '@nestjs/common'
 import { HttpAdapterHost } from '@nestjs/core'
 import { ExpressAdapter } from '@nestjs/platform-express'

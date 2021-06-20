@@ -6,7 +6,7 @@ import {
   TransportOptions,
   TransportState,
   TransportUtils,
-} from '@cheep/transport'
+} from '@cheep/transport/core2'
 import type { SNS, SQS } from 'aws-sdk'
 import { batchDeleteMessages } from './app/batchDeleteMessages'
 import { deleteQueue } from './app/deleteQueue'

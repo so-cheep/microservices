@@ -5,7 +5,7 @@ import {
   TransportBase,
   TransportOptions,
   TransportUtils,
-} from '@cheep/transport'
+} from '@cheep/transport/core2'
 import type { SNS, SQS } from 'aws-sdk'
 import { listenResponseQueue } from './app/listenResponseQueue'
 import { processTriggeredLambdaMessages } from './app/processTriggeredLambdaMessages'

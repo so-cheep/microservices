@@ -1,4 +1,4 @@
-import { TransportCompactMessage } from '@cheep/transport'
+import { TransportCompactMessage } from '@cheep/transport/core2'
 import { BROADCAST } from '../constants'
 import { preprocessFilterMap } from '../preprocessFilterMap'
 import { routeFilter } from '../routeFilter'

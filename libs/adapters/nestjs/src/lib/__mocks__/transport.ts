@@ -1,4 +1,4 @@
-import { Transport } from '@cheep/transport'
+import { Transport } from '@cheep/transport/core2'
 
 export const mockTransport = <Transport>{
   execute: jest.fn().mockResolvedValue(undefined),

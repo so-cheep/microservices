@@ -1,4 +1,4 @@
-import { ApiWithExecutableKeys } from '@cheep/transport'
+import { ApiWithExecutableKeys } from '@cheep/transport/core2'
 
 export type GatewayApi = ApiWithExecutableKeys<
   Record<never, never>,

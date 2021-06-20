@@ -5,7 +5,7 @@ import type {
   Referrer,
   Transport,
   TransportCompactMessage,
-} from '@cheep/transport'
+} from '@cheep/transport/core2'
 
 import {
   ModuleConfigToken,
@@ -20,7 +20,7 @@ import {
   RouteMapReturn,
   ApiWithExecutableKeys,
   createTransportApi,
-} from '@cheep/transport'
+} from '@cheep/transport/core2'
 import {
   CheepMicroservicesModuleConfig,
   CheepMicroservicesRootConfig,

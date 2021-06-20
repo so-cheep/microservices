@@ -18,7 +18,6 @@
     }
   },
   "projects": {
-    "transport-core": { "tags": [] },
     "transport-rabbitmq": { "tags": [] },
     "transport-aws": { "tags": [] },
     "transport-nats": { "tags": [] },
@@ -30,6 +29,8 @@
     "examples-ng-socketio-e2e": {
       "tags": [],
       "implicitDependencies": ["examples-ng-socketio"]
-    }
+    },
+    "transport-core2": { "tags": [] },
+    "transport-core": { "tags": [] }
   }
 }

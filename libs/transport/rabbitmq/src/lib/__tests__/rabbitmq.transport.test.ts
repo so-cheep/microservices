@@ -1,4 +1,4 @@
-import { RemoteError, Transport } from '@cheep/transport'
+import { RemoteError, Transport } from '@cheep/transport/core2'
 import { RabbitMQTransport } from '../rabbitmq.transport'
 
 describe('rabbitmq.transport', () => {

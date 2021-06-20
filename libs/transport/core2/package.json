@@ -1,0 +1,22 @@
+{
+  "name": "@cheep/transport",
+  "version": "1.3.6",
+  "contributors": [
+    "Ezeki",
+    "Kyle"
+  ],
+  "module": "esm/index.js",
+  "keywords": [
+    "transport",
+    "microservices",
+    "cqrs",
+    "events",
+    "eventdriven",
+    "cheep"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/so-cheep/microservices",
+    "directory": "libs/transport/core"
+  }
+}

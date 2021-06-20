@@ -1,7 +1,7 @@
 import {
   MessageMetadata,
   TransportCompactMessage,
-} from '@cheep/transport'
+} from '@cheep/transport/core2'
 import { DeepPartial } from '@cheep/utils'
 import { BROADCAST } from './constants'
 import { FilterMapReturn, PreprocessedFilters } from './types'
