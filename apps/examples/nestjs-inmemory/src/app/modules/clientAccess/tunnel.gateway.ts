@@ -1,4 +1,4 @@
-import { createRouter } from '@cheep/router'
+import { BROADCAST, createRouter } from '@cheep/router'
 import { TransportBase } from '@cheep/transport'
 import { Injectable, OnModuleInit } from '@nestjs/common'
 import { HttpAdapterHost } from '@nestjs/core'
@@ -47,18 +47,15 @@ export class TunnelGateway implements OnModuleInit {
       routerId: 'SERVER',
       transport: this.transport,
       outboundFilters: {
-        Event: () => true,
-        // {
-        //   // forward all blue group events
-        //   Group: item => item.payload[0].color === 'blue',
-        //   // forward all messages where the user can be extracted, otherwise false
-        //   User: item => {
-        //     if (item.route.includes('created')) {
-        //       const user = <User>item.payload[0]
-        //       return { clientId: `${user.id}` }
-        //     }
-        //   },
-        // },
+        Event: {
+          // forward all blue group events
+          Group: item =>
+            item.payload[0].color === 'blue' ? BROADCAST : false,
+          // forward all messages where the user can be extracted, otherwise false
+          User: {
+            created: item => ({ clientId: `${item.payload[0].id}` }),
+          },
+        },
         Command: () => false,
         Query: () => false,
       },
