@@ -1,8 +1,8 @@
 import type {
-  TransportHandlerOptions,
   ApiWithExecutableKeys,
+  Transport,
+  TransportHandlerOptions,
 } from '@cheep/transport'
-import type { Transport } from '@cheep/transport'
 import type { DeepPartial, ReplaceLeaves } from '@cheep/utils'
 
 export interface CheepMicroservicesRootConfig

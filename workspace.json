@@ -1,45 +1,6 @@
 {
   "version": 2,
   "projects": {
-    "transport-core": {
-      "root": "libs/transport/core",
-      "sourceRoot": "libs/transport/core/src",
-      "projectType": "library",
-      "targets": {
-        "lint": {
-          "executor": "@nrwl/linter:eslint",
-          "options": {
-            "lintFilePatterns": ["libs/transport/core/**/*.ts"]
-          }
-        },
-        "test": {
-          "executor": "@nrwl/jest:jest",
-          "outputs": ["coverage/libs/transport/core"],
-          "options": {
-            "jestConfig": "libs/transport/core/jest.config.js",
-            "passWithNoTests": true
-          }
-        },
-        "build": {
-          "executor": "@nrwl/node:package",
-          "outputs": ["{options.outputPath}"],
-          "options": {
-            "outputPath": "dist/libs/transport/core",
-            "tsConfig": "libs/transport/core/tsconfig.lib.json",
-            "packageJson": "libs/transport/core/package.json",
-            "main": "libs/transport/core/src/index.ts",
-            "assets": ["libs/transport/core/*.md"]
-          }
-        },
-        "publish": {
-          "executor": "@nrwl/workspace:run-commands",
-          "options": {
-            "commands": ["npm publish --access=public"],
-            "cwd": "dist/libs/transport/core"
-          }
-        }
-      }
-    },
     "transport-rabbitmq": {
       "root": "libs/transport/rabbitmq",
       "sourceRoot": "libs/transport/rabbitmq/src",
@@ -426,6 +387,43 @@
             "buildableProjectDepsInPackageJsonType": "peerDependencies",
             "main": "libs/transport/nats/src/index.ts",
             "assets": ["libs/transport/nats/*.md"]
+          }
+        }
+      }
+    },
+    "transport-core": {
+      "projectType": "library",
+      "root": "libs/transport/core",
+      "sourceRoot": "libs/transport/core/src",
+      "prefix": "cheep",
+      "targets": {
+        "build": {
+          "executor": "@nrwl/angular:package",
+          "options": {
+            "tsConfig": "libs/transport/core/tsconfig.lib.json",
+            "project": "libs/transport/core/ng-package.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "libs/transport/core/tsconfig.lib.prod.json"
+            }
+          }
+        },
+        "lint": {
+          "executor": "@nrwl/linter:eslint",
+          "options": {
+            "lintFilePatterns": [
+              "libs/transport/core/src/**/*.ts",
+              "libs/transport/core/src/**/*.html"
+            ]
+          }
+        },
+        "test": {
+          "executor": "@nrwl/jest:jest",
+          "outputs": ["coverage/libs/transport/core"],
+          "options": {
+            "jestConfig": "libs/transport/core/jest.config.js",
+            "passWithNoTests": true
           }
         }
       }

@@ -24,7 +24,6 @@
       "@nx-cqrs/example/user/core": [
         "libs/example/user/core/src/index.ts"
       ],
-      "@cheep/transport": ["libs/transport/core/src/index.ts"],
       "@cheep/transport-rabbitmq": [
         "libs/transport/rabbitmq/src/index.ts"
       ],
@@ -33,7 +32,8 @@
       "@cheep/router": ["libs/router/src/index.ts"],
       "@cheep/utils": ["libs/utils/src/index.ts"],
       "@cheep/utils/types": ["libs/utils/src/lib/types.ts"],
-      "@cheep/nats": ["libs/transport/nats/src/index.ts"]
+      "@cheep/nats": ["libs/transport/nats/src/index.ts"],
+      "@cheep/transport": ["libs/transport/core/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

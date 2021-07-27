@@ -1,6 +1,6 @@
+import type { Api, TransportCompactMessage } from '@cheep/transport'
 import type { AllFunctionArgs } from '@cheep/utils'
 import type { BROADCAST } from './constants'
-import type { Api, TransportCompactMessage } from '@cheep/transport'
 
 /**
  * A deep replacement across an api, allowing for functions at any node in the tree,

@@ -1,35 +1,32 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
-
 import type {
   MessageMetadata,
   Referrer,
   Transport,
   TransportCompactMessage,
 } from '@cheep/transport'
-
+import {
+  ApiWithExecutableKeys,
+  createTransportApi,
+  ExecutableApi,
+  PublishableApi,
+  RouteMap,
+  RouteMapReturn,
+  TransportHandlerOptions,
+} from '@cheep/transport'
+import { getLeafAddresses } from '@cheep/utils'
+import { Inject, Injectable, OnModuleInit } from '@nestjs/common'
+import { Observable, Subject } from 'rxjs'
+import { filter, share } from 'rxjs/operators'
 import {
   ModuleConfigToken,
   RootConfigToken,
   TransportToken,
 } from '../constants'
 import {
-  ExecutableApi,
-  PublishableApi,
-  TransportHandlerOptions,
-  RouteMap,
-  RouteMapReturn,
-  ApiWithExecutableKeys,
-  createTransportApi,
-} from '@cheep/transport'
-import {
   CheepMicroservicesModuleConfig,
   CheepMicroservicesRootConfig,
 } from '../types'
 import { processArgsSafely } from '../util/processArgsSafely'
-import { Observable, Subject } from 'rxjs'
-import { getLeafAddresses } from '@cheep/utils'
-
-import { filter, share } from 'rxjs/operators'
 
 @Injectable()
 export class CheepApi<
